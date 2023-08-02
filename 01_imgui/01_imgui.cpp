@@ -1,8 +1,8 @@
-﻿// 00_SettingD3D11.cpp : 애플리케이션에 대한 진입점을 정의합니다.
+﻿// 01_imgui.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
 
 #include "framework.h"
-#include "00_SettingD3D11.h"
+#include "01_imgui.h"
 #include <d3d11.h>
 #pragma comment (lib, "d3d11.lib")
 
@@ -28,7 +28,7 @@ ID3D11DeviceContext* pDeviceContext;
 IDXGISwapChain* pSwapChain;
 ID3D11RenderTargetView* pRenderTargetView;
 
-bool InitD3D(HWND hwnd,UINT clientWidth,UINT clientHeight)
+bool InitD3D(HWND hwnd, UINT clientWidth, UINT clientHeight)
 {
     // 결과값.
     HRESULT hr;
@@ -136,7 +136,7 @@ void Render()
     pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
 
 
-    
+
 
     // 스왑체인 교체.
     pSwapChain->Present(0, 0);
@@ -154,12 +154,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_MY00SETTINGD3D11, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_MY01IMGUI, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // 애플리케이션 초기화를 수행합니다:
     SIZE ClientSize = { 800,600 };
-    if (!InitInstance (hInstance, nCmdShow, ClientSize.cx, ClientSize.cy))
+    if (!InitInstance(hInstance, nCmdShow, ClientSize.cx, ClientSize.cy))
     {
         return FALSE;
     }
@@ -169,30 +169,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY00SETTINGD3D11));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY01IMGUI));
 
-    MSG msg = { 0 };
+    MSG msg;
 
-    // 루프 실행.
-    while (msg.message != WM_QUIT)
+    // 기본 메시지 루프입니다:
+    while (GetMessage(&msg, nullptr, 0, 0))
     {
-        // 메시지 매핑.
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else
-        {
-            // 업데이트.
-            Update();
-
-            // 화면 그리기.
-            Render();
-        }
     }
 
-    UninitD3D();
     return (int) msg.wParam;
 }
 
@@ -214,17 +204,16 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY00SETTINGD3D11));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY01IMGUI));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    // 메뉴는 사용하지 않는다.
-    //wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY00SETTINGD3D11);   
-    wcex.lpszMenuName = 0;
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY01IMGUI);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);
 }
+
 
 //
 //   함수: InitInstance(HINSTANCE, int)
@@ -236,30 +225,30 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        이 함수를 통해 인스턴스 핸들을 전역 변수에 저장하고
 //        주 프로그램 창을 만든 다음 표시합니다.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow ,UINT width,UINT height)
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, UINT width, UINT height)
 {
-   hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   // 원하는 크기가 조정되어 리턴
-   RECT rcClient = { 0, 0, (LONG)width, (LONG)height };
-   AdjustWindowRect(&rcClient, WS_OVERLAPPEDWINDOW, FALSE);
+    // 원하는 크기가 조정되어 리턴
+    RECT rcClient = { 0, 0, (LONG)width, (LONG)height };
+    AdjustWindowRect(&rcClient, WS_OVERLAPPEDWINDOW, FALSE);
 
-   //생성
-   hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-       100, 100,	// 시작 위치
-       rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
-       nullptr, nullptr, hInstance, nullptr);
+    //생성
+    hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        100, 100,	// 시작 위치
+        rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
+        nullptr, nullptr, hInstance, nullptr);
 
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    if (!hWnd)
+    {
+        return FALSE;
+    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
 
-   return TRUE;
+    return TRUE;
 }
 
 //
