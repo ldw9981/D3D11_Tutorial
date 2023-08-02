@@ -11,35 +11,37 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
-	if (pDevice)
-	{
-		pDevice->Release();
-		pDevice = NULL;
-	}
-
-	if (pDeviceContext)
-	{
-		pDeviceContext->Release();
-		pDeviceContext = NULL;
-	}
-
-	if (pSwapChain)
-	{
-		pSwapChain->Release();
-		pSwapChain = NULL;
-	}
-
-	if (pRenderTargetView)
-	{
-		pRenderTargetView->Release();
-		pRenderTargetView = NULL;
-	}
+	UninitD3D();
 }
 
 bool TutorialApp::Initialize(UINT Width, UINT Height)
 {
 	__super::Initialize(Width, Height);
 
+	if (!InitD3D())
+		return false;
+
+	return true;
+}
+
+void TutorialApp::Update()
+{
+
+}
+
+void TutorialApp::Render()
+{
+	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
+
+	// 화면 칠하기.
+	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
+
+	// 스왑체인 교체.
+	pSwapChain->Present(0, 0);
+}
+
+bool TutorialApp::InitD3D()
+{
 	// 결과값.
 	HRESULT hr;
 
@@ -104,22 +106,33 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 		pBackBufferTexture->Release();
 		pBackBufferTexture = NULL;
 	}
-
 	return true;
 }
 
-void TutorialApp::Update()
+void TutorialApp::UninitD3D()
 {
+	// Cleanup DirectX
+	if (pDevice)
+	{
+		pDevice->Release();
+		pDevice = NULL;
+	}
 
-}
+	if (pDeviceContext)
+	{
+		pDeviceContext->Release();
+		pDeviceContext = NULL;
+	}
 
-void TutorialApp::Render()
-{
-	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
+	if (pSwapChain)
+	{
+		pSwapChain->Release();
+		pSwapChain = NULL;
+	}
 
-	// 화면 칠하기.
-	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
-
-	// 스왑체인 교체.
-	pSwapChain->Present(0, 0);
+	if (pRenderTargetView)
+	{
+		pRenderTargetView->Release();
+		pRenderTargetView = NULL;
+	}
 }

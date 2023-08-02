@@ -18,5 +18,8 @@ public:
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
 	virtual void Render();
+
+	bool InitD3D();
+	void UninitD3D();
 };
 
