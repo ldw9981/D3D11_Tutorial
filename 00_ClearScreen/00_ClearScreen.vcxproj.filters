@@ -24,7 +24,7 @@
     <ClInclude Include="Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="01_imgui.h">
+    <ClInclude Include="00_ClearScreen.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="TutorialApp.h">
@@ -32,7 +32,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="01_imgui.cpp">
+    <ClCompile Include="00_ClearScreen.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TutorialApp.cpp">
@@ -40,7 +40,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="01_imgui.rc">
+    <ResourceCompile Include="00_ClearScreen.rc">
       <Filter>리소스 파일</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -48,7 +48,7 @@
     <Image Include="small.ico">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="01_imgui.ico">
+    <Image Include="00_ClearScreen.ico">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

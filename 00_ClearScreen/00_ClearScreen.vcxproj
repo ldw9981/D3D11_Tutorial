@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d43edae9-a64b-4b8d-b451-cd38b7a6339e}</ProjectGuid>
-    <RootNamespace>My01imgui</RootNamespace>
+    <ProjectGuid>{8ddd6570-e8c5-4e3d-89b4-5f527d4b1ca5}</ProjectGuid>
+    <RootNamespace>My00ClearScreen</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,29 +127,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="01_imgui.h" />
+    <ClInclude Include="00_ClearScreen.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TutorialApp.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="01_imgui.cpp" />
+    <ClCompile Include="00_ClearScreen.cpp" />
     <ClCompile Include="TutorialApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="01_imgui.rc" />
+    <ResourceCompile Include="00_ClearScreen.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="01_imgui.ico" />
+    <Image Include="00_ClearScreen.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Framework\Framework.vcxproj">
       <Project>{ceeea13f-896a-4b01-a0c0-ffcb4c6d3409}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\ImGUI\ImGUI.vcxproj">
-      <Project>{3e889677-548e-430a-9485-3063464e2758}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
