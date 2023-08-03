@@ -127,22 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="01_imgui.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TutorialApp.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="01_imgui.cpp" />
+    <ClCompile Include="..\00_ClearScreen\WinMain.cpp" />
     <ClCompile Include="TutorialApp.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="01_imgui.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="01_imgui.ico" />
-    <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Framework\Framework.vcxproj">

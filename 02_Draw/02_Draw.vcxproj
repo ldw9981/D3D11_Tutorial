@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{8ddd6570-e8c5-4e3d-89b4-5f527d4b1ca5}</ProjectGuid>
-    <RootNamespace>My00ClearScreen</RootNamespace>
+    <ProjectGuid>{8ce5cd85-4234-497b-a084-f9ec9114d0ce}</ProjectGuid>
+    <RootNamespace>My02Draw</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -138,6 +138,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Framework\Framework.vcxproj">
       <Project>{ceeea13f-896a-4b01-a0c0-ffcb4c6d3409}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ImGUI\ImGUI.vcxproj">
+      <Project>{3e889677-548e-430a-9485-3063464e2758}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -30,7 +30,7 @@ GameApp::~GameApp()
 
 }
 
-// 윈도우 정보는 게임 마다 다를수 있으므로 등록,생성,보이기만 한다.
+
 bool GameApp::Initialize(UINT Width, UINT Height)
 {
 	m_ClientSize.cx = Width;
