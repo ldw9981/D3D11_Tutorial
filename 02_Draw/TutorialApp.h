@@ -1,6 +1,5 @@
 #pragma once
 #include "../Framework/GameApp.h"
-#include <d3d11.h>
 #include "../imgui/imgui.h"
 
 class TutorialApp :
@@ -27,11 +26,14 @@ public:
 	virtual void Update();
 	virtual void Render();
 
-	bool InitD3D();
+	bool InitD3D();			
 	void UninitD3D();
 
 	bool InitImGUI();
 	void UninitImGUI();
+
+	bool InitScene();		// Ω¶¿Ã¥ı,πˆ≈ÿΩ∫,¿Œµ¶Ω∫
+	void UninitScene();		 
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

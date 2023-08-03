@@ -5,6 +5,7 @@
 #include "../ImGUI/imgui_impl_dx11.h"
 
 #pragma comment (lib, "d3d11.lib")
+#pragma comment(lib,"d3dcompiler.lib")
 
 TutorialApp::TutorialApp(HINSTANCE hInstance)
 :GameApp(hInstance)
@@ -219,6 +220,17 @@ void TutorialApp::UninitImGUI()
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+}
+
+bool TutorialApp::InitScene()
+{
+
+	return false;
+}
+
+void TutorialApp::UninitScene()
+{
+
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
