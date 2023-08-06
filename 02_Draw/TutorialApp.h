@@ -32,7 +32,5 @@ public:
 
 	bool InitScene();		// 쉐이더,버텍스,인덱스
 	void UninitScene();		 
-
-	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };
 
