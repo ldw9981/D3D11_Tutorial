@@ -3,6 +3,7 @@
 #include "../ImGUI/imgui.h"
 #include "../ImGUI/imgui_impl_win32.h"
 #include "../ImGUI/imgui_impl_dx11.h"
+#include "../Framework/Helper.h"
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
@@ -15,7 +16,7 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
-	UninitImGUI();
+	//UninitImGUI();
 	UninitD3D();	
 }
 
@@ -26,7 +27,10 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 	if(!InitD3D())
 		return false;
 	
-	if (!InitImGUI())
+	//if (!InitImGUI())
+	//	return false;
+
+	if (!InitScene())
 		return false;
 
 	return true;
@@ -40,55 +44,11 @@ void TutorialApp::Update()
 void TutorialApp::Render()
 {
 
-	// Start the Dear ImGui frame
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-
-	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-	if (show_demo_window)
-		ImGui::ShowDemoWindow(&show_demo_window);
-
-	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-	{
-		static float f = 0.0f;
-		static int counter = 0;
-
-		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-		ImGui::Checkbox("Another Window", &show_another_window);
-
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-			counter++;
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
-
-		//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-		ImGui::End();
-	}
-
-	// 3. Show another simple window.
-	if (show_another_window)
-	{
-		ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-		ImGui::Text("Hello from another window!");
-		if (ImGui::Button("Close Me"))
-			show_another_window = false;
-		ImGui::End();
-	}
+	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
 
-	ImGui::Render();
-	const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-	this->pDeviceContext->OMSetRenderTargets(1, &this->pRenderTargetView, nullptr);
-	this->pDeviceContext->ClearRenderTargetView(this->pRenderTargetView, clear_color_with_alpha);
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
+	// 화면 칠하기.
+	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
 
 	// 스왑체인 교체.
 	pSwapChain->Present(0, 0);
@@ -166,29 +126,10 @@ bool TutorialApp::InitD3D()
 void TutorialApp::UninitD3D()
 {
 	// Cleanup DirectX
-	if (pDevice)
-	{
-		pDevice->Release();
-		pDevice = NULL;
-	}
-
-	if (pDeviceContext)
-	{
-		pDeviceContext->Release();
-		pDeviceContext = NULL;
-	}
-
-	if (pSwapChain)
-	{
-		pSwapChain->Release();
-		pSwapChain = NULL;
-	}
-
-	if (pRenderTargetView)
-	{
-		pRenderTargetView->Release();
-		pRenderTargetView = NULL;
-	}
+	SAFE_RELEASE(pDevice);
+	SAFE_RELEASE(pDeviceContext);
+	SAFE_RELEASE(pSwapChain);
+	SAFE_RELEASE(pRenderTargetView);
 }
 
 bool TutorialApp::InitImGUI()
@@ -224,13 +165,157 @@ void TutorialApp::UninitImGUI()
 
 bool TutorialApp::InitScene()
 {
+	// 셰이더 컴파일.
+	HRESULT hr;
+	ID3D10Blob* errorMessage = nullptr;
 
-	return false;
+	D3DCompileFromFile(L"BasicVertexShader.hlsl",
+		NULL,
+		NULL,
+		"VSMain",
+		"vs_4_0",
+		NULL,
+		NULL,
+		NULL,
+		&vertexShaderBuffer, NULL, &errorMessage);
+
+	// 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
+	hr = D3DX11CompileFromFile(L"EffectVS.fx", NULL, NULL,
+		"main", "vs_4_0", NULL, NULL, NULL,
+		&vertexShaderBuffer, NULL, NULL);
+
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, L"정점 셰이더 컴파일 실패.", L"오류.", MB_OK);
+		return false;
+	}
+
+	// 정점 셰이더 생성.
+	hr = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+		vertexShaderBuffer->GetBufferSize(), NULL, &vertexShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, L"정점 셰이더 생성 실패.", L"오류.", MB_OK);
+		return false;
+	}
+
+	// 정점 셰이더 단계에 바인딩(설정, 연결)binding.
+	pDeviceContext->VSSetShader(vertexShader, NULL, NULL);
+
+	// 픽셀 셰이더 컴파일.
+	hr = D3DX11CompileFromFile(L"EffectPS.fx", NULL, NULL,
+		"main", "ps_4_0", NULL, NULL, NULL, &pixelShaderBuffer,
+		NULL, NULL);
+
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, L"픽셀 셰이더 컴파일 실패.", L"오류.", MB_OK);
+		return false;
+	}
+
+	// 픽셀 셰이더 생성.
+	hr = pDevice->CreatePixelShader(
+		pixelShaderBuffer->GetBufferPointer(),
+		pixelShaderBuffer->GetBufferSize(), NULL, &pixelShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, L"픽셀 셰이더 생성 실패.", L"오류.", MB_OK);
+		return false;
+	}
+
+	// 픽셀 셰이더 설정.
+	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);
+
+	// 정점 데이터(배열) 생성.
+	Vertex vertices[] =
+	{
+		Vertex(0.0f, 0.5f, 0.5f),
+		Vertex(0.5f, -0.5f, 0.5f),
+		Vertex(-0.5f, -0.5f, 0.5f)
+	};
+
+	D3D11_BUFFER_DESC vbDesc;
+	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
+	// sizeof(vertices) / sizeof(Vertex).
+	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	vbDesc.CPUAccessFlags = 0;
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.MiscFlags = 0;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	// 배열 데이터 할당.
+	D3D11_SUBRESOURCE_DATA vbData;
+	ZeroMemory(&vbData, sizeof(vbData));
+	vbData.pSysMem = vertices;
+
+	// 정점 버퍼 생성.
+	hr = pDevice->CreateBuffer(&vbDesc, &vbData, &vertexBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, L"정점 버퍼 생성 실패.", L"오류.", MB_OK);
+		return false;
+	}
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	// 정점 버퍼 바인딩.
+	pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+
+	// 입력 레이아웃.
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		/*LPCSTR SemanticName;
+		UINT SemanticIndex;
+		DXGI_FORMAT Format;
+		UINT InputSlot;
+		UINT AlignedByteOffset;
+		D3D11_INPUT_CLASSIFICATION InputSlotClass;
+		UINT InstanceDataStepRate;*/
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	// 입력 레이아웃 생성.
+	hr = pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
+		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &vertexInputLayout);
+
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, L"입력 레이아웃 생성 실패.", L"오류.", MB_OK);
+		return false;
+	}
+
+	// 입력 레이아웃 바인딩.
+	pDeviceContext->IASetInputLayout(vertexInputLayout);
+
+	// 정점을 이어서 그릴 방식 설정.
+	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 뷰포트 설정.
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = clientWidth;
+	viewport.Height = clientHeight;
+
+	// 뷰포트 설정.
+	pDeviceContext->RSSetViewports(1, &viewport);
+
+
+	return true;
 }
 
 void TutorialApp::UninitScene()
 {
-
+	SAFE_RELEASE(vertexBuffer);
+	SAFE_RELEASE(vertexShader);
+	SAFE_RELEASE(pixelShader);
+	SAFE_RELEASE(vertexShaderBuffer);
+	SAFE_RELEASE(pixelShaderBuffer);
+	SAFE_RELEASE(vertexInputLayout);
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

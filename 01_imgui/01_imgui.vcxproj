@@ -70,6 +70,16 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgInstalledDir>D:\Git\vcpkg\installed</VcpkgInstalledDir>
+    <VcpkgTriplet>
+    </VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgInstalledDir>D:\Git\vcpkg\installed\x64-windows</VcpkgInstalledDir>
+    <VcpkgTriplet>
+    </VcpkgTriplet>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -138,9 +148,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Framework\Framework.vcxproj">
       <Project>{ceeea13f-896a-4b01-a0c0-ffcb4c6d3409}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\ImGUI\ImGUI.vcxproj">
-      <Project>{3e889677-548e-430a-9485-3063464e2758}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
