@@ -198,7 +198,8 @@ bool TutorialApp::InitScene()
 
 	if (FAILED(hr))
 	{
-		MessageBox(m_hWnd, L"정점 셰이더 컴파일 실패.", L"오류.", MB_OK);
+		MessageBoxA(m_hWnd,(char*)errorMessage->GetBufferPointer() ,"오류.", MB_OK);
+		SAFE_RELEASE(errorMessage);
 		return false;
 	}
 
@@ -228,9 +229,8 @@ bool TutorialApp::InitScene()
 
 	
 	if (FAILED(hr))
-	{	
-		OutputDebugStringA((char*)errorMessage->GetBufferPointer());
-		MessageBox(m_hWnd, L"픽셀 셰이더 컴파일 실패.", L"오류.", MB_OK);
+	{
+		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
 		SAFE_RELEASE(errorMessage);
 		return false;
 	}
