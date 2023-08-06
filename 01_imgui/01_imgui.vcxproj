@@ -146,8 +146,8 @@
     <ClCompile Include="TutorialApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Framework\Framework.vcxproj">
-      <Project>{ceeea13f-896a-4b01-a0c0-ffcb4c6d3409}</Project>
+    <ProjectReference Include="..\Common\Common.vcxproj">
+      <Project>{4ca8df6a-4f5d-4f44-a590-43d541ad684e}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

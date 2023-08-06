@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{ceeea13f-896a-4b01-a0c0-ffcb4c6d3409}</ProjectGuid>
-    <RootNamespace>Framework</RootNamespace>
+    <ProjectGuid>{4ca8df6a-4f5d-4f44-a590-43d541ad684e}</ProjectGuid>
+    <RootNamespace>Common</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -145,7 +145,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Framework.cpp" />
+    <ClCompile Include="Common.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="pch.cpp">

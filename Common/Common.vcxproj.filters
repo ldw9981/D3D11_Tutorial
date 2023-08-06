@@ -21,15 +21,15 @@
     <ClInclude Include="pch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="GameApp.h">
+    <ClInclude Include="Helper.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Helper.h">
+    <ClInclude Include="GameApp.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Framework.cpp">
+    <ClCompile Include="Common.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">

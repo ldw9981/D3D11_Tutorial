@@ -1,5 +1,5 @@
 #pragma once
-#include "../Framework/GameApp.h"
+#include "../Common/GameApp.h"
 #include <imgui.h>
 
 class TutorialApp :

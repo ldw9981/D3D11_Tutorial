@@ -1,5 +1,5 @@
 #pragma once
-#include "../Framework/GameApp.h"
+#include "../Common/GameApp.h"
 #include <d3d11.h>
 #include <imgui.h>
 

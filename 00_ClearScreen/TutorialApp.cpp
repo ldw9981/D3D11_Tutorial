@@ -1,5 +1,6 @@
 #include "framework.h"
 #include "TutorialApp.h"
+#include "../Common/Helper.h"
 
 #pragma comment (lib, "d3d11.lib")
 
@@ -44,7 +45,7 @@ bool TutorialApp::InitD3D()
 {
 	// 결과값.
 	HRESULT hr;
-
+	
 	// 스왑체인 속성 설정 구조체 생성.
 	DXGI_SWAP_CHAIN_DESC swapDesc;
 	ZeroMemory(&swapDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
@@ -68,28 +69,31 @@ bool TutorialApp::InitD3D()
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice,
 		NULL, &pDeviceContext);
-
+	
 	if (FAILED(hr))
 	{
 		MessageBox(NULL, L"장치 생성 실패.", L"오류.", MB_OK);
 		return false;
 	}
 
-	// 백버퍼(텍스처).
+	// 백버퍼(텍스처) 스왑 체인의 백 버퍼 중 하나에 액세스합니다.
 	ID3D11Texture2D* pBackBufferTexture;
-	hr = pSwapChain->GetBuffer(NULL,
+	hr = pSwapChain->GetBuffer(0,
 		__uuidof(ID3D11Texture2D),
 		(void**)&pBackBufferTexture);
 
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, L"백버퍼 생성 실패.", L"오류.", MB_OK);
+		MessageBox(NULL, L"백버퍼 얻기 실패.", L"오류.", MB_OK);
 		return false;
 	}
 
-	// 렌더 타겟 생성.
+	// 스왑 체인의 버퍼를 이용하는 렌더 타겟 뷰를 생성합니다.
 	hr = pDevice->CreateRenderTargetView(
 		pBackBufferTexture, NULL, &pRenderTargetView);
+	
+	// 렌더타겟뷰를 만들었으므로 백버퍼 텍스처는 더이상 필요하지 않습니다.
+	SAFE_RELEASE(pBackBufferTexture);
 
 	if (FAILED(hr))
 	{
@@ -97,15 +101,8 @@ bool TutorialApp::InitD3D()
 		return false;
 	}
 
-	// 렌더 타겟 설정.
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, NULL);
-
-	// 백버퍼 텍스처 해제.
-	if (pBackBufferTexture)
-	{
-		pBackBufferTexture->Release();
-		pBackBufferTexture = NULL;
-	}
+	// 렌더 타겟을 출력 파이프라인에 바인딩합니다.
+	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, NULL);	
 	return true;
 }
 
