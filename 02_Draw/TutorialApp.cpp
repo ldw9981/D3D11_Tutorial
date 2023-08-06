@@ -22,7 +22,6 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
-	//UninitImGUI();
 	UninitD3D();	
 }
 
@@ -32,9 +31,6 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 
 	if(!InitD3D())
 		return false;
-	
-	//if (!InitImGUI())
-	//	return false;
 
 	if (!InitScene())
 		return false;
@@ -56,7 +52,13 @@ void TutorialApp::Render()
 	// 화면 칠하기.
 	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
 
-	// 스왑체인 교체.
+
+	// Render a triangle
+	pDeviceContext->VSSetShader(vertexShader, nullptr, 0);
+	pDeviceContext->PSSetShader(pixelShader, nullptr, 0);
+	pDeviceContext->Draw(3, 0);
+
+	// Present the information rendered to the back buffer to the front buffer (the screen)
 	pSwapChain->Present(0, 0);
 }
 
@@ -136,37 +138,6 @@ void TutorialApp::UninitD3D()
 	SAFE_RELEASE(pDeviceContext);
 	SAFE_RELEASE(pSwapChain);
 	SAFE_RELEASE(pRenderTargetView);
-}
-
-bool TutorialApp::InitImGUI()
-{
-	/*
-		ImGui 초기화.
-	*/
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsLight();
-
-	// Setup Platform/Renderer backends
-	ImGui_ImplWin32_Init(m_hWnd);
-	ImGui_ImplDX11_Init(this->pDevice, this->pDeviceContext);
-
-	//
-	return true;
-}
-
-void TutorialApp::UninitImGUI()
-{
-	// Cleanup
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
 }
 
 bool TutorialApp::InitScene()
@@ -254,8 +225,8 @@ bool TutorialApp::InitScene()
 	// 정점 데이터(배열) 생성.
 	Vector3 vertices[] =
 	{
-		Vector3(0.0f, 0.5f, 0.5f),
-		Vector3(0.5f, -0.5f, 0.5f),
+		Vector3( 0.0f,  0.5f, 0.5f),
+		Vector3( 0.5f, -0.5f, 0.5f),
 		Vector3(-0.5f, -0.5f, 0.5f)
 	};
 
@@ -323,6 +294,8 @@ bool TutorialApp::InitScene()
 	viewport.TopLeftY = 0;
 	viewport.Width = (float)m_ClientWidth;
 	viewport.Height = (float)m_ClientHeight;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
 
 	// 뷰포트 설정.
 	pDeviceContext->RSSetViewports(1, &viewport);
@@ -339,14 +312,4 @@ void TutorialApp::UninitScene()
 	SAFE_RELEASE(vertexShaderBuffer);
 	SAFE_RELEASE(pixelShaderBuffer);
 	SAFE_RELEASE(vertexInputLayout);
-}
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
-		return true;
-
-    return __super::WndProc(hWnd, message, wParam, lParam);
 }
