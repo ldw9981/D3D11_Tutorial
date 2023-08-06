@@ -135,11 +135,6 @@
     <ClCompile Include="TutorialApp.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Framework\Framework.vcxproj">
-      <Project>{ceeea13f-896a-4b01-a0c0-ffcb4c6d3409}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
