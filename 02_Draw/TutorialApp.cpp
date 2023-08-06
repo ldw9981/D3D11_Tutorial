@@ -4,9 +4,15 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 #include "../Framework/Helper.h"
+#include <directxtk/simplemath.h>
+#include <comdef.h>
+
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
+
+
+using namespace DirectX::SimpleMath;
 
 TutorialApp::TutorialApp(HINSTANCE hInstance)
 :GameApp(hInstance)
@@ -69,8 +75,8 @@ bool TutorialApp::InitD3D()
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	// 백버퍼(텍스처)의 가로/세로 크기 설정.
-	swapDesc.BufferDesc.Width = m_ClientSize.cx;
-	swapDesc.BufferDesc.Height = m_ClientSize.cy;
+	swapDesc.BufferDesc.Width = m_ClientWidth;
+	swapDesc.BufferDesc.Height = m_ClientHeight;
 	// 화면 주사율 설정.
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
@@ -168,25 +174,31 @@ bool TutorialApp::InitScene()
 	// 셰이더 컴파일.
 	HRESULT hr;
 	ID3D10Blob* errorMessage = nullptr;
-
-	D3DCompileFromFile(L"BasicVertexShader.hlsl",
+	/*
+	D3DCompileFromFile(_In_ LPCWSTR pFileName,
+		_In_reads_opt_(_Inexpressible_(pDefines->Name != NULL)) CONST D3D_SHADER_MACRO * pDefines,
+		_In_opt_ ID3DInclude * pInclude,
+		_In_ LPCSTR pEntrypoint,
+		_In_ LPCSTR pTarget,
+		_In_ UINT Flags1,
+		_In_ UINT Flags2,
+		_Out_ ID3DBlob * *ppCode,
+		_Always_(_Outptr_opt_result_maybenull_) ID3DBlob * *ppErrorMsgs);
+		*/
+	// 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
+	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",
 		NULL,
 		NULL,
-		"VSMain",
+		"main",
 		"vs_4_0",
 		NULL,
-		NULL,
-		NULL,
-		&vertexShaderBuffer, NULL, &errorMessage);
-
-	// 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
-	hr = D3DX11CompileFromFile(L"EffectVS.fx", NULL, NULL,
-		"main", "vs_4_0", NULL, NULL, NULL,
-		&vertexShaderBuffer, NULL, NULL);
+		NULL,	
+		&vertexShaderBuffer,
+		&errorMessage);
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, L"정점 셰이더 컴파일 실패.", L"오류.", MB_OK);
+		MessageBox(m_hWnd, L"정점 셰이더 컴파일 실패.", L"오류.", MB_OK);
 		return false;
 	}
 
@@ -196,7 +208,7 @@ bool TutorialApp::InitScene()
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, L"정점 셰이더 생성 실패.", L"오류.", MB_OK);
+		MessageBox(m_hWnd, L"정점 셰이더 생성 실패.", L"오류.", MB_OK);
 		return false;
 	}
 
@@ -204,13 +216,22 @@ bool TutorialApp::InitScene()
 	pDeviceContext->VSSetShader(vertexShader, NULL, NULL);
 
 	// 픽셀 셰이더 컴파일.
-	hr = D3DX11CompileFromFile(L"EffectPS.fx", NULL, NULL,
-		"main", "ps_4_0", NULL, NULL, NULL, &pixelShaderBuffer,
-		NULL, NULL);
+	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"ps_4_0",
+		NULL,
+		NULL,
+		&pixelShaderBuffer,
+		&errorMessage);
 
+	
 	if (FAILED(hr))
-	{
-		MessageBox(hwnd, L"픽셀 셰이더 컴파일 실패.", L"오류.", MB_OK);
+	{	
+		OutputDebugStringA((char*)errorMessage->GetBufferPointer());
+		MessageBox(m_hWnd, L"픽셀 셰이더 컴파일 실패.", L"오류.", MB_OK);
+		SAFE_RELEASE(errorMessage);
 		return false;
 	}
 
@@ -221,25 +242,27 @@ bool TutorialApp::InitScene()
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, L"픽셀 셰이더 생성 실패.", L"오류.", MB_OK);
+		MessageBox(m_hWnd, L"픽셀 셰이더 생성 실패.", L"오류.", MB_OK);
+		SAFE_RELEASE(errorMessage);
 		return false;
 	}
 
 	// 픽셀 셰이더 설정.
 	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);
+	
 
 	// 정점 데이터(배열) 생성.
-	Vertex vertices[] =
+	Vector3 vertices[] =
 	{
-		Vertex(0.0f, 0.5f, 0.5f),
-		Vertex(0.5f, -0.5f, 0.5f),
-		Vertex(-0.5f, -0.5f, 0.5f)
+		Vector3(0.0f, 0.5f, 0.5f),
+		Vector3(0.5f, -0.5f, 0.5f),
+		Vector3(-0.5f, -0.5f, 0.5f)
 	};
 
 	D3D11_BUFFER_DESC vbDesc;
 	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
 	// sizeof(vertices) / sizeof(Vertex).
-	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	vbDesc.ByteWidth = sizeof(Vector3) * ARRAYSIZE(vertices);
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.MiscFlags = 0;
@@ -254,11 +277,11 @@ bool TutorialApp::InitScene()
 	hr = pDevice->CreateBuffer(&vbDesc, &vbData, &vertexBuffer);
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, L"정점 버퍼 생성 실패.", L"오류.", MB_OK);
+		MessageBox(m_hWnd, L"정점 버퍼 생성 실패.", L"오류.", MB_OK);
 		return false;
 	}
 
-	UINT stride = sizeof(Vertex);
+	UINT stride = sizeof(Vector3);
 	UINT offset = 0;
 
 	// 정점 버퍼 바인딩.
@@ -283,7 +306,7 @@ bool TutorialApp::InitScene()
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, L"입력 레이아웃 생성 실패.", L"오류.", MB_OK);
+		MessageBox(m_hWnd, L"입력 레이아웃 생성 실패.", L"오류.", MB_OK);
 		return false;
 	}
 
@@ -298,8 +321,8 @@ bool TutorialApp::InitScene()
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = clientWidth;
-	viewport.Height = clientHeight;
+	viewport.Width = (float)m_ClientWidth;
+	viewport.Height = (float)m_ClientHeight;
 
 	// 뷰포트 설정.
 	pDeviceContext->RSSetViewports(1, &viewport);

@@ -11,7 +11,7 @@ LRESULT CALLBACK DefaultWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 }
 
 GameApp::GameApp(HINSTANCE hInstance)
-	:m_hInstance(hInstance), m_szWindowClass(L"DefaultWindowCalss"), m_szTitle(L"GameApp"),m_ClientSize({1024,768})
+	:m_hInstance(hInstance), m_szWindowClass(L"DefaultWindowCalss"), m_szTitle(L"GameApp"), m_ClientWidth(1024), m_ClientHeight(768)
 {
 	GameApp::m_pInstance = this;
 	m_wcex.hInstance = hInstance;
@@ -33,14 +33,14 @@ GameApp::~GameApp()
 
 bool GameApp::Initialize(UINT Width, UINT Height)
 {
-	m_ClientSize.cx = Width;
-	m_ClientSize.cy = Height;
+	m_ClientWidth = Width;
+	m_ClientHeight = Height;
 
 	// 등록
 	RegisterClassExW(&m_wcex);
 
 	// 원하는 크기가 조정되어 리턴
-	RECT rcClient = { 0, 0, (LONG)m_ClientSize.cx, (LONG)m_ClientSize.cy };
+	RECT rcClient = { 0, 0, (LONG)Width, (LONG)Height };
 	AdjustWindowRect(&rcClient, WS_OVERLAPPEDWINDOW, FALSE);
 
 	//생성

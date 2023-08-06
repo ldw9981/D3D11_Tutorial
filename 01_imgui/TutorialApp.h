@@ -11,10 +11,10 @@ public:
 	~TutorialApp();
 
 	// DirectX º¯¼ö.
-	ID3D11Device* pDevice;
-	ID3D11DeviceContext* pDeviceContext;
-	IDXGISwapChain* pSwapChain;
-	ID3D11RenderTargetView* pRenderTargetView;
+	ID3D11Device* pDevice = nullptr;
+	ID3D11DeviceContext* pDeviceContext = nullptr;
+	IDXGISwapChain* pSwapChain = nullptr;
+	ID3D11RenderTargetView* pRenderTargetView = nullptr;
 
 
 	// Our state

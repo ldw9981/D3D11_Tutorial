@@ -55,8 +55,8 @@ bool TutorialApp::InitD3D()
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	// 백버퍼(텍스처)의 가로/세로 크기 설정.
-	swapDesc.BufferDesc.Width = m_ClientSize.cx;
-	swapDesc.BufferDesc.Height = m_ClientSize.cy;
+	swapDesc.BufferDesc.Width = m_ClientWidth;
+	swapDesc.BufferDesc.Height = m_ClientHeight;
 	// 화면 주사율 설정.
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;

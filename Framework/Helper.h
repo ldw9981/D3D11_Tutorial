@@ -57,3 +57,7 @@ void SAFE_DELETE(T* p)
 		p = nullptr;
 	}
 }
+
+
+LPCTSTR GetComErrorString(HRESULT hr);
+

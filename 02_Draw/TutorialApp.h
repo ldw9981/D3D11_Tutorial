@@ -1,6 +1,6 @@
 #pragma once
 #include "../Framework/GameApp.h"
-#include "../imgui/imgui.h"
+#include <imgui.h>
 
 class TutorialApp :
     public GameApp
@@ -15,12 +15,12 @@ public:
 	IDXGISwapChain* pSwapChain = nullptr;
 	ID3D11RenderTargetView* pRenderTargetView = nullptr;
 
-	ID3D11Buffer* vertexBuffer;		// 정점 버퍼.
-	ID3D11VertexShader* vertexShader;		// 정점 셰이더.
-	ID3D11PixelShader* pixelShader;			// 픽셀 셰이더.
-	ID3DBlob* vertexShaderBuffer;		// 정점 셰이더 버퍼.
-	ID3DBlob* pixelShaderBuffer;		// 픽셀 셰이더 버퍼.
-	ID3D11InputLayout* vertexInputLayout;	// 입력 레이아웃.
+	ID3D11Buffer* vertexBuffer = nullptr;		// 정점 버퍼.
+	ID3D11VertexShader* vertexShader = nullptr;		// 정점 셰이더.
+	ID3D11PixelShader* pixelShader = nullptr;		// 픽셀 셰이더.
+	ID3DBlob* vertexShaderBuffer = nullptr;		// 정점 셰이더 버퍼.
+	ID3DBlob* pixelShaderBuffer = nullptr;		// 픽셀 셰이더 버퍼.
+	ID3D11InputLayout* vertexInputLayout = nullptr;	// 입력 레이아웃.
 
 
 	// Our state

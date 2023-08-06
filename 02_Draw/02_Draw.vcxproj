@@ -132,7 +132,11 @@
     <ClInclude Include="TutorialApp.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BasicVertexShader.hlsl" />
+    <FxCompile Include="BasicVertexShader.hlsl">
+      <FileType>Document</FileType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <ClCompile Include="TutorialApp.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
@@ -142,7 +146,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl" />
+    <FxCompile Include="BasicPixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
