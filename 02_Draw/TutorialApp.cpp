@@ -7,7 +7,6 @@
 #include <directxtk/simplemath.h>
 #include <comdef.h>
 
-
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
 
@@ -93,7 +92,7 @@ bool TutorialApp::InitD3D()
 
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, L"장치 생성 실패.", L"오류.", MB_OK);
+		LOG_ERROR(L"%s",GetComErrorString(hr));
 		return false;
 	}
 
@@ -105,7 +104,7 @@ bool TutorialApp::InitD3D()
 
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, L"백버퍼 생성 실패.", L"오류.", MB_OK);
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
@@ -115,7 +114,7 @@ bool TutorialApp::InitD3D()
 
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, L"렌더 타겟 생성 실패.", L"오류.", MB_OK);
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 

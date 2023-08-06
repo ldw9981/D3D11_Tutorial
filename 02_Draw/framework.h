@@ -13,6 +13,5 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
 #include <d3d11.h>
 #include <d3dcompiler.h>
