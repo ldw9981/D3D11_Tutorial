@@ -1,7 +1,7 @@
 #pragma once
 #include "../Framework/GameApp.h"
 #include <d3d11.h>
-#include "../imgui/imgui.h"
+#include <imgui.h>
 
 class TutorialApp :
     public GameApp

@@ -26,9 +26,9 @@ public:
 public:
 	// 윈도우 정보 등록,생성,보이기 한다.
 	virtual bool Initialize(UINT Width, UINT Height);
-	virtual void Loop();
-	virtual void Update();
-	virtual void Render();
+	virtual bool Run();
+	virtual void Update()=0; // 상속 받은 클래스에서 구현
+	virtual void Render()=0; // 상속 받은 클래스에서 구현
 
 	const SIZE& GetClientSize() { return m_ClientSize; 	}
 

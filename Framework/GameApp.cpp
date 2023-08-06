@@ -60,7 +60,7 @@ bool GameApp::Initialize(UINT Width, UINT Height)
 	return true;
 }
 
-void GameApp::Loop()
+bool GameApp::Run()
 {
 	// PeekMessage 메세지가 있으면 true,없으면 false
 	while (TRUE)
@@ -80,18 +80,10 @@ void GameApp::Loop()
 			Render();
 		}
 	}
-}
-
-void GameApp::Update()
-{
-
+	return 0;
 }
 
 
-void GameApp::Render()
-{
-	
-}
 
 //
 //  함수: WndProc(HWND, UINT, WPARAM, LPARAM)

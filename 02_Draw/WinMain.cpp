@@ -16,6 +16,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (!App.Initialize(1024, 768))
 		return -1;	
 
-	App.Loop();
-	return 1;
+	return App.Run();
 }
