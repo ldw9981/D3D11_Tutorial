@@ -1,8 +1,5 @@
 #include "framework.h"
 #include "TutorialApp.h"
-#include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
 #include "../Common/Helper.h"
 #include <directxtk/simplemath.h>
 #include <comdef.h>
@@ -44,13 +41,10 @@ void TutorialApp::Update()
 
 void TutorialApp::Render()
 {
-
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
-
 
 	// 화면 칠하기.
 	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
-
 
 	// Render a triangle
 	pDeviceContext->VSSetShader(vertexShader, nullptr, 0);
@@ -85,48 +79,35 @@ bool TutorialApp::InitD3D()
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
-	// 장치 및 스왑체인 생성.
+	// 1. 장치 와 스왑체인 생성.
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice,
-		NULL, &pDeviceContext);
-
-	if (FAILED(hr))
-	{
-		LOG_ERROR(L"%s",GetComErrorString(hr));
+		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice, NULL, &pDeviceContext);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
-
-	// 백버퍼(텍스처).
+	
+	// 2. 렌더타겟뷰 생성.
+	// 스왑체인의 내부의 백버퍼를 얻습니다. 
 	ID3D11Texture2D* pBackBufferTexture;
-	hr = pSwapChain->GetBuffer(NULL,
-		__uuidof(ID3D11Texture2D),
-		(void**)&pBackBufferTexture);
-
-	if (FAILED(hr))
-	{
+	hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
+	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
-	// 렌더 타겟 생성.
+	// 스왑체인의 백버퍼를 이용하는 렌더타겟뷰를 생성합니다.
 	hr = pDevice->CreateRenderTargetView(
 		pBackBufferTexture, NULL, &pRenderTargetView);
-
-	if (FAILED(hr))
-	{
+	// 렌더타겟뷰를 만들었으므로 백버퍼 텍스처 인터페이스는 더이상 필요하지 않습니다.
+	SAFE_RELEASE(pBackBufferTexture);
+	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
-	// 렌더 타겟 설정.
+	//3. 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
 	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, NULL);
-
-	// 백버퍼 텍스처 해제.
-	if (pBackBufferTexture)
-	{
-		pBackBufferTexture->Release();
-		pBackBufferTexture = NULL;
-	}
 	return true;
 }
 
@@ -140,63 +121,50 @@ void TutorialApp::UninitD3D()
 }
 
 bool TutorialApp::InitScene()
-{
-	// 셰이더 컴파일.
-	HRESULT hr;
-	ID3D10Blob* errorMessage = nullptr;
-	/*
-	D3DCompileFromFile(_In_ LPCWSTR pFileName,
-		_In_reads_opt_(_Inexpressible_(pDefines->Name != NULL)) CONST D3D_SHADER_MACRO * pDefines,
-		_In_opt_ ID3DInclude * pInclude,
-		_In_ LPCSTR pEntrypoint,
-		_In_ LPCSTR pTarget,
-		_In_ UINT Flags1,
-		_In_ UINT Flags2,
-		_Out_ ID3DBlob * *ppCode,
-		_Always_(_Outptr_opt_result_maybenull_) ID3DBlob * *ppErrorMsgs);
-		*/
-	// 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
-	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",
-		NULL,
-		NULL,
-		"main",
-		"vs_4_0",
-		NULL,
-		NULL,	
-		&vertexShaderBuffer,
-		&errorMessage);
+{	
+	HRESULT hr; // 결과값.
+	ID3D10Blob* errorMessage = nullptr;	 // 에러 메시지를 저장할 버퍼.
+	
+	//////////////////////////////////////////////////////////////////////////
+	// 정점 셰이더	 
+	// 1. 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
+	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
+		NULL,NULL,
+		"main",	// 시작 함수 이름
+		"vs_4_0", // 정점 셰이더 버전.
+		NULL,NULL,	
+		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
+		&errorMessage);	// 컴파일 에러 메시지가 저장될 버퍼.
 
 	if (FAILED(hr))
 	{
-		MessageBoxA(m_hWnd,(char*)errorMessage->GetBufferPointer() ,"오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);
+		MessageBoxA(m_hWnd,(char*)errorMessage->GetBufferPointer() ,"오류.", MB_OK);		
 		return false;
 	}
+	SAFE_RELEASE(errorMessage);	// 에러 메세지 더이상 필요없음
 
-	// 정점 셰이더 생성.
+	// 2. 정점 셰이더 생성.
 	hr = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &vertexShader);
 
-	if (FAILED(hr))
-	{
-		MessageBox(m_hWnd, L"정점 셰이더 생성 실패.", L"오류.", MB_OK);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
-	// 정점 셰이더 단계에 바인딩(설정, 연결)binding.
+	// 3. 정점 셰이더 단계에 바인딩(설정, 연결)binding.
 	pDeviceContext->VSSetShader(vertexShader, NULL, NULL);
 
-	// 픽셀 셰이더 컴파일.
-	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl",
-		NULL,
-		NULL,
-		"main",
-		"ps_4_0",
-		NULL,
-		NULL,
-		&pixelShaderBuffer,
-		&errorMessage);
-
+	//////////////////////////////////////////////////////////////////////////
+	// 픽셀 셰이더 
+	// 1. 컴파일.
+	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
+		NULL,NULL,
+		"main",		// 시작 함수 이름
+		"ps_4_0",	// 정점 셰이더 버전.
+		NULL,NULL,
+		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
+		&errorMessage);		// 컴파일 에러 메시지가 저장될 버퍼.
 	
 	if (FAILED(hr))
 	{
@@ -204,22 +172,18 @@ bool TutorialApp::InitScene()
 		SAFE_RELEASE(errorMessage);
 		return false;
 	}
-
-	// 픽셀 셰이더 생성.
+	// 2. 픽셀 셰이더 생성.
 	hr = pDevice->CreatePixelShader(
 		pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &pixelShader);
 
-	if (FAILED(hr))
-	{
-		MessageBox(m_hWnd, L"픽셀 셰이더 생성 실패.", L"오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
-	// 픽셀 셰이더 설정.
-	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);
-	
+	//3. 픽셀 셰이더 설정.
+	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);	
 
 	// 정점 데이터(배열) 생성.
 	Vector3 vertices[] =
@@ -286,7 +250,7 @@ bool TutorialApp::InitScene()
 	// 정점을 이어서 그릴 방식 설정.
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// 뷰포트 설정.
+	// 뷰포트 설정.	
 	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
@@ -298,8 +262,6 @@ bool TutorialApp::InitScene()
 
 	// 뷰포트 설정.
 	pDeviceContext->RSSetViewports(1, &viewport);
-
-
 	return true;
 }
 
