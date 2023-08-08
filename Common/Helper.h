@@ -1,8 +1,5 @@
 #pragma once
-
-/*
-	Render에서 유용한 매크로나 함수를 정의한다.
-*/
+#include <wchar.h>
 
 #define LOG_ERROR(...) \
 { \
@@ -12,7 +9,7 @@
     swprintf_s(message,256, __VA_ARGS__); \
     wcscat_s(buffer, message); \
     wcscat_s(buffer, L"\n"); \
-    ::MessageBox(NULL, buffer, L"LOG_ERROR", MB_OK); \
+    MessageBoxW(NULL, buffer, L"LOG_ERROR", MB_OK); \
 }
 
 #define LOG_WARNING(...) \
@@ -23,7 +20,7 @@
     swprintf_s(message,256, __VA_ARGS__); \
     wcscat_s(buffer, message); \
     wcscat_s(buffer, L"\n"); \
-    OutputDebugString(buffer); \
+    OutputDebugStringW(buffer); \
 }
 
 #define LOG_MESSAGE(...) \
@@ -34,7 +31,7 @@
     swprintf_s(message,256, __VA_ARGS__); \
     wcscat_s(buffer, message); \
     wcscat_s(buffer, L"\n"); \
-    OutputDebugString(buffer); \
+    OutputDebugStringW(buffer); \
 }
 
 
@@ -59,4 +56,4 @@ void SAFE_DELETE(T* p)
 }
 
 
-LPCTSTR GetComErrorString(HRESULT hr);
+LPCWSTR GetComErrorString(HRESULT hr);
