@@ -1,9 +1,7 @@
 #pragma once
-
+#include "TimeSystem.h"
 #define MAX_LOADSTRING 100
 
-
-class D2DRenderer;
 class GameApp
 {
 public:
@@ -20,16 +18,17 @@ public:
 	WCHAR m_szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 	WCHAR m_szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 	WNDCLASSEXW m_wcex;
-
+	float m_previousTime;
+	float m_currentTime;
 	int  m_nCmdShow;
-
+	GameTimer m_Timer;
 	UINT m_ClientWidth;
 	UINT m_ClientHeight;
 public:
 	// 윈도우 정보 등록,생성,보이기 한다.
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual bool Run();
-	virtual void Update()=0; // 상속 받은 클래스에서 구현
+	virtual void Update(); // 상속 받은 클래스에서 구현
 	virtual void Render()=0; // 상속 받은 클래스에서 구현
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);	

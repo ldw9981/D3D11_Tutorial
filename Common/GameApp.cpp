@@ -57,6 +57,8 @@ bool GameApp::Initialize(UINT Width, UINT Height)
 	// 윈도우 보이기
 	ShowWindow(m_hWnd,SW_SHOW);
 	UpdateWindow(m_hWnd);
+
+	m_currentTime = m_previousTime = (float)GetTickCount64() / 1000.0f;
 	return true;
 }
 
@@ -75,7 +77,7 @@ bool GameApp::Run()
 			DispatchMessage(&m_msg);
 		}
 		else
-		{
+		{			
 			Update();			
 			Render();
 		}
@@ -84,6 +86,11 @@ bool GameApp::Run()
 }
 
 
+
+void GameApp::Update()
+{
+	m_Timer.Tick();
+}
 
 //
 //  함수: WndProc(HWND, UINT, WPARAM, LPARAM)
