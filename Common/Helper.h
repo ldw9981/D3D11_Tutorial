@@ -60,4 +60,3 @@ void SAFE_DELETE(T* p)
 
 
 LPCTSTR GetComErrorString(HRESULT hr);
-
