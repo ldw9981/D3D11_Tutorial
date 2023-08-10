@@ -259,7 +259,7 @@ bool TutorialApp::InitScene()
 	viewport.MaxDepth = 1.0f;
 
 	// ºäÆ÷Æ® ¼³Á¤.
-	pDeviceContext->RSSetViewports(1, &viewport);
+	pDeviceContext->RSSetViewports(1, &viewport);	
 	return true;
 }
 
