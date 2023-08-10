@@ -1,4 +1,5 @@
 #pragma once
+#include <windows.h>
 #include "TimeSystem.h"
 #define MAX_LOADSTRING 100
 
