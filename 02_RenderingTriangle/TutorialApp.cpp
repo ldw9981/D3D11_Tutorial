@@ -121,28 +121,28 @@ void TutorialApp::UninitD3D()
 bool TutorialApp::InitScene()
 {	
 	HRESULT hr; // 결과값.
-	ID3D10Blob* errorMessage = nullptr;	 // 에러 메시지를 저장할 버퍼.
+	ID3D10Blob* errorMessage = nullptr;	 // 컴파일 에러 메시지가 저장될 버퍼.
 	
 	//////////////////////////////////////////////////////////////////////////
-	// 정점 셰이더	 
-	// 1. 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
+	// 버텍스 셰이더	 
+	// 1.  컴파일해서 버퍼에 저장.
 	ID3DBlob* vertexShaderBuffer = nullptr;
 	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
 		NULL,NULL,
 		"main",	// 시작 함수 이름
-		"vs_4_0", // 정점 셰이더 버전.
+		"vs_4_0", //  셰이더 버전.
 		NULL,NULL,	
 		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);	// 컴파일 에러 메시지가 저장될 버퍼.
+		&errorMessage);	
 
 	if (FAILED(hr))
 	{
 		MessageBoxA(m_hWnd,(char*)errorMessage->GetBufferPointer() ,"오류.", MB_OK);		
+		SAFE_RELEASE(errorMessage);	// 컴파일 에러 메세지 더이상 필요없음
 		return false;
 	}
-	SAFE_RELEASE(errorMessage);	// 에러 메세지 더이상 필요없음
 
-	// 2. 정점 셰이더 생성.
+	// 2. DeviceContext에 바인딩 가능한 버텍스 셰이더 리소스 생성.
 	hr = m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
 
@@ -150,10 +150,6 @@ bool TutorialApp::InitScene()
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
-
-	// 3. 정점 셰이더 단계에 바인딩(설정, 연결)binding.
-	m_pDeviceContext->VSSetShader(m_pVertexShader, NULL, NULL);
-
 	//////////////////////////////////////////////////////////////////////////
 	// 픽셀 셰이더 
 	// 1. 컴파일.
@@ -172,7 +168,7 @@ bool TutorialApp::InitScene()
 		SAFE_RELEASE(errorMessage);
 		return false;
 	}
-	// 2. 픽셀 셰이더 생성.
+	// 2. DeviceContext에 바인딩 가능한 픽셀 셰이더 리소스 생성.
 	hr = m_pDevice->CreatePixelShader(
 		pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
@@ -182,9 +178,6 @@ bool TutorialApp::InitScene()
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
-
-	//3. 픽셀 셰이더 설정.
-	m_pDeviceContext->PSSetShader(m_pPixelShader, NULL, NULL);	
 
 	// 정점 데이터(배열) 생성.
 	Vector3 vertices[] =
@@ -238,7 +231,7 @@ bool TutorialApp::InitScene()
 
 	// 입력 레이아웃 생성.
 	hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
-		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pVertexInputLayout);
+		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
 	SAFE_RELEASE(vertexShaderBuffer);
 
 	if (FAILED(hr))
@@ -248,7 +241,7 @@ bool TutorialApp::InitScene()
 	}
 
 	// 입력 레이아웃 바인딩.
-	m_pDeviceContext->IASetInputLayout(m_pVertexInputLayout);
+	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 
 	// 정점을 이어서 그릴 방식 설정.
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -273,5 +266,5 @@ void TutorialApp::UninitScene()
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pVertexShader);
 	SAFE_RELEASE(m_pPixelShader);
-	SAFE_RELEASE(m_pVertexInputLayout);
+	SAFE_RELEASE(m_pInputLayout);
 }

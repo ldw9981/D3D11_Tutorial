@@ -18,7 +18,7 @@ public:
 	ID3D11VertexShader* m_pVertexShader = nullptr;		// 정점 셰이더.
 	ID3D11PixelShader* m_pPixelShader = nullptr;		// 픽셀 셰이더.
 	ID3D11Buffer* m_pVertexBuffer = nullptr;		// 정점 버퍼.
-	ID3D11InputLayout* m_pVertexInputLayout = nullptr;	// 입력 레이아웃.
+	ID3D11InputLayout* m_pInputLayout = nullptr;	// 입력 레이아웃.
 
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
