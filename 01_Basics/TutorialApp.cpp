@@ -34,10 +34,10 @@ void TutorialApp::Render()
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
 	// 화면 칠하기.
-	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
 	// 스왑체인 교체.
-	pSwapChain->Present(0, 0);
+	m_pSwapChain->Present(0, 0);
 }
 
 bool TutorialApp::InitD3D()
@@ -66,7 +66,7 @@ bool TutorialApp::InitD3D()
 
 	// 1. 장치 와 스왑체인 생성.
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice, NULL, &pDeviceContext);
+		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
@@ -75,14 +75,14 @@ bool TutorialApp::InitD3D()
 	// 2. 렌더타겟뷰 생성.
 	// 스왑체인의 내부의 백버퍼를 얻습니다. 
 	ID3D11Texture2D* pBackBufferTexture;
-	hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
+	hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 	// 스왑체인의 백버퍼를 이용하는 렌더타겟뷰를 생성합니다.
-	hr = pDevice->CreateRenderTargetView(
-		pBackBufferTexture, NULL, &pRenderTargetView);
+	hr = m_pDevice->CreateRenderTargetView(
+		pBackBufferTexture, NULL, &m_pRenderTargetView);
 	// 렌더타겟뷰를 만들었으므로 백버퍼 텍스처 인터페이스는 더이상 필요하지 않습니다.
 	SAFE_RELEASE(pBackBufferTexture);
 	if (FAILED(hr)) {
@@ -91,15 +91,14 @@ bool TutorialApp::InitD3D()
 	}
 
 	//3. 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, NULL);
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 	return true;
 }
 
 void TutorialApp::UninitD3D()
 {
-	// Cleanup DirectX
-	SAFE_RELEASE(pDevice);
-	SAFE_RELEASE(pDeviceContext);
-	SAFE_RELEASE(pSwapChain);
-	SAFE_RELEASE(pRenderTargetView);
+	SAFE_RELEASE(m_pDevice);
+	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pSwapChain);
+	SAFE_RELEASE(m_pRenderTargetView);
 }
