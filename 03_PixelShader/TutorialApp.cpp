@@ -55,15 +55,15 @@ void TutorialApp::Render()
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
 	// 화면 칠하기.
-	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
 	// Render a triangle
-	pDeviceContext->VSSetShader(vertexShader, nullptr, 0);
-	pDeviceContext->PSSetShader(pixelShader, nullptr, 0);
-	pDeviceContext->Draw(3, 0);
+	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
+	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
+	m_pDeviceContext->Draw(3, 0);
 
 	// Present the information rendered to the back buffer to the front buffer (the screen)
-	pSwapChain->Present(0, 0);
+	m_pSwapChain->Present(0, 0);
 }
 
 bool TutorialApp::InitD3D()
@@ -92,7 +92,7 @@ bool TutorialApp::InitD3D()
 
 	// 1. 장치 와 스왑체인 생성.
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice, NULL, &pDeviceContext);
+		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
@@ -101,15 +101,15 @@ bool TutorialApp::InitD3D()
 	// 2. 렌더타겟뷰 생성.
 	// 스왑체인의 내부의 백버퍼를 얻습니다. 
 	ID3D11Texture2D* pBackBufferTexture;
-	hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
+	hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
 	// 스왑체인의 백버퍼를 이용하는 렌더타겟뷰를 생성합니다.
-	hr = pDevice->CreateRenderTargetView(
-		pBackBufferTexture, NULL, &pRenderTargetView);
+	hr = m_pDevice->CreateRenderTargetView(
+		pBackBufferTexture, NULL, &m_pRenderTargetView);
 	// 렌더타겟뷰를 만들었으므로 백버퍼 텍스처 인터페이스는 더이상 필요하지 않습니다.
 	SAFE_RELEASE(pBackBufferTexture);
 	if (FAILED(hr)) {
@@ -118,17 +118,17 @@ bool TutorialApp::InitD3D()
 	}
 
 	//3. 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, NULL);
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 	return true;
 }
 
 void TutorialApp::UninitD3D()
 {
 	// Cleanup DirectX
-	SAFE_RELEASE(pDevice);
-	SAFE_RELEASE(pDeviceContext);
-	SAFE_RELEASE(pSwapChain);
-	SAFE_RELEASE(pRenderTargetView);
+	SAFE_RELEASE(m_pDevice);
+	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pSwapChain);
+	SAFE_RELEASE(m_pRenderTargetView);
 }
 
 bool TutorialApp::InitScene()
@@ -139,6 +139,7 @@ bool TutorialApp::InitScene()
 	//////////////////////////////////////////////////////////////////////////
 	// 정점 셰이더	 
 	// 1. 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
+	ID3D10Blob* vertexShaderBuffer = nullptr;
 	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
 		NULL,NULL,
 		"main",	// 시작 함수 이름
@@ -155,8 +156,9 @@ bool TutorialApp::InitScene()
 	SAFE_RELEASE(errorMessage);	// 에러 메세지 더이상 필요없음
 
 	// 2. 정점 셰이더 생성.
-	hr = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
-		vertexShaderBuffer->GetBufferSize(), NULL, &vertexShader);
+	hr = m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
+	
 
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
@@ -164,11 +166,12 @@ bool TutorialApp::InitScene()
 	}
 
 	// 3. 정점 셰이더 단계에 바인딩(설정, 연결)binding.
-	pDeviceContext->VSSetShader(vertexShader, NULL, NULL);
+	m_pDeviceContext->VSSetShader(m_pVertexShader, NULL, NULL);
 
 	//////////////////////////////////////////////////////////////////////////
 	// 픽셀 셰이더 
 	// 1. 컴파일.
+	ID3D10Blob* pixelShaderBuffer = nullptr;
 	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
 		NULL,NULL,
 		"main",		// 시작 함수 이름
@@ -184,9 +187,10 @@ bool TutorialApp::InitScene()
 		return false;
 	}
 	// 2. 픽셀 셰이더 생성.
-	hr = pDevice->CreatePixelShader(
+	hr = m_pDevice->CreatePixelShader(
 		pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &pixelShader);
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
+	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
 
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
@@ -194,7 +198,7 @@ bool TutorialApp::InitScene()
 	}
 
 	//3. 픽셀 셰이더 설정.
-	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);	
+	m_pDeviceContext->PSSetShader(m_pPixelShader, NULL, NULL);	
 
 	// 정점 데이터(배열) 생성.
 	Vertex vertices[] =
@@ -219,7 +223,7 @@ bool TutorialApp::InitScene()
 	vbData.pSysMem = vertices;
 
 	// 정점 버퍼 생성.
-	hr = pDevice->CreateBuffer(&vbDesc, &vbData, &vertexBuffer);
+	hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer);
 	if (FAILED(hr))
 	{
 		MessageBox(m_hWnd, L"정점 버퍼 생성 실패.", L"오류.", MB_OK);
@@ -230,7 +234,7 @@ bool TutorialApp::InitScene()
 	UINT offset = 0;
 
 	// 정점 버퍼 바인딩.
-	pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 
 	// 입력 레이아웃.
 	D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -247,8 +251,9 @@ bool TutorialApp::InitScene()
 	};
 
 	// 입력 레이아웃 생성.
-	hr = pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
-		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &vertexInputLayout);
+	hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
+		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
+	SAFE_RELEASE(vertexShaderBuffer);	// 정점 셰이더 버퍼 더이상 필요없음.
 
 	if (FAILED(hr))
 	{
@@ -257,10 +262,10 @@ bool TutorialApp::InitScene()
 	}
 
 	// 입력 레이아웃 바인딩.
-	pDeviceContext->IASetInputLayout(vertexInputLayout);
+	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 
 	// 정점을 이어서 그릴 방식 설정.
-	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 뷰포트 설정.	
 	D3D11_VIEWPORT viewport;
@@ -273,16 +278,14 @@ bool TutorialApp::InitScene()
 	viewport.MaxDepth = 1.0f;
 
 	// 뷰포트 설정.
-	pDeviceContext->RSSetViewports(1, &viewport);
+	m_pDeviceContext->RSSetViewports(1, &viewport);
 	return true;
 }
 
 void TutorialApp::UninitScene()
 {
-	SAFE_RELEASE(vertexBuffer);
-	SAFE_RELEASE(vertexShader);
-	SAFE_RELEASE(pixelShader);
-	SAFE_RELEASE(vertexShaderBuffer);
-	SAFE_RELEASE(pixelShaderBuffer);
-	SAFE_RELEASE(vertexInputLayout);
+	SAFE_RELEASE(m_pVertexBuffer);
+	SAFE_RELEASE(m_pVertexShader);
+	SAFE_RELEASE(m_pPixelShader);
+	SAFE_RELEASE(m_pInputLayout);
 }
