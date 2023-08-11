@@ -10,18 +10,15 @@ public:
 	~TutorialApp();
 
 	// DirectX 변수.
-	ID3D11Device* pDevice = nullptr;
-	ID3D11DeviceContext* pDeviceContext = nullptr;
-	IDXGISwapChain* pSwapChain = nullptr;
-	ID3D11RenderTargetView* pRenderTargetView = nullptr;
-
-	ID3D11Buffer* vertexBuffer = nullptr;		// 정점 버퍼.
-	ID3D11VertexShader* vertexShader = nullptr;		// 정점 셰이더.
-	ID3D11PixelShader* pixelShader = nullptr;		// 픽셀 셰이더.
-	ID3DBlob* vertexShaderBuffer = nullptr;		// 정점 셰이더 버퍼.
-	ID3DBlob* pixelShaderBuffer = nullptr;		// 픽셀 셰이더 버퍼.
-	ID3D11InputLayout* vertexInputLayout = nullptr;	// 입력 레이아웃.
-
+	ID3D11Device*			m_pDevice = nullptr;			// 디바이스	
+	ID3D11DeviceContext*	m_pDeviceContext = nullptr;		// 즉시 디바이스 컨텍스트
+	IDXGISwapChain*			m_pSwapChain = nullptr;			// 스왑체인
+	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// 렌더링 타겟뷰
+	
+	ID3D11VertexShader*		m_pVertexShader = nullptr;		// 정점 셰이더.
+	ID3D11PixelShader*		m_pPixelShader = nullptr;		// 픽셀 셰이더.
+	ID3D11Buffer*			m_pVertexBuffer = nullptr;		// 정점 버퍼.
+	ID3D11InputLayout*		m_pVertexInputLayout = nullptr;	// 입력 레이아웃.
 
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
