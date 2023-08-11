@@ -26,7 +26,7 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 
 void TutorialApp::Update()
 {
-
+	
 }
 
 void TutorialApp::Render()
