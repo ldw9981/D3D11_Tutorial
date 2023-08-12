@@ -14,14 +14,22 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Shaders">
-      <UniqueIdentifier>{41662297-90b6-47ff-9c40-e1d79732bf88}</UniqueIdentifier>
+      <UniqueIdentifier>{c9c65f68-fc81-4645-a179-819ed8e9f435}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WinMain.cpp">
+    <FxCompile Include="BasicVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BasicPixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="TutorialApp.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="TutorialApp.cpp">
+    <ClCompile Include="WinMain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,14 +37,6 @@
     <ClInclude Include="TutorialApp.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BasicVertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shared.fxh">
