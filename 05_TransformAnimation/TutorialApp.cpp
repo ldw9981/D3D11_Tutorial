@@ -236,7 +236,7 @@ bool TutorialApp::InitScene()
 	// 1. 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
 	ID3D10Blob* vertexShaderBuffer = nullptr;
 	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
-		NULL, NULL,
+		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"main",	// 시작 함수 이름
 		"vs_4_0", // 정점 셰이더 버전.
 		NULL, NULL,
@@ -267,7 +267,7 @@ bool TutorialApp::InitScene()
 	// 1. 컴파일.
 	ID3D10Blob* pixelShaderBuffer = nullptr;	// 픽셀 셰이더 코드가 저장될 버퍼.
 	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
-		NULL, NULL,
+		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"main",		// 시작 함수 이름
 		"ps_4_0",	// 정점 셰이더 버전.
 		NULL, NULL,
