@@ -34,42 +34,8 @@ struct PS_INPUT
 };
 
 
-//--------------------------------------------------------------------------------------
-// Vertex Shader
-//--------------------------------------------------------------------------------------
-PS_INPUT VS(VS_INPUT input)
-{
-    PS_INPUT output = (PS_INPUT) 0;
-    output.Pos = mul(input.Pos, World);
-    output.Pos = mul(output.Pos, View);
-    output.Pos = mul(output.Pos, Projection);
-    output.Norm = mul(float4(input.Norm, 1), World).xyz;
-    
-    return output;
-}
 
 
-//--------------------------------------------------------------------------------------
-// Pixel Shader
-//--------------------------------------------------------------------------------------
-float4 PS(PS_INPUT input) : SV_Target
-{
-    float4 finalColor = 0;
-    
-    //do NdotL lighting for 2 lights
-    for (int i = 0; i < 2; i++)
-    {
-        finalColor += saturate(dot((float3) vLightDir[i], input.Norm) * vLightColor[i]);
-    }
-    finalColor.a = 1;
-    return finalColor;
-}
 
 
-//--------------------------------------------------------------------------------------
-// PSSolid - render a solid color
-//--------------------------------------------------------------------------------------
-float4 PSSolid(PS_INPUT input) : SV_Target
-{
-    return vOutputColor;
-}
+

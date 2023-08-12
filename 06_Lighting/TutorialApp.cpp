@@ -56,62 +56,93 @@ void TutorialApp::Update()
 
 	float t = GameTimer::m_Instance->TotalTime();
 
-	// 1st Cube: Rotate around the origin
-	g_World1 = XMMatrixRotationY(t);
 
-	// 2nd Cube:  Rotate around origin
-	XMMATRIX mSpin = XMMatrixRotationZ(-t);
-	XMMATRIX mOrbit = XMMatrixRotationY(-t * 2.0f);
-	XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
-	XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
-	g_World2 = mScale * mSpin * mTranslate * mOrbit;
+
+
 }
 
 void TutorialApp::Render()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
-	// 화면 칠하기.
-	pDeviceContext->ClearRenderTargetView(pRenderTargetView, color);
+	float t = GameTimer::m_Instance->TotalTime();
+	m_World = XMMatrixRotationY(t);
+
+	// Setup our lighting parameters
+	XMFLOAT4 vLightDirs[2] =
+	{
+		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
+		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
+	};
+	XMFLOAT4 vLightColors[2] =
+	{
+		XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
+		XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
+	};
+
+	// Rotate the second light around the origin
+	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+	XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
+	vLightDir = XMVector3Transform(vLightDir, mRotate);
+	XMStoreFloat4(&vLightDirs[1], vLightDir);
+
+	//
+	// Clear the back buffer
+	//
+
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
 	//
 	// Clear the depth buffer to 1.0 (max depth)
 	//
-	pDeviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	// Update variables for the first cube
+	//
+	// Update matrix variables and lighting variables
 	//
 	ConstantBuffer cb1;
-	cb1.mWorld = XMMatrixTranspose(g_World1);
-	cb1.mView = XMMatrixTranspose(g_View);
-	cb1.mProjection = XMMatrixTranspose(g_Projection);
-	pDeviceContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+	cb1.mWorld = XMMatrixTranspose(m_World);
+	cb1.mView = XMMatrixTranspose(m_View);
+	cb1.mProjection = XMMatrixTranspose(m_Projection);
+	cb1.vLightDir[0] = vLightDirs[0];
+	cb1.vLightDir[1] = vLightDirs[1];
+	cb1.vLightColor[0] = vLightColors[0];
+	cb1.vLightColor[1] = vLightColors[1];
+	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
 	//
-	// Render the first cube
+	// Render the cube
 	//
-	pDeviceContext->VSSetShader(vertexShader, nullptr, 0);
-	pDeviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-	pDeviceContext->PSSetShader(pixelShader, nullptr, 0);
-	pDeviceContext->DrawIndexed(nIndices, 0, 0);
+	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
+	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
+	m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pConstantBuffer);
+	m_pDeviceContext->DrawIndexed(36, 0, 0);
 
 	//
-	// Update variables for the second cube
+	// Render each light
 	//
-	ConstantBuffer cb2;
-	cb2.mWorld = XMMatrixTranspose(g_World2);
-	cb2.mView = XMMatrixTranspose(g_View);
-	cb2.mProjection = XMMatrixTranspose(g_Projection);
-	pDeviceContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb2, 0, 0);
+	for (int m = 0; m < 2; m++)
+	{
+		XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[m]));
+		XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
+		mLight = mLightScale * mLight;
+
+		// Update the world variable to reflect the current light
+		cb1.mWorld = XMMatrixTranspose(mLight);
+		cb1.vOutputColor = vLightColors[m];
+		m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+
+		m_pDeviceContext->PSSetShader(m_pPixelShaderSolid, nullptr, 0);
+		m_pDeviceContext->DrawIndexed(36, 0, 0);
+	}
 
 	//
-	// Render the second cube
+	// Present our back buffer to our front buffer
 	//
-	pDeviceContext->DrawIndexed(nIndices, 0, 0);
-
-	// Present the information rendered to the back buffer to the front buffer (the screen)
-	pSwapChain->Present(0, 0);
+	m_pSwapChain->Present(0, 0);
 }
 
 bool TutorialApp::InitD3D()
@@ -140,7 +171,7 @@ bool TutorialApp::InitD3D()
 
 	// 1. 장치 와 스왑체인 생성.
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice, NULL, &pDeviceContext);
+		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
@@ -149,15 +180,15 @@ bool TutorialApp::InitD3D()
 	// 2. 렌더타겟뷰 생성.
 	// 스왑체인의 내부의 백버퍼를 얻습니다. 
 	ID3D11Texture2D* pBackBufferTexture;
-	hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
+	hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
 	// 스왑체인의 백버퍼를 이용하는 렌더타겟뷰를 생성합니다.
-	hr = pDevice->CreateRenderTargetView(
-		pBackBufferTexture, NULL, &pRenderTargetView);
+	hr = m_pDevice->CreateRenderTargetView(
+		pBackBufferTexture, NULL, &m_pRenderTargetView);
 	// 렌더타겟뷰를 만들었으므로 백버퍼 텍스처 인터페이스는 더이상 필요하지 않습니다.
 	SAFE_RELEASE(pBackBufferTexture);
 	if (FAILED(hr)) {
@@ -178,7 +209,9 @@ bool TutorialApp::InitD3D()
 	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
-	hr = pDevice->CreateTexture2D(&descDepth, nullptr, &g_pDepthStencil);
+
+	ID3D11Texture2D *pDepthStencilTexture = nullptr;
+	hr = m_pDevice->CreateTexture2D(&descDepth, nullptr, &pDepthStencilTexture);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
@@ -189,13 +222,13 @@ bool TutorialApp::InitD3D()
 	descDSV.Format = descDepth.Format;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
-	hr = pDevice->CreateDepthStencilView(g_pDepthStencil, &descDSV, &g_pDepthStencilView);
+	hr = m_pDevice->CreateDepthStencilView(pDepthStencilTexture, &descDSV, &m_pDepthStencilView);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, g_pDepthStencilView);
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 
 	//4. 뷰포트 설정.	
 	D3D11_VIEWPORT viewport;
@@ -208,17 +241,17 @@ bool TutorialApp::InitD3D()
 	viewport.MaxDepth = 1.0f;
 
 	// 뷰포트 설정.
-	pDeviceContext->RSSetViewports(1, &viewport);
+	m_pDeviceContext->RSSetViewports(1, &viewport);
 	return true;
 }
 
 void TutorialApp::UninitD3D()
 {
 	// Cleanup DirectX
-	SAFE_RELEASE(pDevice);
-	SAFE_RELEASE(pDeviceContext);
-	SAFE_RELEASE(pSwapChain);
-	SAFE_RELEASE(pRenderTargetView);
+	SAFE_RELEASE(m_pDevice);
+	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pSwapChain);
+	SAFE_RELEASE(m_pRenderTargetView);
 }
 
 bool TutorialApp::InitScene()
@@ -229,9 +262,10 @@ bool TutorialApp::InitScene()
 	//////////////////////////////////////////////////////////////////////////
 	// 정점 셰이더	 
 	// 1. 정점 셰이더 컴파일해서 정점 셰이더 버퍼에 저장.
+	ID3D10Blob* vertexShaderBuffer = nullptr;
 	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
-		NULL, NULL,
-		"VS",	// 시작 함수 이름
+		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"main",	// 시작 함수 이름
 		"vs_4_0", // 정점 셰이더 버전.
 		NULL, NULL,
 		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
@@ -245,23 +279,49 @@ bool TutorialApp::InitScene()
 	}
 
 	// 2. 정점 셰이더 생성.
-	hr = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
-		vertexShaderBuffer->GetBufferSize(), NULL, &vertexShader);
+	hr = m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader);
 
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
-	// 3. 정점 셰이더 단계에 바인딩(설정, 연결)binding.
-	pDeviceContext->VSSetShader(vertexShader, NULL, NULL);
+	// 입력 레이아웃.
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		/*LPCSTR SemanticName;
+		UINT SemanticIndex;
+		DXGI_FORMAT Format;
+		UINT InputSlot;
+		UINT AlignedByteOffset;
+		D3D11_INPUT_CLASSIFICATION InputSlotClass;
+		UINT InstanceDataStepRate;*/
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	// 입력 레이아웃 생성.
+	hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
+		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
+	SAFE_RELEASE(vertexShaderBuffer);
+
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
+		return false;
+	}
+
+	// 입력 레이아웃 바인딩.
+	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
+
 
 	//////////////////////////////////////////////////////////////////////////
 	// 픽셀 셰이더 
 	// 1. 컴파일.
+	ID3D10Blob* pixelShaderBuffer = nullptr;
 	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
-		NULL, NULL,
-		"PS",		// 시작 함수 이름
+		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"main",		// 시작 함수 이름
 		"ps_4_0",	// 정점 셰이더 버전.
 		NULL, NULL,
 		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
@@ -274,24 +334,23 @@ bool TutorialApp::InitScene()
 		return false;
 	}
 	// 2. 픽셀 셰이더 생성.
-	hr = pDevice->CreatePixelShader(
+	hr = m_pDevice->CreatePixelShader(
 		pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &pixelShader);
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader);
+
+	SAFE_RELEASE(pixelShaderBuffer);
 
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
-
-	//3. 픽셀 셰이더 설정.
-	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);
 
 	//////////////////////////////////////////////////////////////////////////
 	// Solid 픽셀 셰이더 
 	// 1. 컴파일.
 	hr = D3DCompileFromFile(L"SolidPixelShader.hlsl", // 셰이더 파일 이름.
-		NULL, NULL,
-		"PSSolid",		// 시작 함수 이름
+		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"main",		// 시작 함수 이름
 		"ps_4_0",	// 정점 셰이더 버전.
 		NULL, NULL,
 		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
@@ -304,9 +363,9 @@ bool TutorialApp::InitScene()
 		return false;
 	}
 	// 2. 픽셀 셰이더 생성.
-	hr = pDevice->CreatePixelShader(
+	hr = m_pDevice->CreatePixelShader(
 		pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &pixelShader);
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShaderSolid);
 
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
@@ -314,7 +373,7 @@ bool TutorialApp::InitScene()
 	}
 
 	//3. 픽셀 셰이더 설정.
-	pDeviceContext->PSSetShader(pixelShader, NULL, NULL);
+	m_pDeviceContext->PSSetShader(m_pPixelShader, NULL, NULL);
 
 
 
@@ -356,29 +415,25 @@ bool TutorialApp::InitScene()
 		{ Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f) },
 	};
 
+	// 버텍스 버퍼 생성.
 	D3D11_BUFFER_DESC bd = {};
 	bd.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0;
-
-	// 배열 데이터 할당.
-	D3D11_SUBRESOURCE_DATA vbData;
-	ZeroMemory(&vbData, sizeof(vbData));
+	
+	D3D11_SUBRESOURCE_DATA vbData = {};
 	vbData.pSysMem = vertices;
-
-	// 버텍스 버퍼 생성.
-	hr = pDevice->CreateBuffer(&bd, &vbData, &vertexBuffer);
-	if (FAILED(hr))
-	{
-		MessageBox(m_hWnd, L"정점 버퍼 생성 실패.", L"오류.", MB_OK);
+	hr = m_pDevice->CreateBuffer(&bd, &vbData, &m_pVertexBuffer);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
 	// 버텍스 버퍼 바인딩.
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	pDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 
 
 	//5. 인덱스 버퍼
@@ -388,24 +443,24 @@ bool TutorialApp::InitScene()
 		3,1,0,
 		2,1,3,
 
-		0,5,4,
-		1,5,0,
-
-		3,4,7,
-		0,4,3,
-
-		1,6,5,
-		2,6,1,
-
-		2,7,6,
-		3,7,2,
-
 		6,4,5,
 		7,4,6,
+
+		11,9,8,
+		10,9,11,
+
+		14,12,13,
+		15,12,14,
+
+		19,17,16,
+		18,17,19,
+
+		22,20,21,
+		23,20,22
 	};
 
 	// 인덱스 개수 저장.
-	nIndices = ARRAYSIZE(indices);
+	m_nIndices = ARRAYSIZE(indices);
 
 	bd.ByteWidth = sizeof(DWORD) * ARRAYSIZE(indices);
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -417,88 +472,54 @@ bool TutorialApp::InitScene()
 	ibData.pSysMem = indices;
 
 	// 인덱스 버퍼 생성.
-	hr = pDevice->CreateBuffer(&bd, &ibData, &g_pIndexBuffer);
-	if (FAILED(hr))
-	{
-		MessageBox(m_hWnd, L"인덱스 버퍼 생성 실패.", L"오류.", MB_OK);
+	hr = m_pDevice->CreateBuffer(&bd, &ibData, &m_pIndexBuffer);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
 	// 인덱스 버퍼 바인딩(binding).
-	pDeviceContext->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 
-	// 입력 레이아웃.
-	D3D11_INPUT_ELEMENT_DESC layout[] =
-	{
-		/*LPCSTR SemanticName;
-		UINT SemanticIndex;
-		DXGI_FORMAT Format;
-		UINT InputSlot;
-		UINT AlignedByteOffset;
-		D3D11_INPUT_CLASSIFICATION InputSlotClass;
-		UINT InstanceDataStepRate;*/
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-
-	// 입력 레이아웃 생성.
-	hr = pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
-		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &vertexInputLayout);
-
-	if (FAILED(hr))
-	{
-		MessageBox(m_hWnd, L"입력 레이아웃 생성 실패.", L"오류.", MB_OK);
-		return false;
-	}
-
-	// 입력 레이아웃 바인딩.
-	pDeviceContext->IASetInputLayout(vertexInputLayout);
 
 
 	// 정점을 이어서 그릴 방식 설정.
-	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Create the constant buffer
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.ByteWidth = sizeof(ConstantBuffer);
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = 0;
-	hr = pDevice->CreateBuffer(&bd, nullptr, &g_pConstantBuffer);
-	if (FAILED(hr))
-	{
-		MessageBox(m_hWnd, L"상수버퍼 생성 실패.", L"오류.", MB_OK);
+	hr = m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
 
 	// Initialize the world matrix
-	g_World1 = XMMatrixIdentity();
-	g_World2 = XMMatrixIdentity();
+	m_World = XMMatrixIdentity();
+
 
 	// Initialize the view matrix
-	XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+	XMVECTOR Eye = XMVectorSet(0.0f, 4.0f, -10.0f, 0.0f);
 	XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-	g_View = XMMatrixLookAtLH(Eye, At, Up);
+	m_View = XMMatrixLookAtLH(Eye, At, Up);
 
 	// Initialize the projection matrix
-	g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
-
-
-	//g_Projection = XMMatrixOrthographicLH(m_ClientWidth ,m_ClientHeight, 0.0f, 100);
+	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
 
 	return true;
 }
 
 void TutorialApp::UninitScene()
 {
-	SAFE_RELEASE(vertexBuffer);
-	SAFE_RELEASE(vertexShader);
-	SAFE_RELEASE(pixelShader);
-	SAFE_RELEASE(vertexShaderBuffer);
-	SAFE_RELEASE(pixelShaderBuffer);
-	SAFE_RELEASE(vertexInputLayout);
-	SAFE_RELEASE(g_pIndexBuffer);
-	SAFE_RELEASE(g_pDepthStencil);
-	SAFE_RELEASE(g_pDepthStencilView);
+	SAFE_RELEASE(m_pVertexBuffer);
+	SAFE_RELEASE(m_pVertexShader);
+	SAFE_RELEASE(m_pPixelShader);
+	SAFE_RELEASE(m_pInputLayout);
+	SAFE_RELEASE(m_pIndexBuffer);
+	SAFE_RELEASE(m_pDepthStencilView);
 }
