@@ -58,7 +58,7 @@ void TutorialApp::Render()
 
 	// 정점 그리기. (Draw Call. 드로우 콜).
 	//pDeviceContext->Draw(nVertices, 0);
-	m_pDeviceContext->DrawIndexed(nIndices, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 
 	// Present the information rendered to the back buffer to the front buffer (the screen)
 	m_pSwapChain->Present(0, 0);
@@ -249,7 +249,7 @@ bool TutorialApp::InitScene()
 	};
 
 	// 인덱스 개수 저장.
-	nIndices = ARRAYSIZE(indices);
+	m_nIndices = ARRAYSIZE(indices);
 
 	D3D11_BUFFER_DESC ibDesc;
 	ZeroMemory(&ibDesc, sizeof(D3D11_BUFFER_DESC));

@@ -15,19 +15,18 @@ public:
 	TutorialApp(HINSTANCE hInstance);
 	~TutorialApp();
 
-	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스
-
+	// DirectX 변수.
 	ID3D11Device* pDevice = nullptr;
 	ID3D11DeviceContext* pDeviceContext = nullptr;
 	IDXGISwapChain* pSwapChain = nullptr;
 	ID3D11RenderTargetView* pRenderTargetView = nullptr;
 
-
-	// 렌더링 파이프라인에 적용하는 리소스 객체의 인터페이스
-
 	ID3D11Buffer* vertexBuffer = nullptr;		// 정점 버퍼.
 	ID3D11VertexShader* vertexShader = nullptr;		// 정점 셰이더.
 	ID3D11PixelShader* pixelShader = nullptr;		// 픽셀 셰이더.
+
+	ID3D11PixelShader* pixelShaderSolid = nullptr;		// 픽셀 셰이더.
+	
 	ID3DBlob* vertexShaderBuffer = nullptr;		// 정점 셰이더 버퍼.
 	ID3DBlob* pixelShaderBuffer = nullptr;		// 픽셀 셰이더 버퍼.
 	ID3D11InputLayout* vertexInputLayout = nullptr;	// 입력 레이아웃.
@@ -37,7 +36,12 @@ public:
 	ID3D11Buffer* g_pIndexBuffer = nullptr;	
 	ID3D11Buffer* g_pConstantBuffer = nullptr;	// 상수 버퍼.
 
-	Matrix                g_World;
+	// 깊이/스텐실 
+	ID3D11Texture2D* g_pDepthStencil = nullptr;
+	ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
+
+	Matrix                g_World1;
+	Matrix                g_World2;
 	Matrix                g_View;
 	Matrix                g_Projection;
 
