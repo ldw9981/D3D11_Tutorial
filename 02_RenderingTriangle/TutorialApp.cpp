@@ -8,6 +8,12 @@
 
 using namespace DirectX::SimpleMath;
 
+// 정점 선언.
+struct Vertex
+{
+	Vector3 position;		// 위치 정보.
+};
+
 TutorialApp::TutorialApp(HINSTANCE hInstance)
 :GameApp(hInstance)
 {
@@ -127,7 +133,7 @@ bool TutorialApp::InitScene()
 	ID3D10Blob* errorMessage = nullptr;	 // 컴파일 에러 메시지가 저장될 버퍼.	
 
 	//1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
-	Vector3 vertices[] =
+	Vertex vertices[] =
 	{
 		Vector3(0.0f,  0.5f, 0.5f),
 		Vector3(0.5f, -0.5f, 0.5f),
@@ -137,7 +143,7 @@ bool TutorialApp::InitScene()
 	D3D11_BUFFER_DESC vbDesc;
 	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
 	// sizeof(vertices) / sizeof(Vertex).
-	vbDesc.ByteWidth = sizeof(Vector3) * ARRAYSIZE(vertices);
+	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.MiscFlags = 0;
@@ -150,7 +156,7 @@ bool TutorialApp::InitScene()
 	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));
 
 	// 버텍스 버퍼 정보 
-	m_VertextBufferStride = sizeof(Vector3);
+	m_VertextBufferStride = sizeof(Vertex);
 	m_VertextBufferOffset = 0;
 
 
