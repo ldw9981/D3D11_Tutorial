@@ -12,10 +12,6 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 TutorialApp::~TutorialApp()
 {
 	UninitD3D();
-#ifdef _DEBUG
-	m_pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-	SAFE_RELEASE(m_pDebug);	
-#endif
 }
 
 bool TutorialApp::Initialize(UINT Width, UINT Height)
