@@ -1,4 +1,5 @@
 #include "TutorialApp.h"
+#include "../Common/Helper.h"
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
@@ -55,28 +56,26 @@ void TutorialApp::Render()
 
 	ImGui::Render();
 	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };
-	this->pDeviceContext->OMSetRenderTargets(1, &this->pRenderTargetView, nullptr);
-	this->pDeviceContext->ClearRenderTargetView(this->pRenderTargetView, clear_color_with_alpha);
+	this->m_pDeviceContext->OMSetRenderTargets(1, &this->m_pRenderTargetView, nullptr);
+	this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTargetView, clear_color_with_alpha);
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 
 	// 스왑체인 교체.
-	pSwapChain->Present(0, 0);
+	m_pSwapChain->Present(0, 0);
 }
 
 bool TutorialApp::InitD3D()
 {
 	// 결과값.
-	HRESULT hr;
+	HRESULT hr=0;
 
 	// 스왑체인 속성 설정 구조체 생성.
-	DXGI_SWAP_CHAIN_DESC swapDesc;
-	ZeroMemory(&swapDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
+	DXGI_SWAP_CHAIN_DESC swapDesc = {};
 	swapDesc.BufferCount = 1;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapDesc.OutputWindow = m_hWnd;	// 스왑체인 출력할 창 핸들 값.
 	swapDesc.Windowed = true;		// 창 모드 여부 설정.
-	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	// 백버퍼(텍스처)의 가로/세로 크기 설정.
 	swapDesc.BufferDesc.Width = m_ClientWidth;
@@ -92,77 +91,26 @@ bool TutorialApp::InitD3D()
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// 장치 및 스왑체인 생성.
-	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice,
-		NULL, &pDeviceContext);
+	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
+	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
+		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
 
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"장치 생성 실패.", L"오류.", MB_OK);
-		return false;
-	}
-
-	// 백버퍼(텍스처).
-	ID3D11Texture2D* pBackBufferTexture;
-	hr = pSwapChain->GetBuffer(NULL,
-		__uuidof(ID3D11Texture2D),
-		(void**)&pBackBufferTexture);
-
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"백버퍼 생성 실패.", L"오류.", MB_OK);
-		return false;
-	}
-
-	// 렌더 타겟 생성.
-	hr = pDevice->CreateRenderTargetView(
-		pBackBufferTexture, NULL, &pRenderTargetView);
-
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"렌더 타겟 생성 실패.", L"오류.", MB_OK);
-		return false;
-	}
-
-	// 렌더 타겟 설정.
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTargetView, NULL);
-
-	// 백버퍼 텍스처 해제.
-	if (pBackBufferTexture)
-	{
-		pBackBufferTexture->Release();
-		pBackBufferTexture = NULL;
-	}
+	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
+	ID3D11Texture2D* pBackBufferTexture = nullptr;
+	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
+	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
+	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
+	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 	return true;
 }
 
 void TutorialApp::UninitD3D()
 {
-	// Cleanup DirectX
-	if (pDevice)
-	{
-		pDevice->Release();
-		pDevice = NULL;
-	}
-
-	if (pDeviceContext)
-	{
-		pDeviceContext->Release();
-		pDeviceContext = NULL;
-	}
-
-	if (pSwapChain)
-	{
-		pSwapChain->Release();
-		pSwapChain = NULL;
-	}
-
-	if (pRenderTargetView)
-	{
-		pRenderTargetView->Release();
-		pRenderTargetView = NULL;
-	}
+	SAFE_RELEASE(m_pRenderTargetView);	
+	SAFE_RELEASE(m_pSwapChain);
+	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pDevice);
 }
 
 bool TutorialApp::InitImGUI()
@@ -182,7 +130,7 @@ bool TutorialApp::InitImGUI()
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init(m_hWnd);
-	ImGui_ImplDX11_Init(this->pDevice, this->pDeviceContext);
+	ImGui_ImplDX11_Init(this->m_pDevice, this->m_pDeviceContext);
 
 	//
 	return true;
