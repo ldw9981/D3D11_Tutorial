@@ -118,9 +118,6 @@ bool TutorialApp::InitD3D()
 
 void TutorialApp::UninitD3D()
 {
-	// 디바이스 컨텍스트을 기본 설정으로 다시 설정합니다. 내부 참조가 해제된다.
-	m_pDeviceContext->ClearState();
-
 	SAFE_RELEASE(m_pRenderTargetView);
 	SAFE_RELEASE(m_pSwapChain);
 	SAFE_RELEASE(m_pDeviceContext);
