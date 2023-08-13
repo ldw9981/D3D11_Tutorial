@@ -76,15 +76,6 @@ bool TutorialApp::InitD3D()
 		return false;
 	}
 
-#ifdef _DEBUG
-	hr = m_pDevice->QueryInterface(__uuidof(ID3D11Debug), (void**)&m_pDebug);
-	if (FAILED(hr)) {
-		LOG_ERROR(L"%s", GetComErrorString(hr));
-		return false;
-	}
-#endif
-
-
 	// 2. 렌더타겟뷰 생성.
 	// 스왑체인의 내부의 백버퍼를 얻습니다. 
 	ID3D11Texture2D* pBackBufferTexture;
