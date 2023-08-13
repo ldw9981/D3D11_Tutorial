@@ -34,6 +34,7 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
+	UninitScene();
 	UninitD3D();
 }
 

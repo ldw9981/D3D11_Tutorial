@@ -16,6 +16,7 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
+	UninitScene();
 	UninitD3D();	
 }
 
@@ -77,8 +78,12 @@ bool TutorialApp::InitD3D()
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
+	UINT creationFlags = 0;
+#ifdef _DEBUG
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 	// 1. 장치 와 스왑체인 생성.
-	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
+	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
@@ -111,11 +116,10 @@ bool TutorialApp::InitD3D()
 
 void TutorialApp::UninitD3D()
 {
-	// Cleanup DirectX
-	SAFE_RELEASE(m_pDevice);
-	SAFE_RELEASE(m_pDeviceContext);
-	SAFE_RELEASE(m_pSwapChain);
 	SAFE_RELEASE(m_pRenderTargetView);
+	SAFE_RELEASE(m_pSwapChain);
+	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pDevice);
 }
 
 bool TutorialApp::InitScene()
@@ -264,7 +268,7 @@ bool TutorialApp::InitScene()
 void TutorialApp::UninitScene()
 {
 	SAFE_RELEASE(m_pVertexBuffer);
+	SAFE_RELEASE(m_pInputLayout);
 	SAFE_RELEASE(m_pVertexShader);
 	SAFE_RELEASE(m_pPixelShader);
-	SAFE_RELEASE(m_pInputLayout);
 }

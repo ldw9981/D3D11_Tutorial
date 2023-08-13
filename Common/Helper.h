@@ -1,5 +1,6 @@
 #pragma once
 #include <wchar.h>
+#include <d3d11.h>
 
 #define LOG_ERROR(...) \
 { \
@@ -57,3 +58,4 @@ void SAFE_DELETE(T* p)
 
 
 LPCWSTR GetComErrorString(HRESULT hr);
+void ReportLiveObjects(ID3D11Device* pDevice);

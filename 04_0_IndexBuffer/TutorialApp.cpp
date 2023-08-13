@@ -27,7 +27,8 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
-	UninitD3D();	
+	UninitScene();
+	UninitD3D();
 }
 
 bool TutorialApp::Initialize(UINT Width, UINT Height)
@@ -121,7 +122,7 @@ bool TutorialApp::InitD3D()
 }
 
 void TutorialApp::UninitD3D()
-{
+{	
 	// Cleanup DirectX
 	SAFE_RELEASE(m_pDevice);
 	SAFE_RELEASE(m_pDeviceContext);

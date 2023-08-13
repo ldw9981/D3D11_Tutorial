@@ -9,4 +9,3 @@ LPCWSTR GetComErrorString(HRESULT hr)
 	LPCWSTR errMsg = err.ErrorMessage();
 	return errMsg;
 }
-

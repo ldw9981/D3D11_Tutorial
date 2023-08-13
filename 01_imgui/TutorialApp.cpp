@@ -88,6 +88,10 @@ bool TutorialApp::InitD3D()
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
+	UINT creationFlags = 0;
+#ifdef _DEBUG
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 	// 장치 및 스왑체인 생성.
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &pSwapChain, &pDevice,

@@ -29,7 +29,8 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 
 TutorialApp::~TutorialApp()
 {
-	UninitD3D();	
+	UninitScene();
+	UninitD3D();
 }
 
 bool TutorialApp::Initialize(UINT Width, UINT Height)

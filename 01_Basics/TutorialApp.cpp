@@ -12,6 +12,10 @@ TutorialApp::TutorialApp(HINSTANCE hInstance)
 TutorialApp::~TutorialApp()
 {
 	UninitD3D();
+#ifdef _DEBUG
+	m_pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	SAFE_RELEASE(m_pDebug);	
+#endif
 }
 
 bool TutorialApp::Initialize(UINT Width, UINT Height)
@@ -64,13 +68,26 @@ bool TutorialApp::InitD3D()
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
+	UINT creationFlags = 0;
+#ifdef _DEBUG
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 	// 1. 장치 와 스왑체인 생성.
-	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
+	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext);
 	if (FAILED(hr)) {
 		LOG_ERROR(L"%s", GetComErrorString(hr));
 		return false;
 	}
+
+#ifdef _DEBUG
+	hr = m_pDevice->QueryInterface(__uuidof(ID3D11Debug), (void**)&m_pDebug);
+	if (FAILED(hr)) {
+		LOG_ERROR(L"%s", GetComErrorString(hr));
+		return false;
+	}
+#endif
+
 
 	// 2. 렌더타겟뷰 생성.
 	// 스왑체인의 내부의 백버퍼를 얻습니다. 
@@ -96,9 +113,9 @@ bool TutorialApp::InitD3D()
 }
 
 void TutorialApp::UninitD3D()
-{
-	SAFE_RELEASE(m_pDevice);
+{	
+	SAFE_RELEASE(m_pRenderTargetView);
 	SAFE_RELEASE(m_pDeviceContext);
 	SAFE_RELEASE(m_pSwapChain);
-	SAFE_RELEASE(m_pRenderTargetView);
+	SAFE_RELEASE(m_pDevice);
 }
