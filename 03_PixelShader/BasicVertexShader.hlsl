@@ -1,14 +1,10 @@
+#include "Shared.fxh"
 // ¡§¡° ºŒ¿Ã¥ı.
 
-struct VS_OUTPUT
-{
-    float4 pos : SV_POSITION;
-    float4 color : COLOR;
-};
 
-VS_OUTPUT main(float4 pos : POSITION, float4 color : COLOR)
+PS_INPUT main(float4 pos : POSITION, float4 color : COLOR)
 {
-    VS_OUTPUT output;
+    PS_INPUT output;
     output.pos = pos;
     output.color = color;
     return output;
