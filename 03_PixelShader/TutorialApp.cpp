@@ -171,11 +171,16 @@ bool TutorialApp::InitScene()
 
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
 	ID3D10Blob* vertexShaderBuffer = nullptr;
+	UINT compileFlags = 0;
+#if defined(DEBUG) || defined(_DEBUG)  
+	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
 	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
 		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"main",	// 시작 함수 이름
 		"vs_4_0", // 정점 셰이더 버전.
-		NULL, NULL,
+		compileFlags, 
+		NULL,
 		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
 		&errorMessage);	// 컴파일 에러 메시지가 저장될 버퍼.
 
@@ -216,7 +221,8 @@ bool TutorialApp::InitScene()
 		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		"main",		// 시작 함수 이름
 		"ps_4_0",	// 정점 셰이더 버전.
-		NULL, NULL,
+		compileFlags,
+		NULL,
 		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
 		&errorMessage);		// 컴파일 에러 메시지가 저장될 버퍼.
 
