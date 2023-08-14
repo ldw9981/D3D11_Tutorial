@@ -145,7 +145,7 @@ bool TutorialApp::InitD3D()
 	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
-	//4. 뷰포트 설정.	
+	//5. 뷰포트 설정.	
 	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
@@ -156,7 +156,7 @@ bool TutorialApp::InitD3D()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-	//5. 뎊스&스텐실 뷰 생성
+	//6. 뎊스&스텐실 뷰 생성
 	D3D11_TEXTURE2D_DESC descDepth = {};
 	descDepth.Width = m_ClientWidth;
 	descDepth.Height = m_ClientHeight;
@@ -188,7 +188,6 @@ bool TutorialApp::InitD3D()
 
 void TutorialApp::UninitD3D()
 {
-	// Cleanup DirectX
 	SAFE_RELEASE(m_pDevice);
 	SAFE_RELEASE(m_pDeviceContext);
 	SAFE_RELEASE(m_pSwapChain);
@@ -265,23 +264,12 @@ bool TutorialApp::InitScene()
 	// 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
 	WORD indices[] =
 	{
-		3,1,0,
-		2,1,3,
-
-		0,5,4,
-		1,5,0,
-
-		3,4,7,
-		0,4,3,
-
-		1,6,5,
-		2,6,1,
-
-		2,7,6,
-		3,7,2,
-
-		6,4,5,
-		7,4,6,
+		3,1,0,  2,1,3,
+		0,5,4,  1,5,0,
+		3,4,7,  0,4,3,
+		1,6,5,  2,6,1,
+		2,7,6,  3,7,2,
+		6,4,5,  7,4,6,
 	};
 
 	// 인덱스 개수 저장.
@@ -321,33 +309,22 @@ bool TutorialApp::InitScene()
 
 
 	// 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
-
-
-
-
-
-	
-
-
-	// Create the constant buffer
+	bd = {};
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.ByteWidth = sizeof(ConstantBuffer);
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = 0;
 	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer));
 
-	// Initialize the world matrix
+	
+	// 쉐이더에 상수버퍼에 전달할 시스템 메모리 데이터 초기화
 	m_World1 = XMMatrixIdentity();
 	m_World2 = XMMatrixIdentity();
 
-	// Initialize the view matrix
 	XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
 	XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
 	m_View = XMMatrixLookAtLH(Eye, At, Up);
-
-	// Initialize the projection matrix
 	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
 	return true;
 }
