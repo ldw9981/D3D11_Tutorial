@@ -60,7 +60,7 @@ void TutorialApp::Render()
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정.
 	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_VertextBufferStride, &m_VertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
-	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 
@@ -71,9 +71,8 @@ void TutorialApp::Render()
 }
 
 bool TutorialApp::InitD3D()
-{
-	// 결과값.
-	HRESULT hr;
+{	
+	HRESULT hr=0;
 
 	// 스왑체인 속성 설정 구조체 생성.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
@@ -156,20 +155,14 @@ bool TutorialApp::InitScene()
 		Vertex(Vector3(0.5f, -0.5f, 0.5f), Vector4(0.0f, 0.0f, 1.0f, 1.0f))
 	};
 
-	D3D11_BUFFER_DESC vbDesc;
-	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
+	D3D11_BUFFER_DESC vbDesc = {};
 	// sizeof(vertices) / sizeof(Vertex).
 	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;
-
-	// 배열 데이터 할당.
-	D3D11_SUBRESOURCE_DATA vbData;
-	ZeroMemory(&vbData, sizeof(vbData));
-	vbData.pSysMem = vertices;
-
-	// 버텍스 버퍼 생성.
-	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;	
+	D3D11_SUBRESOURCE_DATA vbData = {};
+	vbData.pSysMem = vertices;	// 배열 데이터 할당.
+	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));  
 	
 	// 버텍스 버퍼 정보
 	m_VertextBufferStride = sizeof(Vertex);
@@ -178,30 +171,11 @@ bool TutorialApp::InitScene()
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
-		/*LPCSTR SemanticName;
-		UINT SemanticIndex;
-		DXGI_FORMAT Format;
-		UINT InputSlot;
-		UINT AlignedByteOffset;
-		D3D11_INPUT_CLASSIFICATION InputSlotClass;
-		UINT InstanceDataStepRate;*/
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
-		NULL, NULL,
-		"main",	// 시작 함수 이름
-		"vs_4_0", // 정점 셰이더 버전.
-		NULL, NULL,
-		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);	// 컴파일 에러 메시지가 저장될 버퍼.
-	if (FAILED(hr))
-	{
-		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);	// 에러 메세지 더이상 필요없음
-		return false;
-	}
+	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));	
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));
 
@@ -211,14 +185,14 @@ bool TutorialApp::InitScene()
 	SAFE_RELEASE(vertexShaderBuffer);	// 버퍼 해제.
 
 	// 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
-	DWORD indices[] =
+	WORD indices[] =
 	{
 		0, 1, 2,
 		2, 1, 3
 	};
 	m_nIndices = ARRAYSIZE(indices);	// 인덱스 개수 저장.
 	D3D11_BUFFER_DESC ibDesc = {};
-	ibDesc.ByteWidth = sizeof(DWORD) * ARRAYSIZE(indices);
+	ibDesc.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
 	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibDesc.Usage = D3D11_USAGE_DEFAULT;
 	D3D11_SUBRESOURCE_DATA ibData = {};
@@ -227,25 +201,10 @@ bool TutorialApp::InitScene()
 
 	// 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
-		NULL,NULL,
-		"main",		// 시작 함수 이름
-		"ps_4_0",	// 정점 셰이더 버전.
-		NULL,NULL,
-		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);		// 컴파일 에러 메시지가 저장될 버퍼.
-	
-	if (FAILED(hr))
-	{
-		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);	// 에러 메세지 더이상 필요없음
-		return false;
-	}
-
+	HR_T( CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
 	HR_T( m_pDevice->CreatePixelShader( pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
 	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
-
 	return true;
 }
 
