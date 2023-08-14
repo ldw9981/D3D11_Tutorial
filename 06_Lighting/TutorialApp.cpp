@@ -56,53 +56,35 @@ void TutorialApp::Update()
 	__super::Update();
 
 	float t = GameTimer::m_Instance->TotalTime();
+	m_World = XMMatrixRotationY(t);
 
+	
+	m_LightDirsEvaluated[0] = m_InitialLightDirs[0];
 
-
-
-
+	// Rotate the second light around the origin
+	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+	XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
+	vLightDir = XMVector3Transform(vLightDir, mRotate);
+	XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);
 }
 
 void TutorialApp::Render()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
-
-	float t = GameTimer::m_Instance->TotalTime();
-	m_World = XMMatrixRotationY(t);
-
-	// Setup our lighting parameters
-	XMFLOAT4 vLightDirs[2] =
-	{
-		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
-		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
-	};
-	XMFLOAT4 vLightColors[2] =
-	{
-		XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
-		XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
-	};
-
-	// Rotate the second light around the origin
-	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
-	XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
-	vLightDir = XMVector3Transform(vLightDir, mRotate);
-	XMStoreFloat4(&vLightDirs[1], vLightDir);
-
+	
 	// Clear 
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	//
 	// Update matrix variables and lighting variables
-	//
 	ConstantBuffer cb1;
 	cb1.mWorld = XMMatrixTranspose(m_World);
 	cb1.mView = XMMatrixTranspose(m_View);
 	cb1.mProjection = XMMatrixTranspose(m_Projection);
-	cb1.vLightDir[0] = vLightDirs[0];
-	cb1.vLightDir[1] = vLightDirs[1];
-	cb1.vLightColor[0] = vLightColors[0];
-	cb1.vLightColor[1] = vLightColors[1];
+	cb1.vLightDir[0] = m_LightDirsEvaluated[0];
+	cb1.vLightDir[1] = m_LightDirsEvaluated[1];
+	cb1.vLightColor[0] = m_LightColors[0];
+	cb1.vLightColor[1] = m_LightColors[1];
 	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
@@ -117,23 +99,23 @@ void TutorialApp::Render()
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 
-	m_pDeviceContext->DrawIndexed(36, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 
 	
 	// Render each light	
 	for (int m = 0; m < 2; m++)
 	{
-		XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[m]));
+		XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&m_LightDirsEvaluated[m]));
 		XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
 		mLight = mLightScale * mLight;
 
 		// Update the world variable to reflect the current light
 		cb1.mWorld = XMMatrixTranspose(mLight);
-		cb1.vOutputColor = vLightColors[m];
+		cb1.vOutputColor = m_LightColors[m];
 		m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
 		m_pDeviceContext->PSSetShader(m_pPixelShaderSolid, nullptr, 0);
-		m_pDeviceContext->DrawIndexed(36, 0, 0);
+		m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 	}
 
 	//
@@ -388,11 +370,7 @@ bool TutorialApp::InitScene()
 	bd.ByteWidth = sizeof(ConstantBuffer);
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = 0;
-	hr = m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer);
-	if (FAILED(hr)) {
-		LOG_ERROR(L"%s", GetComErrorString(hr));
-		return false;
-	}
+	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer));
 
 	// 초기값설정
 	m_World = XMMatrixIdentity();

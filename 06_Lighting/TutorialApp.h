@@ -38,6 +38,18 @@ public:
 	Matrix                m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_Projection;			// 단위장치좌표계( Normalized Device Coordinate) 공간으로 변환을 위한 행렬.
 
+	XMFLOAT4 m_LightColors[2] =
+	{
+		XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
+		XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
+	};
+	XMFLOAT4 m_InitialLightDirs[2] =
+	{
+		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
+		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
+	};	
+	XMFLOAT4 m_LightDirsEvaluated[2] = {};
+
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
 	virtual void Render();
