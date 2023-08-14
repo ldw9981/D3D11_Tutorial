@@ -48,7 +48,7 @@ public:
 		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
 		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 	};	
-	XMFLOAT4 m_LightDirsEvaluated[2] = {};
+	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// 계산된 라이트 방향
 
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
