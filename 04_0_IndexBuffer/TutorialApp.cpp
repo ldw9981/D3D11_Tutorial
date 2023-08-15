@@ -138,8 +138,6 @@ void TutorialApp::UninitD3D()
 bool TutorialApp::InitScene()
 {	
 	HRESULT hr=0; // 결과값.
-	ID3D10Blob* errorMessage = nullptr;	 // 에러 메시지를 저장할 버퍼.
-
 	// 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
 	// Normalized Device Coordinate
 	//   0-----1
@@ -156,16 +154,13 @@ bool TutorialApp::InitScene()
 	};
 
 	D3D11_BUFFER_DESC vbDesc = {};
-	// sizeof(vertices) / sizeof(Vertex).
 	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;	
 	D3D11_SUBRESOURCE_DATA vbData = {};
 	vbData.pSysMem = vertices;	// 배열 데이터 할당.
 	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));  
-	
-	// 버텍스 버퍼 정보
-	m_VertextBufferStride = sizeof(Vertex);
+	m_VertextBufferStride = sizeof(Vertex);		// 버텍스 버퍼 정보
 	m_VertextBufferOffset = 0;
 
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
