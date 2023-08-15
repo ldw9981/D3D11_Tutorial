@@ -38,4 +38,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shared.fxh">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
 </Project>

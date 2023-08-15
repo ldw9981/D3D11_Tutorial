@@ -1,10 +1,4 @@
-// «»ºø ºŒ¿Ã¥ı(Ω¶¿Ã¥ı/ºŒ¿Ã¥ı).
-
-struct PS_INPUT
-{
-    float4 Pos : SV_POSITION;
-    float4 Color : COLOR0;
-};
+#include <shared.fxh>
 
 //--------------------------------------------------------------------------------------
 // Pixel Shader
