@@ -4,12 +4,21 @@
 Texture2D txDiffuse : register(t0);
 SamplerState samLinear : register(s0);
 
-cbuffer ConstantBuffer : register(b0)
+cbuffer cbNeverChanges : register(b0)
+{
+    matrix View;
+};
+
+cbuffer cbChangeOnResize : register(b1)
+{
+    matrix Projection;
+};
+
+cbuffer cbChangesEveryFrame : register(b2)
 {
     matrix World;
-    matrix View;
-    matrix Projection;
-}
+    float4 vMeshColor;
+};
 
 
 //--------------------------------------------------------------------------------------

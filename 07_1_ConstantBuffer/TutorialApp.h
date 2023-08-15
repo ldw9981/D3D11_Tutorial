@@ -23,16 +23,21 @@ public:
 	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;	// 깊이/스텐실 뷰
 
 	// 렌더링 파이프라인에 적용하는 리소스 객체의 인터페이스
-	ID3D11Buffer* m_pVertexBuffer = nullptr;		// 정점 버퍼.
-	ID3D11Buffer* m_pIndexBuffer = nullptr;
+	ID3D11Buffer* m_pVertexBuffer = nullptr;			// 버텍스 버퍼.
+	ID3D11Buffer* m_pIndexBuffer = nullptr;				// 인덱스 버퍼.
 	ID3D11VertexShader* m_pVertexShader = nullptr;		// 정점 셰이더.
 	ID3D11PixelShader* m_pPixelShader = nullptr;		// 픽셀 셰이더.
-	ID3D11PixelShader* m_pPixelShaderSolid = nullptr;		// 픽셀 셰이더.
-	ID3D11InputLayout* m_pInputLayout = nullptr;	// 입력 레이아웃.
-	ID3D11Buffer* m_pConstantBuffer = nullptr;	// 상수 버퍼.
-	ID3D11ShaderResourceView* m_pTextureRV = nullptr;
-	ID3D11SamplerState* m_pSamplerLinear = nullptr;
+	ID3D11PixelShader* m_pPixelShaderSolid = nullptr;	// 픽셀 셰이더.
+	ID3D11InputLayout* m_pInputLayout = nullptr;		// 입력 레이아웃.
+	ID3D11Buffer* m_pCBNeverChanges = nullptr;			// m_View 행렬을 위한 상수 버퍼.
+	ID3D11Buffer* m_pCBChangeOnResize = nullptr;		// m_Projection 행렬을 위한 상수 버퍼.
+	ID3D11Buffer* m_pCBChangesEveryFrame = nullptr;		// m_World 행렬,m_vMeshColor 위한 상수 버퍼.
+	ID3D11ShaderResourceView* m_pTextureRV = nullptr;	// 텍스처 리소스 뷰
+	ID3D11SamplerState* m_pSamplerLinear = nullptr;		// 텍스처 샘플러
 
+	// 렌더링 파이프라인에 적용하는 정보
+	UINT m_VertexBufferStride = 0;						// 버텍스 하나의 크기.
+	UINT m_VertexBufferOffset = 0;						// 버텍스 버퍼의 오프셋.
 	int m_nIndices = 0;							// 인덱스 개수.
 	Matrix                m_World;				// 월드좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
