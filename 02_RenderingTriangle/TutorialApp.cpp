@@ -104,8 +104,7 @@ bool TutorialApp::InitD3D()
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 	// 뷰포트 설정.	
-	D3D11_VIEWPORT viewport;
-	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+	D3D11_VIEWPORT viewport={};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.Width = (float)m_ClientWidth;
@@ -137,8 +136,7 @@ bool TutorialApp::InitScene()
 		Vector3(-0.5f, -0.5f, 0.5f)
 	};
 
-	D3D11_BUFFER_DESC vbDesc;
-	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
+	D3D11_BUFFER_DESC vbDesc = {};
 	// sizeof(vertices) / sizeof(Vertex).
 	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
 	vbDesc.CPUAccessFlags = 0;
@@ -147,8 +145,7 @@ bool TutorialApp::InitScene()
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;
 
 	// 정점 버퍼 생성.
-	D3D11_SUBRESOURCE_DATA vbData;
-	ZeroMemory(&vbData, sizeof(vbData));
+	D3D11_SUBRESOURCE_DATA vbData = {};
 	vbData.pSysMem = vertices;
 	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));
 

@@ -4,6 +4,7 @@
 #include <exception>
 #include <stdio.h>
 
+
 #define LOG_ERROR(...) \
 { \
     wchar_t buffer[256]; \
@@ -93,3 +94,9 @@ inline void HR_T(HRESULT hr)
 }
 
 
+//--------------------------------------------------------------------------------------
+// Helper for compiling shaders with D3DCompile
+//
+// With VS 11, we could load up prebuilt .cso files instead...
+//--------------------------------------------------------------------------------------
+HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);

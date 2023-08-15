@@ -127,8 +127,7 @@ bool TutorialApp::InitD3D()
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 	//4. ºäÆ÷Æ® ¼³Á¤.	
-	D3D11_VIEWPORT viewport;
-	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.Width = (float)m_ClientWidth;
