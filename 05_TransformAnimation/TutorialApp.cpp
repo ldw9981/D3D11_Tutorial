@@ -146,8 +146,7 @@ bool TutorialApp::InitD3D()
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 	//5. 뷰포트 설정.	
-	D3D11_VIEWPORT viewport;
-	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.Width = (float)m_ClientWidth;
@@ -202,8 +201,7 @@ void TutorialApp::UninitD3D()
 // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
 bool TutorialApp::InitScene()
 {
-	HRESULT hr; // 결과값.
-	ID3D10Blob* errorMessage = nullptr;	 // 에러 메시지를 저장할 버퍼.
+	HRESULT hr=0; // 결과값.
 
 	// 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비		
 	Vertex vertices[] = // Local or Object or Model Space    position
@@ -239,21 +237,8 @@ bool TutorialApp::InitScene()
 	};
 
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 셰이더 파일 이름.
-		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main",	// 시작 함수 이름
-		"vs_4_0", // 정점 셰이더 버전.
-		NULL, NULL,
-		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);	// 컴파일 에러 메시지가 저장될 버퍼.
-
-	if (FAILED(hr))
-	{
-		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);	// 에러 메세지 더이상 필요없음
-		return false;
-	}
-	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
+	HR_T( CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	HR_T( m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));
 
 	// 3. Render() 에서 파이프라인에 바인딩할  버텍스 셰이더 생성
@@ -279,30 +264,15 @@ bool TutorialApp::InitScene()
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0;
-
 	D3D11_SUBRESOURCE_DATA ibData = {};
 	ibData.pSysMem = indices;
-
-	// 인덱스 버퍼 생성.
 	HR_T(m_pDevice->CreateBuffer(&bd, &ibData, &m_pIndexBuffer));
 
 	// 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성	
 	ID3D10Blob* pixelShaderBuffer = nullptr;	// 픽셀 셰이더 코드가 저장될 버퍼.
-	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
-		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main",		// 시작 함수 이름
-		"ps_4_0",	// 정점 셰이더 버전.
-		NULL, NULL,
-		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);		// 컴파일 에러 메시지가 저장될 버퍼.
 
-	if (FAILED(hr))
-	{
-		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);
-		return false;
-	}
-	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+	HR_T( CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+	HR_T( m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
 
 	SAFE_RELEASE(pixelShaderBuffer);
