@@ -1,7 +1,10 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
+#include <directxtk/simplemath.h>
 
 #pragma comment (lib, "d3d11.lib")
+
+using namespace DirectX::SimpleMath;
 
 TutorialApp::TutorialApp(HINSTANCE hInstance)
 	:GameApp(hInstance)
@@ -31,7 +34,7 @@ void TutorialApp::Update()
 
 void TutorialApp::Render()
 {
-	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
+	Color color(0.0f, 0.5f, 0.5f, 1.0f);
 	// È­¸é Ä¥ÇÏ±â.
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
