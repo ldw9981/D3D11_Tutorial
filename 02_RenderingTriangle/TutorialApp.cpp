@@ -59,7 +59,7 @@ void TutorialApp::Render()
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 	
 	// Render a triangle	
-	m_pDeviceContext->Draw(3, 0);
+	m_pDeviceContext->Draw(m_VertexCount, 0);
 
 	// Present the information rendered to the back buffer to the front buffer (the screen)
 	m_pSwapChain->Present(0, 0);
@@ -129,16 +129,28 @@ bool TutorialApp::InitScene()
 	ID3D10Blob* errorMessage = nullptr;	 // 컴파일 에러 메시지가 저장될 버퍼.	
 
 	//1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
+	// 아직은 VertexShader의 World, View, Projection 변환을 사용하지 않으므로 
+	// 직접 Normalized Device Coordinate(좌표계)의 위치로 설정한다.
+	//      /---------------------(1,1,1)   z값은 깊이값
+	//     /                      / |   
+	// (-1,1,0)----------------(1,1,0)        
+	//   |         v0           |   |
+	//   |        /   `         |   |       중앙이 (0,0,0)  
+	//   |       /  +   `       |   |
+	//   |     /         `      |   |
+	//	 |   v2-----------v1    |  /
+	// (-1,-1,0)-------------(1,-1,0)
 	Vertex vertices[] =
 	{
-		Vector3(0.0f,  0.5f, 0.5f),
-		Vector3(0.5f, -0.5f, 0.5f),
-		Vector3(-0.5f, -0.5f, 0.5f)
+		Vector3(0.0f,  0.5f, 0.5f), // v0     z값은 깊이값
+		Vector3(0.5f, -0.5f, 0.5f),	// v1
+		Vector3(-0.5f, -0.5f, 0.5f),// v2
 	};
 
 	D3D11_BUFFER_DESC vbDesc = {};
 	// sizeof(vertices) / sizeof(Vertex).
-	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	m_VertexCount = ARRAYSIZE(vertices);
+	vbDesc.ByteWidth = sizeof(Vertex) * m_VertexCount;
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.MiscFlags = 0;

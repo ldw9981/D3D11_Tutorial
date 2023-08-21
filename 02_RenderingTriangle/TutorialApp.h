@@ -22,6 +22,7 @@ public:
 	ID3D11Buffer* m_pVertexBuffer = nullptr;		// 버텍스 버퍼.
 	UINT m_VertextBufferStride = 0;					// 버텍스 하나의 크기.
 	UINT m_VertextBufferOffset = 0;					// 버텍스 버퍼의 오프셋.
+	UINT m_VertexCount = 0;							// 버텍스 개수.
 
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
