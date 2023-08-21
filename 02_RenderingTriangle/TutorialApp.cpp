@@ -186,14 +186,7 @@ bool TutorialApp::InitScene()
 	};
 	
 	ID3DBlob* vertexShaderBuffer = nullptr;
-	hr = D3DCompileFromFile(L"BasicVertexShader.hlsl",	// 버텍스 쉐이터 컴파일
-		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main",	// 시작 함수 이름
-		"vs_4_0", //  셰이더 버전.
-		NULL,NULL,	
-		&vertexShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);	
-
+	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
 	if (FAILED(hr))
 	{
 		MessageBoxA(m_hWnd,(char*)errorMessage->GetBufferPointer() ,"오류.", MB_OK);		
@@ -212,14 +205,7 @@ bool TutorialApp::InitScene()
 
 	// 4. Render에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3DBlob* pixelShaderBuffer = nullptr;
-	hr = D3DCompileFromFile(L"BasicPixelShader.hlsl", // 셰이더 파일 이름.
-		NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main",		// 시작 함수 이름
-		"ps_4_0",	// 정점 셰이더 버전.
-		NULL,NULL,
-		&pixelShaderBuffer, // 컴파일된 셰이더 코드가 저장될 버퍼.
-		&errorMessage);		// 컴파일 에러 메시지가 저장될 버퍼.
-	
+	HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
 	if (FAILED(hr))
 	{
 		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
