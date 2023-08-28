@@ -8,8 +8,6 @@
 
 using namespace DirectX::SimpleMath;
 
-#define USE_TRIANGLE_STRIP 0
-
 // 정점 선언.
 struct Vertex
 {
@@ -54,11 +52,7 @@ void TutorialApp::Render()
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
 	// Draw계열 함수를 호출하기전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.	
-#if USE_TRIANGLE_STRIP 
-	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP); // 정점을 이어서 그릴 방식 설정.
-#else
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정.
-#endif // 
 	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_VertextBufferStride, &m_VertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
@@ -148,17 +142,9 @@ bool TutorialApp::InitScene()
 	// (-1,-1,0)-------------(1,-1,0)
 	Vertex vertices[] =
 	{
-#if USE_TRIANGLE_STRIP
-		//https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-primitive-topologies
-		Vector3(-0.5,-0.5,0.5), // v0    
-		Vector3(0,0.5,0.5),		// v1    
-		Vector3(0.5,-0.5,0.5),	// v2
-		Vector3(1,0.5,0.5),	// v2
-#else
 		Vector3(-0.5,-0.5,0.5), // v0    
 		Vector3(0,0.5,0.5),		// v1    
 		Vector3(0.5,-0.5,0.5),	// v2		
-#endif
 	};
 
 	D3D11_BUFFER_DESC vbDesc = {};
