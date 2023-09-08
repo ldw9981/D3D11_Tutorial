@@ -173,12 +173,6 @@ bool TutorialApp::InitScene()
 	
 	ID3DBlob* vertexShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
-	if (FAILED(hr))
-	{
-		MessageBoxA(m_hWnd,(char*)errorMessage->GetBufferPointer() ,"오류.", MB_OK);		
-		SAFE_RELEASE(errorMessage);	// 컴파일 에러 메세지 더이상 필요없음
-		return false;
-	}
 	HR_T(hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));	
 
@@ -192,13 +186,6 @@ bool TutorialApp::InitScene()
 	// 4. Render에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3DBlob* pixelShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
-	if (FAILED(hr))
-	{
-		MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "오류.", MB_OK);
-		SAFE_RELEASE(errorMessage);
-		return false;
-	}
-
 	HR_T( m_pDevice->CreatePixelShader(
 		pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
