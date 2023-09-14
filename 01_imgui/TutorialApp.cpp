@@ -38,6 +38,10 @@ void TutorialApp::Update()
 
 void TutorialApp::Render()
 {
+	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };
+	this->m_pDeviceContext->OMSetRenderTargets(1, &this->m_pRenderTargetView, nullptr);
+	this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTargetView, clear_color_with_alpha);
+
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -84,12 +88,12 @@ void TutorialApp::Render()
 		ImGui::End();
 	}
 
-
-	ImGui::Render();
-	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };
-	this->m_pDeviceContext->OMSetRenderTargets(1, &this->m_pRenderTargetView, nullptr);
-	this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTargetView, clear_color_with_alpha);
+	ImGui::Render();	
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+	/////
+	// DeviceContext::Draw();
+	/////
 
 
 	// 스왑체인 교체.
