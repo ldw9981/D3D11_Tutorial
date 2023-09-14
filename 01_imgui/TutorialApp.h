@@ -26,7 +26,6 @@ public:
 	bool m_show_demo_window = true;
 	float m_f;
 	int m_counter;
-	ImGuiIO io;
 
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
