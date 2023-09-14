@@ -68,7 +68,7 @@ void TutorialApp::Update()
 	XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
 	XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
-	m_World2 = mScale * mSpin * mTranslate * mOrbit;
+	m_World2 = mScale * mSpin * mTranslate * mOrbit; // 스케일적용 -> R(제자리Y회전) -> 왼쪽으로 이동 ->  궤도회전  
 }
 
 void TutorialApp::Render()

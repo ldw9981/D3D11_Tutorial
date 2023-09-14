@@ -176,7 +176,6 @@ bool TutorialApp::InitScene()
 	HR_T(hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));	
 
-
 	// 3. Render에서 파이프라인에 바인딩할  버텍스 셰이더 생성
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
