@@ -22,6 +22,11 @@ public:
 
 	Vector4 m_ClearColor = Vector4(0.45f, 0.55f, 0.60f, 1.00f);
 
+	bool m_show_another_window = false;
+	bool m_show_demo_window = true;
+	float m_f;
+	int m_counter;
+	ImGuiIO io;
 
 	virtual bool Initialize(UINT Width, UINT Height);
 	virtual void Update();
