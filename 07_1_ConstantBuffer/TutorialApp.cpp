@@ -14,10 +14,16 @@ struct Vertex
 	Vector2 Tex;
 };
 
+
+
 struct CBNeverChanges
 {
 	Matrix mView;
+	float a;
 };
+
+static_assert((sizeof(CBNeverChanges) % 16) == 0,
+	"Constant Buffer size must be 16-byte aligned");
 
 struct CBChangeOnResize
 {

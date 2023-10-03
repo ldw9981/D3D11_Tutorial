@@ -3,7 +3,15 @@
 #include <d3d11.h>
 #include <exception>
 #include <stdio.h>
-
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <fstream>
+#include <stdexcept>
+#include <system_error>
+#include <vector>
+#include <directxtk/SimpleMath.h>
+using namespace DirectX::SimpleMath;
 
 #define LOG_ERROR(...) \
 { \
@@ -100,3 +108,5 @@ inline void HR_T(HRESULT hr)
 // With VS 11, we could load up prebuilt .cso files instead...
 //--------------------------------------------------------------------------------------
 HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
+
+HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView);
