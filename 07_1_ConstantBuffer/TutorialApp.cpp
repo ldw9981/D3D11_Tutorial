@@ -19,7 +19,6 @@ struct Vertex
 struct CBNeverChanges
 {
 	Matrix mView;
-	float a;
 };
 
 static_assert((sizeof(CBNeverChanges) % 16) == 0,
