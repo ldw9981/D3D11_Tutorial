@@ -38,6 +38,13 @@ void TutorialApp::Update()
 
 void TutorialApp::Render()
 {
+	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };
+	this->m_pDeviceContext->OMSetRenderTargets(1, &this->m_pRenderTargetView, nullptr);
+	this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTargetView, clear_color_with_alpha);
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
 	// Start the Dear ImGui frame
 	ImGui_ImplDX11_NewFrame();
@@ -45,20 +52,48 @@ void TutorialApp::Render()
 	ImGui::NewFrame();
 
 	
-	{
+	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+	if (m_show_demo_window)
+		ImGui::ShowDemoWindow(&m_show_demo_window);
+
+	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+	{	
+
 		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)	
-		ImGui::ColorEdit3("clear color", (float*)&m_ClearColor); // Edit 3 floats representing a color			
+
+		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+		ImGui::Checkbox("Demo Window", &m_show_demo_window);      // Edit bools storing our window open/close state
+		ImGui::Checkbox("Another Window", &m_show_another_window);
+
+		ImGui::SliderFloat("float", &m_f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		
+		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+			m_counter++;
+		ImGui::SameLine();
+		ImGui::Text("counter = %d", m_counter);
+
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+		ImGui::ColorEdit3("clear color", (float*)&m_ClearColor); // Edit 3 floats representing a color	
 		ImGui::End();
 	}
 
+	// 3. Show another simple window.
+	if (m_show_another_window)
+	{
+		ImGui::Begin("Another Window", &m_show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+		ImGui::Text("Hello from another window!");
+		if (ImGui::Button("Close Me"))
+			m_show_another_window = false;
+		ImGui::End();
+	}
 
-
-	ImGui::Render();
-	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };
-	this->m_pDeviceContext->OMSetRenderTargets(1, &this->m_pRenderTargetView, nullptr);
-	this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTargetView, clear_color_with_alpha);
+	ImGui::Render();	
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+	/////
+	// DeviceContext::Draw();
+	/////
 
 
 	// 스왑체인 교체.
@@ -120,9 +155,7 @@ bool TutorialApp::InitImGUI()
 	*/
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
