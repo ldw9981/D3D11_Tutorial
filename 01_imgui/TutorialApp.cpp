@@ -38,10 +38,15 @@ void TutorialApp::Update()
 
 void TutorialApp::Render()
 {
-	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };
-	this->m_pDeviceContext->OMSetRenderTargets(1, &this->m_pRenderTargetView, nullptr);
-	this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTargetView, clear_color_with_alpha);
+	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };	
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, clear_color_with_alpha);
+	/////
+	// 이곳에 먼저 렌더링 합니다.
+	// DeviceContext::Draw(); 
+	/////
 
+	/////////////////
+	//아래부터는 ImGUI
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -87,14 +92,8 @@ void TutorialApp::Render()
 			m_show_another_window = false;
 		ImGui::End();
 	}
-
 	ImGui::Render();	
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-	/////
-	// DeviceContext::Draw();
-	/////
-
 
 	// 스왑체인 교체.
 	m_pSwapChain->Present(0, 0);
@@ -136,7 +135,7 @@ bool TutorialApp::InitD3D()
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
 	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
 	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);	
 	return true;
 }
 
