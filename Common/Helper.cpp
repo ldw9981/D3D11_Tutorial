@@ -2,6 +2,8 @@
 #include "Helper.h"
 #include <comdef.h>
 #include <d3dcompiler.h>
+#include <Directxtk/DDSTextureLoader.h>
+#include <Directxtk/WICTextureLoader.h>
 
 
 
@@ -42,5 +44,23 @@ HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCS
 	}
 	if (pErrorBlob) pErrorBlob->Release();
 
+	return S_OK;
+}
+
+HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView)
+{
+	HRESULT hr = S_OK;
+
+	// Load the Texture
+	hr = DirectX::CreateDDSTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
+	if (FAILED(hr))
+	{
+		hr = DirectX::CreateWICTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
+		if (FAILED(hr))
+		{
+			MessageBoxW(NULL, GetComErrorString(hr), szFileName, MB_OK);
+			return hr;
+		}
+	}
 	return S_OK;
 }
