@@ -1,30 +1,12 @@
 ﻿// TestCode.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
 //
 
+#include "pch.h"
 #include <iostream>
-#include<stdio.h>
 
-#include <directxtk/SimpleMath.h>
-
-
-using namespace DirectX::SimpleMath;
-using namespace DirectX;
-
-
-struct test {
-	char a;
-	Vector2 b;
-};
-
-
-
-int main() 
+int main()
 {
-	test s1;
-	printf("s1.a size : %d byte\n", sizeof(s1.a));
-	printf("s1.b size : %d byte\n", sizeof(s1.b));
-	printf("s1 size   : %d byte\n", sizeof(s1));
-	return 0;
+    std::cout << "Hello World!\n";
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
