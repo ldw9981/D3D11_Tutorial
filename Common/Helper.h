@@ -46,6 +46,38 @@ using namespace DirectX::SimpleMath;
     OutputDebugStringW(buffer); \
 }
 
+#define LOG_ERRORA(...) \
+{ \
+    char buffer[256]; \
+    sprintf_s(buffer,256, "[ERROR] %s:%d - ", __FUNCTION__, __LINE__); \
+    char message[256]; \
+    sprintf_s(message,256, __VA_ARGS__); \
+    strcat_s(buffer, message); \
+    strcat_s(buffer, "\n"); \
+    MessageBoxA(NULL, buffer, "LOG_ERROR", MB_OK); \
+}
+
+#define LOG_WARNINGA(...) \
+{ \
+    char buffer[256]; \
+    sprintf_s(buffer,256, "[WARNING] %s:%d - ", __FUNCTION__, __LINE__); \
+    char message[256]; \
+    sprintf_s(message,256, __VA_ARGS__); \
+    strcat_s(buffer, message); \
+    strcat_s(buffer, "\n"); \
+    OutputDebugStringW(buffer); \
+}
+
+#define LOG_MESSAGEA(...) \
+{ \
+    char buffer[256]; \
+    sprintf_s(buffer, 256, "[MESSAGE] %s:%d - ", __FUNCTION__, __LINE__); \
+    char message[256]; \
+    sprintf_s(message, 256, __VA_ARGS__); \
+    strcat_s(buffer, message); \
+    strcat_s(buffer, "\n"); \
+    OutputDebugStringA(buffer); \
+}
 
 template <typename T>
 void SAFE_RELEASE(T* p)
