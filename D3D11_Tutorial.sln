@@ -25,8 +25,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "07_0_TextureMapping", "07_0
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "07_1_ConstantBuffer", "07_1_ConstantBuffer\07_1_ConstantBuffer.vcxproj", "{B77D03FC-8209-4301-8707-F806B1E34429}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleTexturedDirectx11", "SimpleTexturedDirectx11\SimpleTexturedDirectx11.vcxproj", "{340832BA-8F69-4C24-B753-0A76C2798691}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestCode", "TestCode\TestCode.vcxproj", "{1CC5E856-CB94-4E13-A0D9-36ED5CFB1974}"
 EndProject
 Global
@@ -125,14 +123,6 @@ Global
 		{B77D03FC-8209-4301-8707-F806B1E34429}.Release|x64.Build.0 = Release|x64
 		{B77D03FC-8209-4301-8707-F806B1E34429}.Release|x86.ActiveCfg = Release|Win32
 		{B77D03FC-8209-4301-8707-F806B1E34429}.Release|x86.Build.0 = Release|Win32
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Debug|x64.ActiveCfg = Debug|x64
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Debug|x64.Build.0 = Debug|x64
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Debug|x86.ActiveCfg = Debug|Win32
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Debug|x86.Build.0 = Debug|Win32
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Release|x64.ActiveCfg = Release|x64
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Release|x64.Build.0 = Release|x64
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Release|x86.ActiveCfg = Release|Win32
-		{340832BA-8F69-4C24-B753-0A76C2798691}.Release|x86.Build.0 = Release|Win32
 		{1CC5E856-CB94-4E13-A0D9-36ED5CFB1974}.Debug|x64.ActiveCfg = Debug|x64
 		{1CC5E856-CB94-4E13-A0D9-36ED5CFB1974}.Debug|x64.Build.0 = Debug|x64
 		{1CC5E856-CB94-4E13-A0D9-36ED5CFB1974}.Debug|x86.ActiveCfg = Debug|Win32
