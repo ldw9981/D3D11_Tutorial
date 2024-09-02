@@ -1,1 +1,90 @@
 이 솔루션의 프로젝트들은 https://github.com/walbourn/directx-sdk-samples/tree/main/Direct3D11Tutorials 의 내용들을 이해하기 쉽도록 수정하였습니다.
+
+Direct3D 튜토리얼 Win32 샘플 
+https://github.com/walbourn/directx-sdk-samples 
+
+이것은 DirectX SDK의 Direct3D 11 튜토리얼 시리즈로, 기존 DirectX SDK 콘텐츠에 대한 종속성 없이 Windows 10 SDK를 사용하도록 업데이트되었습니다. 이는 Windows 10, Windows 8.1, Windows 8 및 Windows 7을 위한 Win32 데스크톱 DirectX 11.0 애플리케이션을 작성하기 위한 튜토리얼입니다. 
+
+이는 레거시 DirectX SDK(2010년 6월) Win32 데스크톱 튜토리얼을 기반으로 합니다. 이는 Windows Store 앱, Windows RT 또는 범용 Windows 앱과 함께 사용하도록 의도된 것이 아닙니다.
+
+설명
+이 튜토리얼 버전에서는 사용되지 않는, D3DX 수학과  D3DX11CompileFromFile같은 기존 D3DX 콘텐츠를 여전히 참조하는 원래 설명서 페이지가 있습니다 .D3DX11CreateShaderResourceViewFromFile
+
+이상적으로는 런타임 HLSL 컴파일을 완전히 사용하지 않고 대신 빌드 타임 컴파일을 사용하여 런타임에 '셰이더 바이너리 블롭'만 로드하고 Direct3D 11 API와 직접 사용합니다. 단순화를 위해 이 튜토리얼은 Win32 데스크톱 지원을 사용하여 '런타임' 컴파일 모드를 유지 D3DCompileFromFile하고 VC 프로젝트도 빌드 타임 컴파일에서 HLSL을 컴파일합니다.
+
+이 튜토리얼 에서는 XNAMath나 D3DX 수학이 아닌  DirectXMath를 사용합니다 .
+
+텍스처 로딩을 위해 튜토리얼은 DDSTextureLoader 모듈을 사용합니다. DirectXTK 및 DirectXTex를 참조하세요 . 
+
+튜토리얼 1: Direct3D 11 기본
+
+
+이 첫 번째 튜토리얼에서는 최소한의 Direct3D 11 애플리케이션을 만드는 데 필요한 요소를 살펴보겠습니다. 모든 Direct3D 11 애플리케이션은 제대로 작동하려면 이러한 요소가 있어야 합니다. 요소에는 창과 장치 개체를 설정한 다음 창에 색상을 표시하는 것이 포함됩니다. 
+
+http://msdn.microsoft.com/en-us/library/windows/apps/ff729718.aspx
+
+원래 튜토리얼에서처럼 D3D11CreateDeviceAndSwapChain을 사용하는 대신, 이 버전은 이제 D3D11CreateDevice를 사용하고 DXGI 1.2의 CreateSwapChainForHwnd 또는 DXGI 1.1의 CreateSwapChain을 사용합니다. 이 블로그 게시물을 참조하세요 .
+
+튜토리얼 2: 삼각형 렌더링
+
+
+이전 튜토리얼에서 우리는 창에 단일 색상을 출력하는 최소한의 Direct3D 11 애플리케이션을 빌드했습니다. 이 튜토리얼에서는 애플리케이션을 확장하여 화면에 단일 삼각형을 렌더링합니다. 삼각형과 관련된 데이터 구조를 설정하는 프로세스를 살펴보겠습니다. 
+
+이 튜토리얼의 결과물은 창 중앙에 삼각형이 렌더링된 창입니다. 
+
+http://msdn.microsoft.com/en-us/library/windows/apps/ff729719.aspx
+
+원래 튜토리얼에서처럼 HLSL 셰이더를 컴파일하기 위해 더 이상 사용되지 않는 D3DX11 함수를 사용하는 대신, 이 버전에서는 D3DCompile API를 직접 사용합니다.
+
+튜토리얼 3: 셰이더와 효과 시스템
+
+
+이전 튜토리얼에서 정점 버퍼를 설정하고 하나의 삼각형을 GPU에 전달했습니다. 이제 실제로 그래픽 파이프라인을 살펴보고 각 단계가 어떻게 작동하는지 살펴보겠습니다. 셰이더와 효과 시스템의 개념이 설명됩니다. 
+
+이 튜토리얼은 이전 튜토리얼과 동일한 소스 코드를 공유하지만, 다른 섹션에 중점을 둘 것입니다. 
+
+http://msdn.microsoft.com/en-us/library/windows/apps/ff729720.aspx
+
+튜토리얼 4: 3D 공간
+
+
+이전 튜토리얼에서 우리는 애플리케이션 창의 중앙에 삼각형을 성공적으로 렌더링했습니다. 우리는 정점 버퍼에서 선택한 정점 위치에 많은 주의를 기울이지 않았습니다. 이 튜토리얼에서는 3D 위치와 변환의 세부 사항을 파헤쳐 보겠습니다. 
+
+이 튜토리얼의 결과는 화면에 렌더링된 3D 객체입니다. 이전 튜토리얼은 2D 객체를 3D 세계에 렌더링하는 데 중점을 두었지만, 여기서는 3D 객체를 보여줍니다. 
+
+  http://msdn.microsoft.com/en-us/library/windows/apps/ff729721.aspx
+
+튜토리얼 5: 3D 변환
+
+
+이전 튜토리얼에서 우리는 모델 공간에서 화면으로 큐브를 렌더링했습니다. 이 튜토리얼에서는 변환의 개념을 확장하고 이러한 변환으로 달성할 수 있는 간단한 애니메이션을 보여줍니다. 
+
+이 튜토리얼의 결과는 다른 물체 주위를 공전하는 물체가 될 것입니다. 변형과 원하는 효과를 얻기 위해 변형을 결합하는 방법을 보여주는 것이 유용할 것입니다. 향후 튜토리얼은 새로운 개념을 소개하면서 이 기초를 기반으로 구축될 것입니다. 
+
+http://msdn.microsoft.com/en-us/library/windows/apps/ff729722.aspx
+
+튜토리얼 6: 조명
+
+
+이전 튜토리얼에서는 모든 객체가 같은 방식으로 조명되어 세상이 지루해 보였습니다. 이 튜토리얼에서는 간단한 조명의 개념과 적용 방법을 소개합니다. 사용되는 기술은 램버시안 조명입니다. 
+
+이 튜토리얼의 결과는 이전 예제를 수정하여 광원을 포함합니다. 이 광원은 궤도에 있는 큐브에 부착됩니다. 빛의 효과는 중앙 큐브에서 볼 수 있습니다. 
+
+  http://msdn.microsoft.com/en-us/library/windows/apps/ff729723.aspx
+
+튜토리얼 7: 텍스처 매핑 및 상수 버퍼
+
+
+이전 튜토리얼에서 우리는 프로젝트에 조명을 소개했습니다. 이제 우리는 큐브에 텍스처를 추가하여 그것을 기반으로 구축할 것입니다. 또한, 상수 버퍼의 개념을 소개하고 버퍼를 사용하여 대역폭 사용을 최소화하여 처리 속도를 높이는 방법을 설명할 것입니다. 
+
+이 튜토리얼의 목적은 중앙 큐브를 수정하여 텍스처를 매핑하는 것입니다. 
+
+  http://msdn.microsoft.com/en-us/library/windows/apps/ff729724.aspx
+
+원래 튜토리얼에서 사용했던 것처럼 텍스처를 로드하기 위해 더 이상 사용되지 않는 D3DX11 라이브러리를 사용하는 대신, 이 버전에서는 포함된 DDSTextureLoader 모듈을 사용합니다.
+
+종속성
+DirectX Win32 데스크톱 샘플은 일반적으로 런타임 HLSL 컴파일을 사용합니다. 빌드 타임 컴파일은 모든 프로덕션 Direct3D 애플리케이션에 권장되지만 실험 및 샘플 개발의 경우 런타임 HLSL 컴파일이 선호됩니다. 따라서 이러한 프로그램이 실행될 때 D3DCompile*.DLL이 검색 경로에 있어야 합니다. 
+
+Windows 10 SDK를 사용하고 Windows Vista 이상을 타겟팅하는 경우 REDIST 폴더에서 파일을 복사하여 애플리케이션과 나란히 D3DCompile_47 DLL을 포함할 수 있습니다.  
+%ProgramFiles(x86)%\Windows kits\10\Redist\D3D\arm, x86 or x64 
