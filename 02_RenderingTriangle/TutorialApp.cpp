@@ -148,22 +148,21 @@ bool TutorialApp::InitScene()
 	};
 
 	D3D11_BUFFER_DESC vbDesc = {};
-	m_VertexCount = ARRAYSIZE(vertices);
-	vbDesc.ByteWidth = sizeof(Vertex) * m_VertexCount;
+	m_VertexCount = ARRAYSIZE(vertices);	// 정점의 수
+	vbDesc.ByteWidth = sizeof(Vertex) * m_VertexCount; // 버텍스 버퍼의 크기(Byte).
 	vbDesc.CPUAccessFlags = 0;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER; // 정점 버퍼로 사용.
 	vbDesc.MiscFlags = 0;
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;	// CPU는 접근불가 ,  GPU에서 읽기/쓰기 가능한 버퍼로 생성.
 
 	// 정점 버퍼 생성.
 	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = vertices;
+	vbData.pSysMem = vertices;	// 버퍼를 생성할때 복사할 데이터의 주소 설정 
 	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));
 
 	// 버텍스 버퍼 정보 
-	m_VertextBufferStride = sizeof(Vertex);
-	m_VertextBufferOffset = 0;
-
+	m_VertextBufferStride = sizeof(Vertex); // 버텍스 하나의 크기
+	m_VertextBufferOffset = 0;	// 버텍스 시작 주소에서 더할 오프셋 주소
 
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
 	D3D11_INPUT_ELEMENT_DESC layout[] =  // 인풋 레이아웃은 버텍스 쉐이더가 입력받을 데이터의 형식을 지정한다.
