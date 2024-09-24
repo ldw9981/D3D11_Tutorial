@@ -25,26 +25,17 @@ void InputSystem::Update(float DeltaTime)
 	m_KeyboardStateTracker.Update(m_KeyboardState);
 
 
-	for (auto& it : m_InputProcessers)
+	if(m_pInputProcessers!=nullptr)
 	{
-		it->OnInputProcess(m_KeyboardState, m_KeyboardStateTracker, m_MouseState, m_MouseStateTracker);
+		m_pInputProcessers->OnInputProcess(m_KeyboardState, m_KeyboardStateTracker, m_MouseState, m_MouseStateTracker);
 	}
 }
 
-bool InputSystem::Initialize(HWND hWnd)
+bool InputSystem::Initialize(HWND hWnd, InputProcesser* processer)
 {
 	m_Keyboard = std::make_unique<Keyboard>();
 	m_Mouse = std::make_unique<Mouse>();
 	m_Mouse->SetWindow(hWnd);
+	m_pInputProcessers = processer;
 	return true;
-}
-
-void InputSystem::AddInputProcesser(InputProcesser* inputProcesser)
-{
-	m_InputProcessers.push_back(inputProcesser);
-}
-
-void InputSystem::RemoveInputProcesser(InputProcesser* inputProcesser)
-{
-	m_InputProcessers.remove(inputProcesser);
 }

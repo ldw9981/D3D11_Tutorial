@@ -20,7 +20,7 @@ public:
 
 	static InputSystem* Instance;
 
-	std::list<InputProcesser*> m_InputProcessers;
+	InputProcesser* m_pInputProcessers = nullptr;
 
 	// input
 	std::unique_ptr<DirectX::Keyboard>              m_Keyboard;
@@ -32,8 +32,5 @@ public:
 	DirectX::Keyboard::State                        m_KeyboardState;
 
 	void Update(float DeltaTime);
-	bool Initialize(HWND hWnd);
-
-	void AddInputProcesser(InputProcesser* inputProcesser);
-	void RemoveInputProcesser(InputProcesser* inputProcesser);
+	bool Initialize(HWND hWnd, InputProcesser* processer);
 };

@@ -25,6 +25,7 @@ public:
 	float m_currentTime;
 	int  m_nCmdShow;
 	GameTimer m_Timer;
+	InputSystem m_Input;
 	UINT m_ClientWidth;
 	UINT m_ClientHeight;
 public:

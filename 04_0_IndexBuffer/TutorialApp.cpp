@@ -60,7 +60,7 @@ void TutorialApp::Render()
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정.
 	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_VertextBufferStride, &m_VertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
-	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); 
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 
@@ -179,7 +179,7 @@ bool TutorialApp::InitScene()
 	SAFE_RELEASE(vertexShaderBuffer);	// 버퍼 해제.
 
 	// 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
-	WORD indices[] =
+	WORD indices[] = 
 	{
 		0, 1, 2,
 		2, 1, 3

@@ -59,6 +59,7 @@ bool GameApp::Initialize(UINT Width, UINT Height)
 	UpdateWindow(m_hWnd);
 
 	m_currentTime = m_previousTime = (float)GetTickCount64() / 1000.0f;
+	m_Input.Initialize(m_hWnd,this);
 	return true;
 }
 
