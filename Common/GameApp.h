@@ -2,6 +2,8 @@
 #include <windows.h>
 #include "TimeSystem.h"
 #include "InputSystem.h"
+#include "Camera.h"
+
 #define MAX_LOADSTRING 100
 
 
@@ -28,6 +30,7 @@ public:
 	InputSystem m_Input;
 	UINT m_ClientWidth;
 	UINT m_ClientHeight;
+	Camera m_Camera;
 public:
 	// 윈도우 정보 등록,생성,보이기 한다.
 	virtual bool Initialize(UINT Width, UINT Height);

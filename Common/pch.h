@@ -34,4 +34,5 @@
 namespace Math = DirectX::SimpleMath;
 using namespace DirectX;
 using namespace Microsoft::WRL;
+using namespace DirectX::SimpleMath;
 #endif //PCH_H

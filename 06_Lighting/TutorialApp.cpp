@@ -66,6 +66,9 @@ void TutorialApp::Update()
 	XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
 	vLightDir = XMVector3Transform(vLightDir, mRotate);
 	XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);
+
+
+	m_Camera.GetViewMatrix(m_View);
 }
 
 void TutorialApp::Render()
