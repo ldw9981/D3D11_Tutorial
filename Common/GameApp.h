@@ -1,9 +1,11 @@
 #pragma once
 #include <windows.h>
 #include "TimeSystem.h"
+#include "InputSystem.h"
 #define MAX_LOADSTRING 100
 
-class GameApp
+
+class GameApp : public InputProcesser
 {
 public:
 	GameApp(HINSTANCE hInstance);
@@ -31,7 +33,8 @@ public:
 	virtual bool Run();
 	virtual void Update(); // 상속 받은 클래스에서 구현
 	virtual void Render()=0; // 상속 받은 클래스에서 구현
-
+	virtual void OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker,
+		const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker);
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);	
 };
 
