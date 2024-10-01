@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Camera.h"
 
-
+const float ROTATION_GAIN = 0.004f;
 
 Vector3 Camera::GetForward()
 {
@@ -37,5 +37,95 @@ void Camera::AddInputVector(const Math::Vector3& input)
 {
 	m_InputVector += input;
 	m_InputVector.Normalize();
+}
+
+void Camera::AddPitch(float value)
+{
+	m_Rotation.x += value;
+	if (m_Rotation.x > XM_PI)
+	{
+		m_Rotation.x -= XM_2PI;
+	}
+	else if (m_Rotation.x < -XM_PI)
+	{
+		m_Rotation.x += XM_2PI;
+	}
+}
+
+void Camera::AddYaw(float value)
+{
+	m_Rotation.y += value;
+	if (m_Rotation.y > XM_PI)
+	{
+		m_Rotation.y -= XM_2PI;
+	}
+	else if (m_Rotation.y < -XM_PI)
+	{
+		m_Rotation.y += XM_2PI;
+	}
+}
+
+
+void Camera::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker, const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker)
+{
+	Vector3 forward = GetForward();
+	Vector3 right = GetRight();
+
+	if (KeyTracker.IsKeyPressed(Keyboard::Keys::R))
+	{
+		m_World = Matrix::Identity;
+		m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+		m_Position = Vector3(0.0f, 0.0f, 0.0f);
+	}
+
+	if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::W))
+	{
+		AddInputVector(forward);
+	}
+	else if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::S))
+	{
+		AddInputVector(-forward);
+	}
+
+	if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::A))
+	{
+		AddInputVector(-right);
+	}
+	else if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::D))
+	{
+		AddInputVector(right);
+	}
+
+	if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::E))
+	{
+		
+		AddInputVector(-m_World.Up());
+	}
+	else if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::Q))
+	{
+		AddInputVector(m_World.Up());
+	}
+
+	if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::F1))
+	{
+		SetSpeed(200);
+	}
+	else if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::F2))
+	{
+		SetSpeed(5000);
+	}
+	else if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::F3))
+	{
+		SetSpeed(10000);
+	}
+
+
+	InputSystem::Instance->m_Mouse->SetMode(MouseState.rightButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+	if (MouseState.positionMode == Mouse::MODE_RELATIVE)
+	{
+		Vector3 delta = Vector3(float(MouseState.x), float(MouseState.y), 0.f) * ROTATION_GAIN;
+		AddPitch(delta.y);
+		AddYaw(delta.x);
+	}
 }
 

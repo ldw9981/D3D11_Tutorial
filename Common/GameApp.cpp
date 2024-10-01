@@ -97,23 +97,7 @@ void GameApp::Update()
 
 void GameApp::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker, const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker)
 {
-	if (KeyState.W )
-	{
-		m_Camera.AddInputVector(m_Camera.GetForward());
-	}
-	else if( KeyState.S )
-	{
-		m_Camera.AddInputVector(-m_Camera.GetForward());
-	}
-	if (KeyState.A)
-	{
-		m_Camera.AddInputVector(-m_Camera.GetRight());
-	}
-	else if (KeyState.D)
-	{
-		m_Camera.AddInputVector(m_Camera.GetRight());
-	}
-
+	m_Camera.OnInputProcess(KeyState,KeyTracker,MouseState, MouseTracker);
 }
 
 //
