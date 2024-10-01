@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Camera.h"
 
-const float ROTATION_GAIN = 0.004f;
 
 Vector3 Camera::GetForward()
 {
@@ -17,7 +16,7 @@ void Camera::Update(float elapsedTime)
 {
 	if (m_InputVector.Length() > 0.0f)
 	{
-		m_Position += m_InputVector * m_Speed * elapsedTime;
+		m_Position += m_InputVector * m_MoveSpeed * elapsedTime;
 		m_InputVector = Vector3::Zero;
 	}
 
@@ -123,7 +122,7 @@ void Camera::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::Key
 	InputSystem::Instance->m_Mouse->SetMode(MouseState.rightButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 	if (MouseState.positionMode == Mouse::MODE_RELATIVE)
 	{
-		Vector3 delta = Vector3(float(MouseState.x), float(MouseState.y), 0.f) * ROTATION_GAIN;
+		Vector3 delta = Vector3(float(MouseState.x), float(MouseState.y), 0.f) * m_RotationSpeed;
 		AddPitch(delta.y);
 		AddYaw(delta.x);
 	}
