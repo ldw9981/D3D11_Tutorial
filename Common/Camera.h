@@ -8,9 +8,10 @@ using namespace DirectX::SimpleMath;
 class Camera : public InputProcesser
 {
 public:
-
+	Camera();
 	Vector3 m_Rotation;	//  z는 Roll 해당되므로 사용안함.
-	Vector3 m_Position = { 0,0,-30 } ;
+	Vector3 m_PositionInitial = { 0,0,-30 };
+	Vector3 m_Position;
 	Matrix m_World;		// 임시카메라는 부모가 없으니 월드행렬로 바로 설정 
 	Vector3 m_InputVector;
 
@@ -20,6 +21,7 @@ public:
 	Vector3 GetForward();
 	Vector3 GetRight();
 	
+	void Reset();
 	void Update(float elapsedTime);
 	void GetViewMatrix(Matrix& out);
 	void AddInputVector(const Vector3& input);

@@ -2,6 +2,11 @@
 #include "Camera.h"
 
 
+Camera::Camera()
+{
+	Reset();
+}
+
 Vector3 Camera::GetForward()
 {
 	return -m_World.Forward();
@@ -10,6 +15,13 @@ Vector3 Camera::GetForward()
 Vector3 Camera::GetRight()
 {
 	return m_World.Right();
+}
+
+void Camera::Reset()
+{
+	m_World = Matrix::Identity;
+	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+	m_Position = Vector3(0.0f, 0.0f, -30.0f);
 }
 
 void Camera::Update(float elapsedTime)
@@ -72,9 +84,7 @@ void Camera::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::Key
 
 	if (KeyTracker.IsKeyPressed(Keyboard::Keys::R))
 	{
-		m_World = Matrix::Identity;
-		m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-		m_Position = Vector3(0.0f, 0.0f, 0.0f);
+		Reset();
 	}
 
 	if (KeyState.IsKeyDown(DirectX::Keyboard::Keys::W))
