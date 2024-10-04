@@ -40,6 +40,7 @@ public:
 	Matrix                m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_Projection;			// 단위장치좌표계( Normalized Device Coordinate) 공간으로 변환을 위한 행렬.
 
+	Matrix				  m_CameraInverse;		// 카메라의 역행렬
 	Vector3 m_RotationDegree = {0,0,0};
 
 	XMFLOAT4 m_LightColors[2] =		// 라이트 색상

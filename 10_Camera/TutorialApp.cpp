@@ -73,6 +73,7 @@ void TutorialApp::Update()
 
 
 	m_Camera.GetViewMatrix(m_View);
+	m_CameraInverse = m_Camera.m_World.Invert();
 }
 
 void TutorialApp::Render()
@@ -160,16 +161,22 @@ void TutorialApp::RenderImGUI()
 	}
 
 	ImGui::Text("World");
-	ImGui::InputFloat4("m[0]", m_Camera.m_World.m[0]);
-	ImGui::InputFloat4("m[1]", m_Camera.m_World.m[1]);
-	ImGui::InputFloat4("m[2]", m_Camera.m_World.m[2]);
-	ImGui::InputFloat4("m[3]", m_Camera.m_World.m[3]);
+	ImGui::InputFloat4("W m[0]", m_Camera.m_World.m[0]);
+	ImGui::InputFloat4("W m[1]", m_Camera.m_World.m[1]);
+	ImGui::InputFloat4("W m[2]", m_Camera.m_World.m[2]);
+	ImGui::InputFloat4("W m[3]", m_Camera.m_World.m[3]);
 
-	ImGui::Text("Inverse (View)");
-	ImGui::InputFloat4("m[0]", m_View.m[0]);
-	ImGui::InputFloat4("m[1]", m_View.m[1]);
-	ImGui::InputFloat4("m[2]", m_View.m[2]);
-	ImGui::InputFloat4("m[3]", m_View.m[3]);
+	ImGui::Text("View");
+	ImGui::InputFloat4("V m[0]", m_View.m[0]);
+	ImGui::InputFloat4("V m[1]", m_View.m[1]);
+	ImGui::InputFloat4("V m[2]", m_View.m[2]);
+	ImGui::InputFloat4("V m[3]", m_View.m[3]);
+
+	ImGui::Text("Inverse");
+	ImGui::InputFloat4("I m[0]", m_CameraInverse.m[0]);
+	ImGui::InputFloat4("I m[1]", m_CameraInverse.m[1]);
+	ImGui::InputFloat4("I m[2]", m_CameraInverse.m[2]);
+	ImGui::InputFloat4("I m[3]", m_CameraInverse.m[3]);
 
 
 	ImGui::End();
