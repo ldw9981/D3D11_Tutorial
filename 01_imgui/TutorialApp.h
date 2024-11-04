@@ -1,10 +1,22 @@
 #pragma once
 #include "../Common/GameApp.h"
+#include <dxgi1_4.h>
 #include <d3d11.h>
 #include <imgui.h>
-
+#include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
+#include <string>
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx11.h>
+#include <Psapi.h>
+
+#pragma comment (lib, "d3d11.lib")
+#pragma comment(lib,"dxgi.lib")
+
 using namespace DirectX::SimpleMath;
+using namespace Microsoft::WRL;
+using namespace std;
 
 class TutorialApp :
     public GameApp
@@ -12,6 +24,9 @@ class TutorialApp :
 public:
 	TutorialApp(HINSTANCE hInstance);
 	~TutorialApp();
+
+	ComPtr<IDXGIFactory4> m_pDXGIFactory;		// DXGI팩토리
+	ComPtr<IDXGIAdapter3> m_pDXGIAdapter;		// 비디오카드 정보에 접근 가능한 인터페이스
 
 	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스
 	ID3D11Device* m_pDevice = nullptr;						// 디바이스	
@@ -36,6 +51,11 @@ public:
 
 	bool InitImGUI();
 	void UninitImGUI();
+
+	void GetVideoMemoryInfo(std::string& out);
+
+	void GetSystemMemoryInfo(std::string& out);
+
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

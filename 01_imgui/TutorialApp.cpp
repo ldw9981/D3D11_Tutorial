@@ -1,10 +1,6 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
-#include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
 
-#pragma comment (lib, "d3d11.lib")
 
 TutorialApp::TutorialApp(HINSTANCE hInstance)
 :GameApp(hInstance)
@@ -56,7 +52,8 @@ void TutorialApp::Render()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	
+
+
 	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 	if (m_show_demo_window)
 		ImGui::ShowDemoWindow(&m_show_demo_window);
@@ -78,6 +75,12 @@ void TutorialApp::Render()
 		ImGui::Text("counter = %d", m_counter);
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+		std::string str;
+		GetVideoMemoryInfo(str);
+		ImGui::Text("VideoMemory: %s", str.c_str());
+		GetSystemMemoryInfo(str);
+		ImGui::Text("SystemMemory Private: %s", str.c_str());
 
 		ImGui::ColorEdit3("clear color", (float*)&m_ClearColor); // Edit 3 floats representing a color	
 		ImGui::End();
@@ -103,6 +106,10 @@ bool TutorialApp::InitD3D()
 {
 	// 결과값.
 	HRESULT hr=0;
+
+	// Create DXGI factory
+	HR_T(CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)m_pDXGIFactory.GetAddressOf()));
+	HR_T(m_pDXGIFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter**>(m_pDXGIAdapter.GetAddressOf())));
 
 	// 스왑체인 속성 설정 구조체 생성.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
@@ -174,6 +181,23 @@ void TutorialApp::UninitImGUI()
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+}
+
+void TutorialApp::GetVideoMemoryInfo(std::string& out)
+{
+	DXGI_QUERY_VIDEO_MEMORY_INFO videoMemoryInfo;
+	m_pDXGIAdapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &videoMemoryInfo);
+
+	out = std::to_string(videoMemoryInfo.CurrentUsage / 1024 / 1024) + " MB" + " / " + std::to_string(videoMemoryInfo.Budget / 1024 / 1024) + " MB";
+}
+
+void TutorialApp::GetSystemMemoryInfo(std::string& out)
+{
+	HANDLE hProcess = GetCurrentProcess();
+	PROCESS_MEMORY_COUNTERS_EX pmc;
+	pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
+	GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+	out = std::to_string((pmc.PrivateUsage) / 1024 / 1024) + " MB";
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
