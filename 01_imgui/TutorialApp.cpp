@@ -77,10 +77,12 @@ void TutorialApp::Render()
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
 		std::string str;
-		GetVideoMemoryInfo(str);
-		ImGui::Text("VideoMemory: %s", str.c_str());
-		GetSystemMemoryInfo(str);
-		ImGui::Text("SystemMemory Private: %s", str.c_str());
+		ImGui::Text("\nDisplay Memory");
+		GetDisplayMemoryInfo(str);
+		ImGui::Text("%s", str.c_str());
+		ImGui::Text("\nProcess Memory");
+		GetVirtualMemoryInfo(str);
+		ImGui::Text("%s", str.c_str());
 
 		ImGui::ColorEdit3("clear color", (float*)&m_ClearColor); // Edit 3 floats representing a color	
 		ImGui::End();
@@ -183,21 +185,34 @@ void TutorialApp::UninitImGUI()
 	ImGui::DestroyContext();
 }
 
-void TutorialApp::GetVideoMemoryInfo(std::string& out)
-{
-	DXGI_QUERY_VIDEO_MEMORY_INFO videoMemoryInfo;
-	m_pDXGIAdapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &videoMemoryInfo);
+void TutorialApp::GetDisplayMemoryInfo(std::string& out)
+{	
+	DXGI_ADAPTER_DESC desc;
+	m_pDXGIAdapter->GetDesc(&desc);
 
-	out = std::to_string(videoMemoryInfo.CurrentUsage / 1024 / 1024) + " MB" + " / " + std::to_string(videoMemoryInfo.Budget / 1024 / 1024) + " MB";
+	DXGI_QUERY_VIDEO_MEMORY_INFO local,nonLocal;
+	m_pDXGIAdapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &local);
+	m_pDXGIAdapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &nonLocal);
+
+	out =  std::to_string( (desc.DedicatedVideoMemory+ desc.SharedSystemMemory) / 1024 / 1024) + " MB\n";
+	out += "Dedicated Video Memory : " + std::to_string(desc.DedicatedVideoMemory / 1024 / 1024) + " MB\n";	
+	out += "nShared System Memory : " + std::to_string(desc.SharedSystemMemory/ 1024 / 1024) + " MB\n";
+	
+	out += "Local Video Memory: ";
+	out += std::to_string(local.Budget / 1024 / 1024) + "MB" + " / " + std::to_string(local.CurrentUsage / 1024 / 1024) + " MB\n";
+	out += "NonLocal Video Memory: ";
+	out += std::to_string(nonLocal.Budget / 1024 / 1024) + "MB" + " / " + std::to_string(nonLocal.CurrentUsage / 1024 / 1024) + " MB";
 }
 
-void TutorialApp::GetSystemMemoryInfo(std::string& out)
-{
+void TutorialApp::GetVirtualMemoryInfo(std::string& out)
+{	
 	HANDLE hProcess = GetCurrentProcess();
 	PROCESS_MEMORY_COUNTERS_EX pmc;
 	pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
 	GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
-	out = std::to_string((pmc.PrivateUsage) / 1024 / 1024) + " MB";
+	out = "PrivateUsage: " + std::to_string((pmc.PrivateUsage) / 1024 / 1024) + " MB\n";
+	out += "WorkingSetSize: " + std::to_string((pmc.WorkingSetSize) / 1024 / 1024) + " MB\n";
+	out += "PagefileUsage: " + std::to_string((pmc.PagefileUsage) / 1024 / 1024) + " MB";
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

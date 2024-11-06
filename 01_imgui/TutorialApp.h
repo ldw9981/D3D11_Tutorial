@@ -52,9 +52,9 @@ public:
 	bool InitImGUI();
 	void UninitImGUI();
 
-	void GetVideoMemoryInfo(std::string& out);
+	void GetDisplayMemoryInfo(std::string& out);
 
-	void GetSystemMemoryInfo(std::string& out);
+	void GetVirtualMemoryInfo(std::string& out);
 
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
