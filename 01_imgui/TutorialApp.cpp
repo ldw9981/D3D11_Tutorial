@@ -196,7 +196,7 @@ void TutorialApp::GetDisplayMemoryInfo(std::string& out)
 
 	out =  std::to_string( (desc.DedicatedVideoMemory+ desc.SharedSystemMemory) / 1024 / 1024) + " MB\n";
 	out += "Dedicated Video Memory : " + std::to_string(desc.DedicatedVideoMemory / 1024 / 1024) + " MB\n";	
-	out += "nShared System Memory : " + std::to_string(desc.SharedSystemMemory/ 1024 / 1024) + " MB\n";
+	out += "Shared System Memory : " + std::to_string(desc.SharedSystemMemory/ 1024 / 1024) + " MB\n";
 	
 	out += "Local Video Memory: ";
 	out += std::to_string(local.Budget / 1024 / 1024) + "MB" + " / " + std::to_string(local.CurrentUsage / 1024 / 1024) + " MB\n";
