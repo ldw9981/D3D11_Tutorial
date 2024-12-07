@@ -1,6 +1,11 @@
 #include "pch.h"
 #include "GameApp.h"
+#include "Helper.h"
 
+#include <dbghelp.h>
+#include <minidumpapiset.h>
+
+#pragma comment(lib, "Dbghelp.lib")
 
 GameApp* GameApp::m_pInstance = nullptr;
 HWND GameApp::m_hWnd;
@@ -8,6 +13,56 @@ HWND GameApp::m_hWnd;
 LRESULT CALLBACK DefaultWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	return  GameApp::m_pInstance->WndProc(hWnd,message,wParam,lParam);
+}
+
+void CreateDump(EXCEPTION_POINTERS* pExceptionPointers)
+{
+	wchar_t moduleFileName[MAX_PATH]={0,};
+	std::wstring fileName(moduleFileName);
+	if (GetModuleFileName(NULL, moduleFileName, MAX_PATH) == 0) {
+		fileName = L"unknown_project.dmp"; // 예외 상황 처리
+	}
+	else
+	{
+		fileName = std::wstring(moduleFileName);
+		size_t pos = fileName.find_last_of(L"\\/");
+		if (pos != std::wstring::npos) {
+			fileName = fileName.substr(pos + 1); // 파일 이름 추출
+		}
+
+		pos = fileName.find_last_of(L'.');
+		if (pos != std::wstring::npos) {
+			fileName = fileName.substr(0, pos); // 확장자 제거
+		}
+		fileName += L".dmp";
+	}
+
+	HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) return;
+
+	MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+	dumpInfo.ThreadId = GetCurrentThreadId();
+	dumpInfo.ExceptionPointers = pExceptionPointers;
+	dumpInfo.ClientPointers = TRUE;
+
+	MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &dumpInfo, NULL, NULL);
+
+	CloseHandle(hFile);
+}
+
+LONG WINAPI CustomExceptionHandler(EXCEPTION_POINTERS* pExceptionPointers)
+{
+	int msgResult = MessageBox(
+		NULL,
+		L"Should Create Dump ?",
+		L"Exception",
+		MB_YESNO | MB_ICONQUESTION
+	);
+	
+	if (msgResult == IDYES) {
+		CreateDump(pExceptionPointers);
+	}
+	return EXCEPTION_EXECUTE_HANDLER;
 }
 
 GameApp::GameApp(HINSTANCE hInstance)
@@ -33,6 +88,8 @@ GameApp::~GameApp()
 
 bool GameApp::Initialize(UINT Width, UINT Height)
 {
+	SetUnhandledExceptionFilter(CustomExceptionHandler);
+
 	m_ClientWidth = Width;
 	m_ClientHeight = Height;
 
