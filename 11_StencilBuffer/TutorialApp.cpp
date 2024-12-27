@@ -9,7 +9,7 @@
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
-
+#include <dxgidebug.h>
 
 // 정점 선언.
 struct Vertex
@@ -213,8 +213,6 @@ bool TutorialApp::InitD3D()
 	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
-
-
 	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, &m_pTextureDepthStencil));
 
 	// Create the depth stencil view
@@ -224,16 +222,14 @@ bool TutorialApp::InitD3D()
 	descDSV.Texture2D.MipSlice = 0;
 	HR_T(m_pDevice->CreateDepthStencilView(m_pTextureDepthStencil, &descDSV, &m_pDepthStencilView));
 
-
-
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // 뎁스 값만 읽음
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	m_pDevice->CreateShaderResourceView(m_pTextureDepthStencil, &srvDesc, &m_pDepthSRV);
-	
+	HR_T(m_pDevice->CreateShaderResourceView(m_pTextureDepthStencil, &srvDesc, &m_pDepthSRV));
+
 	srvDesc.Format = DXGI_FORMAT_X24_TYPELESS_G8_UINT; // 스텐실 값만 읽음
-	m_pDevice->CreateShaderResourceView(m_pTextureDepthStencil, &srvDesc, &m_pStencilSRV);
+	HR_T(m_pDevice->CreateShaderResourceView(m_pTextureDepthStencil, &srvDesc, &m_pStencilSRV));
 
 
 
@@ -279,8 +275,7 @@ bool TutorialApp::InitD3D()
 
 void TutorialApp::UninitD3D()
 {
-	// Cleanup DirectX
-	
+	// Cleanup DirectX	
 	SAFE_RELEASE(m_pDepthSRV);
 	SAFE_RELEASE(m_pStencilSRV);
 	SAFE_RELEASE(m_pDepthStencilStateWrite);
@@ -505,15 +500,10 @@ void TutorialApp::RenderImGUI()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-
-
-	ImGui::Begin("Test");                          // Create a window called "Hello, world!" and append into it.
-
+	ImGui::Begin("Test");                       
 	ImGui::Checkbox("Test Stencil",&m_bTestStencilBuffer);
-
-
-	ImGui::Image((ImTextureID)m_pDepthSRV, ImVec2(128, 128));
-	ImGui::Image((ImTextureID)m_pStencilSRV, ImVec2(128, 128));
+	ImGui::Image((void*)m_pDepthSRV, ImVec2(128, 128));
+	ImGui::Image((void*)m_pStencilSRV, ImVec2(128, 128));
 	ImGui::End();
 
 	ImGui::Render();
