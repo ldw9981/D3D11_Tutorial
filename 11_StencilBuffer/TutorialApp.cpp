@@ -69,7 +69,7 @@ void TutorialApp::Update()
 
 	m_Camera.GetViewMatrix(m_View);
 
-	Vector3 Pos = m_Camera.m_Position + m_Camera.GetForward() * 10;
+	Vector3 Pos = m_Camera.m_Position + m_Camera.GetForward() * 20;
 	m_World2 = m_Camera.m_World;
 	m_World2.Translation(Pos);
 }
@@ -148,15 +148,17 @@ void TutorialApp::Render()
 	}
 
 	// 뎁스&스텐실 뷰를 렌더타겟에서 쓰기해제해야 ImGUI를 위해 읽기로 사용 가능
-	ID3D11RenderTargetView* pArrayRTV[1] = { m_pRenderTargetView };
-	m_pDeviceContext->OMSetRenderTargets(1, pArrayRTV, nullptr);
+
+	//m_pDeviceContext->CopySubresourceRegion(m_pTextureDepthDebug, 0, 0, 0, 0, m_pTextureDepthStencil, 0, nullptr);  // Depth 복사
+	//m_pDeviceContext->CopySubresourceRegion(m_pTextureDepthStencil, 0, 0, 0, 0, m_pTextureDepthStencil, 0, nullptr);  // Stencil 복사
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, nullptr);
 	RenderImGUI();
 	m_pSwapChain->Present(0, 0);	// Present our back buffer to our front buffer
 }
 
 bool TutorialApp::InitD3D()
 {
-	HRESULT hr = 0;	// 결과값.
+	HRESULT hr = 0;	
 
 	// 스왑체인 속성 설정 구조체 생성.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
@@ -207,30 +209,20 @@ bool TutorialApp::InitD3D()
 	descDepth.Height = m_ClientHeight;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	descDepth.SampleDesc.Count = 1;
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
-	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
 	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, &m_pTextureDepthStencil));
-
-	// Create the depth stencil view
+		
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
 	descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // Depth 24-bit + Stencil 8-bit;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
 	HR_T(m_pDevice->CreateDepthStencilView(m_pTextureDepthStencil, &descDSV, &m_pDepthStencilView));
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS; // 뎁스 값만 읽음
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-	HR_T(m_pDevice->CreateShaderResourceView(m_pTextureDepthStencil, &srvDesc, &m_pDepthSRV));
-
-	srvDesc.Format = DXGI_FORMAT_X24_TYPELESS_G8_UINT; // 스텐실 값만 읽음
-	HR_T(m_pDevice->CreateShaderResourceView(m_pTextureDepthStencil, &srvDesc, &m_pStencilSRV));
 
 
 
@@ -503,8 +495,6 @@ void TutorialApp::RenderImGUI()
 
 	ImGui::Begin("Test");                       
 	ImGui::Checkbox("Test Stencil",&m_bTestStencilBuffer);
-	ImGui::Image((void*)m_pDepthSRV, ImVec2(128, 128));
-	ImGui::Image((void*)m_pStencilSRV, ImVec2(128, 128));
 	ImGui::End();
 
 	ImGui::Render();
