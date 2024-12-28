@@ -103,7 +103,6 @@ void TutorialApp::Render()
 		m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 
-
 		// Read Stencil Buffer
 		m_pDeviceContext->OMSetDepthStencilState(m_pDepthStencilStateRead, 1);
 		m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
@@ -118,7 +117,6 @@ void TutorialApp::Render()
 		m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 		m_pDeviceContext->PSSetShaderResources(0, 1, &m_pTextureRV);
 		m_pDeviceContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
-
 
 		cb1.mWorld = XMMatrixTranspose(m_World);
 		m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
@@ -149,6 +147,9 @@ void TutorialApp::Render()
 		m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 	}
 
+	// 뎁스&스텐실 뷰를 렌더타겟에서 쓰기해제해야 ImGUI를 위해 읽기로 사용 가능
+	ID3D11RenderTargetView* pArrayRTV[1] = { m_pRenderTargetView };
+	m_pDeviceContext->OMSetRenderTargets(1, pArrayRTV, nullptr);
 	RenderImGUI();
 	m_pSwapChain->Present(0, 0);	// Present our back buffer to our front buffer
 }
