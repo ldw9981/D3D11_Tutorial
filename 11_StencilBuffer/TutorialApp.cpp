@@ -241,14 +241,13 @@ bool TutorialApp::InitD3D()
 	stencilDescWrite.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // 깊이 테스트 실패 시 유지
 	stencilDescWrite.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE; // 테스트 통과 시 교체
 	stencilDescWrite.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; // 항상 통과
-
-	// 후면 페이스도 동일하게 설정
-	stencilDescWrite.BackFace = stencilDescWrite.FrontFace;
+	
+	stencilDescWrite.BackFace = stencilDescWrite.FrontFace;	
 	m_pDevice->CreateDepthStencilState(&stencilDescWrite, &m_pDepthStencilStateWrite);
 
 	// 7. 스텐실 읽기(테스트)를 위한 상태 설정
 	D3D11_DEPTH_STENCIL_DESC stencilDescRead = {};
-	stencilDescRead.DepthEnable = TRUE;
+	stencilDescRead.DepthEnable = FALSE;
 	stencilDescRead.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 깊이 쓰기 비활성화
 	stencilDescRead.DepthFunc = D3D11_COMPARISON_LESS;
 
@@ -256,11 +255,12 @@ bool TutorialApp::InitD3D()
 	stencilDescRead.StencilReadMask = 0xFF; // 읽기 마스크
 	stencilDescRead.StencilWriteMask = 0x00; // 쓰기 비활성화
 
-	// 스텐실 값이 1인 경우만 통과
+	// 전면 페이스에서의 스텐실 연산
 	stencilDescRead.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
 	stencilDescRead.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP; // 유지
 	stencilDescRead.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; // 실패 시 유지
 	stencilDescRead.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // 깊이 실패 시 유지
+
 	stencilDescRead.BackFace = stencilDescRead.FrontFace;
 	m_pDevice->CreateDepthStencilState(&stencilDescRead, &m_pDepthStencilStateRead);
 	return true;
