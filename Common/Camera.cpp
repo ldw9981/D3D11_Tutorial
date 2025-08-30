@@ -19,7 +19,7 @@ Vector3 Camera::GetRight()
 
 void Camera::Reset()
 {
-	m_World = Matrix::Identity;
+	m_World = XMMatrixIdentity();
 	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
 	m_Position = Vector3(0.0f, 0.0f, -30.0f);
 }
@@ -29,7 +29,7 @@ void Camera::Update(float elapsedTime)
 	if (m_InputVector.Length() > 0.0f)
 	{
 		m_Position += m_InputVector * m_MoveSpeed * elapsedTime;
-		m_InputVector = Vector3::Zero;
+		m_InputVector = Vector3(0.0f, 0.0f, 0.0f);
 	}
 
 	m_World = Matrix::CreateFromYawPitchRoll(m_Rotation)*
