@@ -19,7 +19,7 @@ Vector3 Camera::GetRight()
 
 void Camera::Reset()
 {
-	m_World = XMMatrixIdentity();
+	m_World = Matrix::Identity;
 	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
 	m_Position = Vector3(0.0f, 0.0f, -30.0f);
 }

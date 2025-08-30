@@ -4,6 +4,8 @@
 #include "pch.h"
 #include <iostream>
 
+#pragma comment(lib, "directXTK.lib")
+
 struct Test1
 {
 	char a;
@@ -23,7 +25,8 @@ struct Test2
 };
 
 int main()
-{
+{	
+	Math::Matrix mat = Math::Matrix::Identity;
 	// char 1byte, short 2byte,int 4byte, double 8byte
 	int size1 = sizeof(Test1);
 	int size2 = sizeof(Test2);
