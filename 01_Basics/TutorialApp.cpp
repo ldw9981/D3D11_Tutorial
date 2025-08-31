@@ -122,8 +122,8 @@ bool TutorialApp::InitD3D()
 		&m_pSwapChain
 	));
 
-	// 3. 렌더타겟 뷰 생성.  (백버퍼를 텍스처를 이용하는 렌더타겟뷰) 
-	//  렌더 타겟 뷰는 "여기다가 그림을 그려라"라고 GPU에게 알려주는 역할을 하는 객체.
+	// 3. 렌더타겟 뷰 생성.  렌더 타겟 뷰는 "여기다가 그림을 그려라"라고 GPU에게 알려주는 역할을 하는 객체.
+	// 텍스처와 영구적 연결되는 객체이다. 
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView));
