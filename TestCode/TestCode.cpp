@@ -4,33 +4,13 @@
 #include "pch.h"
 #include <iostream>
 
-#pragma comment(lib, "directXTK.lib")
-
-struct Test1
-{
-	char a;
-	float b;
-	char c;
-	
-};
-
-struct Test2
-{
-	char a;
-	char* k;
-	double d;
-	char e;
-	char* k2;
-	double f;
-};
+#include "SizeOfStruct.h"
+#include "Math.h"
 
 int main()
-{	
-	Math::Matrix mat = Math::Matrix::Identity;
-	// char 1byte, short 2byte,int 4byte, double 8byte
-	int size1 = sizeof(Test1);
-	int size2 = sizeof(Test2);
-    std::cout << "Hello World!\n";
+{
+	SizeOfStruct();
+	TestMath();
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
