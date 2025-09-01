@@ -163,31 +163,32 @@ bool TutorialApp::InitScene()
 	// 버텍스 버퍼 정보 
 	m_VertextBufferStride = sizeof(Vertex); // 버텍스 하나의 크기
 	m_VertextBufferOffset = 0;	// 버텍스 시작 주소에서 더할 오프셋 주소
-
-	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
+	
+	// 2. Render에서 파이프라인에 바인딩할  버텍스 셰이더 생성
+	ID3DBlob* vertexShaderBuffer = nullptr; // 버텍스 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
+	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), // 필요한 데이터를 복사하며 객체 생성 
+		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
+	
+	// 3. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
 	D3D11_INPUT_ELEMENT_DESC layout[] =  // 인풋 레이아웃은 버텍스 쉐이더가 입력받을 데이터의 형식을 지정한다.
 	{// SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate		
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
-	
-	ID3DBlob* vertexShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	// 버텍스 셰이더의 Input에 지정된 내용과 같은지 검증하면서 InputLayout을 생성한다.
 	HR_T(hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));	
 
-	// 3. Render에서 파이프라인에 바인딩할  버텍스 셰이더 생성
-	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
-		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
-	SAFE_RELEASE(vertexShaderBuffer);
+	SAFE_RELEASE(vertexShaderBuffer); // 복사했으니 버퍼는 해제 가능
 
 
 	// 4. Render에서 파이프라인에 바인딩할 픽셀 셰이더 생성
-	ID3DBlob* pixelShaderBuffer = nullptr;
+	ID3DBlob* pixelShaderBuffer = nullptr; // 픽셀 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
 	HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
-	HR_T( m_pDevice->CreatePixelShader(
+	HR_T( m_pDevice->CreatePixelShader(	  // 필요한 데이터를 복사하며 객체 생성 
 		pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
-	SAFE_RELEASE(pixelShaderBuffer);
+	SAFE_RELEASE(pixelShaderBuffer); // 복사했으니 버퍼는 해제 가능
 	
 	return true;
 }
