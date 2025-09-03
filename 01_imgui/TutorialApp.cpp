@@ -1,23 +1,8 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
 
-
-TutorialApp::TutorialApp(HINSTANCE hInstance)
-:GameApp(hInstance)
+bool TutorialApp::OnInitialize()
 {
-
-}
-
-TutorialApp::~TutorialApp()
-{
-	UninitImGUI();
-	UninitD3D();	
-}
-
-bool TutorialApp::Initialize(UINT Width, UINT Height)
-{
-	__super::Initialize(Width, Height);
-
 	if(!InitD3D())
 		return false;
 	
@@ -27,12 +12,17 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 	return true;
 }
 
-void TutorialApp::Update()
+void TutorialApp::OnUninitialize()
+{	
+	UninitImGUI();
+	UninitD3D();
+}
+void TutorialApp::OnUpdate()
 {
 
 }
 
-void TutorialApp::Render()
+void TutorialApp::OnRender()
 {
 	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };	
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, clear_color_with_alpha);

@@ -6,8 +6,6 @@ class TutorialApp :
 	public GameApp
 {
 public:
-	TutorialApp(HINSTANCE hInstance);
-	~TutorialApp();
 
 	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스 (  뎊스 스텐실 뷰도 있지만 아직 사용하지 않는다.)
 	ID3D11Device* m_pDevice = nullptr;						// 디바이스	
@@ -24,9 +22,10 @@ public:
 	UINT m_VertextBufferOffset = 0;					// 버텍스 버퍼의 오프셋.
 	UINT m_VertexCount = 0;							// 버텍스 개수.
 
-	virtual bool Initialize(UINT Width, UINT Height);
-	virtual void Update();
-	virtual void Render();
+	bool OnInitialize() override;
+	void OnUninitialize() override;
+	void OnUpdate() override;
+	void OnRender() override;
 
 	bool InitD3D();
 	void UninitD3D();

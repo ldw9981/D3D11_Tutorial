@@ -12,9 +12,6 @@ class TutorialApp :
 	public GameApp
 {
 public:
-	TutorialApp(HINSTANCE hInstance);
-	~TutorialApp();
-
 	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스 
 	ID3D11Device* m_pDevice = nullptr;						// 디바이스	
 	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// 즉시 디바이스 컨텍스트
@@ -50,9 +47,10 @@ public:
 	};	
 	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// 계산된 라이트 방향
 
-	virtual bool Initialize(UINT Width, UINT Height);
-	virtual void Update();
-	virtual void Render();
+	bool OnInitialize() override;
+	void OnUninitialize() override;
+	void OnUpdate() override;
+	void OnRender() override;
 
 	bool InitD3D();
 	void UninitD3D();

@@ -35,22 +35,8 @@ struct CBChangesEveryFrame
 	Vector4 vMeshColor;
 };
 
-TutorialApp::TutorialApp(HINSTANCE hInstance)
-	:GameApp(hInstance)
+bool TutorialApp::OnInitialize()
 {
-
-}
-
-TutorialApp::~TutorialApp()
-{
-	UninitScene();
-	UninitD3D();
-}
-
-bool TutorialApp::Initialize(UINT Width, UINT Height)
-{
-	__super::Initialize(Width, Height);
-
 	if (!InitD3D())
 		return false;
 
@@ -60,9 +46,14 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 	return true;
 }
 
-void TutorialApp::Update()
+void TutorialApp::OnUninitialize()
 {
-	__super::Update();
+	UninitScene();
+	UninitD3D();
+}
+
+void TutorialApp::OnUpdate()
+{	
 	float t = GameTimer::m_Instance->TotalTime();
 	// Rotate cube around the origin
 	m_World = XMMatrixRotationY(t);
@@ -75,7 +66,7 @@ void TutorialApp::Update()
 	m_Camera.GetViewMatrix(m_View);
 }
 
-void TutorialApp::Render()
+void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 

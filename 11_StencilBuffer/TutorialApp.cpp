@@ -25,23 +25,8 @@ struct ConstantBuffer
 	Matrix mProjection;
 };
 
-TutorialApp::TutorialApp(HINSTANCE hInstance)
-	:GameApp(hInstance)
+bool TutorialApp::OnInitialize()
 {
-
-}
-
-TutorialApp::~TutorialApp()
-{
-	UninitScene();
-	UninitImGUI();
-	UninitD3D();
-}
-
-bool TutorialApp::Initialize(UINT Width, UINT Height)
-{
-	__super::Initialize(Width, Height);
-
 	if (!InitD3D())
 		return false;
 
@@ -53,11 +38,15 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 
 	return true;
 }
-
-void TutorialApp::Update()
+void TutorialApp::OnUninitialize()
 {
-	__super::Update();
+	UninitScene();
+	UninitImGUI();
+	UninitD3D();
+}
 
+void TutorialApp::OnUpdate()
+{
 	float t = GameTimer::m_Instance->TotalTime();
 	// Rotate cube around the origin
 	m_World = XMMatrixRotationY(t);
@@ -74,7 +63,7 @@ void TutorialApp::Update()
 	m_World2.Translation(Pos);
 }
 
-void TutorialApp::Render()
+void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 	ConstantBuffer cb1;

@@ -22,9 +22,6 @@ class TutorialApp :
     public GameApp
 {
 public:
-	TutorialApp(HINSTANCE hInstance);
-	~TutorialApp();
-
 	ComPtr<IDXGIFactory4> m_pDXGIFactory;		// DXGI팩토리
 	ComPtr<IDXGIAdapter3> m_pDXGIAdapter;		// 비디오카드 정보에 접근 가능한 인터페이스
 
@@ -42,9 +39,10 @@ public:
 	float m_f;
 	int m_counter;
 
-	virtual bool Initialize(UINT Width, UINT Height);
-	virtual void Update();
-	virtual void Render();
+	bool OnInitialize() override;
+	void OnUninitialize() override;
+	void OnUpdate() override;
+	void OnRender() override;
 
 	bool InitD3D();
 	void UninitD3D();
@@ -53,9 +51,7 @@ public:
 	void UninitImGUI();
 
 	void GetDisplayMemoryInfo(std::string& out);
-
 	void GetVirtualMemoryInfo(std::string& out);
-
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

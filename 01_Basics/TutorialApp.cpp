@@ -9,38 +9,32 @@
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"dxgi.lib")
 
+
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
 #define USE_FLIPMODE 1			//경고 메세지를 없애려면 Flip 모드를 사용한다.
 
-TutorialApp::TutorialApp(HINSTANCE hInstance)
-	:GameApp(hInstance)
+
+bool TutorialApp::OnInitialize()
 {
-
-}
-
-TutorialApp::~TutorialApp()
-{
-	UninitD3D();
-}
-
-bool TutorialApp::Initialize(UINT Width, UINT Height)
-{
-	__super::Initialize(Width, Height);
-
 	if (!InitD3D())
 		return false;
 
 	return true;
 }
 
-void TutorialApp::Update()
+void TutorialApp::OnUninitialize()
+{
+	UninitD3D();
+}
+
+void TutorialApp::OnUpdate()
 {
 	
 }
 
-void TutorialApp::Render()
+void TutorialApp::OnRender()
 {
 #if USE_FLIPMODE==1
 	// Flip모드에서는 매프레임 설정 필요

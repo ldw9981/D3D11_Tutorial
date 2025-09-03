@@ -19,22 +19,8 @@ struct Vertex
 		: position(position), color(color) { }
 };
 
-TutorialApp::TutorialApp(HINSTANCE hInstance)
-:GameApp(hInstance)
+bool TutorialApp::OnInitialize()
 {
-
-}
-
-TutorialApp::~TutorialApp()
-{
-	UninitScene();
-	UninitD3D();
-}
-
-bool TutorialApp::Initialize(UINT Width, UINT Height)
-{
-	__super::Initialize(Width, Height);
-
 	if(!InitD3D())
 		return false;
 
@@ -44,12 +30,18 @@ bool TutorialApp::Initialize(UINT Width, UINT Height)
 	return true;
 }
 
-void TutorialApp::Update()
+void TutorialApp::OnUninitialize()
+{
+	UninitScene();
+	UninitD3D();
+}
+
+void TutorialApp::OnUpdate()
 {
 
 }
 
-void TutorialApp::Render()
+void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 

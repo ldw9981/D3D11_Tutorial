@@ -12,9 +12,6 @@ class TutorialApp :
     public GameApp
 {
 public:
-	TutorialApp(HINSTANCE hInstance);
-	~TutorialApp();
-
 	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스
 	ID3D11Device* m_pDevice = nullptr;						// 디바이스
 	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// 즉시 디바이스 컨텍스트
@@ -51,9 +48,10 @@ public:
 	Vector4	m_vMeshColor = {0.7f, 0.7f, 0.7f, 1.0f};
 	bool m_bTestStencilBuffer = false;
 
-	virtual bool Initialize(UINT Width, UINT Height);
-	virtual void Update();
-	virtual void Render();
+	bool OnInitialize() override;
+	void OnUninitialize() override;
+	void OnUpdate() override;
+	void OnRender() override;
 
 	bool InitD3D();			
 	void UninitD3D();
