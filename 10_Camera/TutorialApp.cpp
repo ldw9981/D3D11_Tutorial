@@ -69,6 +69,9 @@ void TutorialApp::OnUpdate()
 void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
+	//그릴대상 설정
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+
 	
 	// Clear 
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);

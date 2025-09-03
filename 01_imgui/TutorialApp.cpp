@@ -24,6 +24,10 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
+	//그릴대상 설정
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+
+
 	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };	
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, clear_color_with_alpha);
 	/////

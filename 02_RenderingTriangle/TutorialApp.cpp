@@ -45,8 +45,9 @@ void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
-	// Flip모드에서는 매프레임 설정 필요
+	//그릴대상 설정
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+
 
 	// 화면 칠하기.
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);

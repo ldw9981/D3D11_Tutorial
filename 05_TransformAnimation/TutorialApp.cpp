@@ -62,6 +62,10 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
+	//그릴대상 설정
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+
+
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color); 	
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0); // 뎁스버퍼 1.0f로 초기화.

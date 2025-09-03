@@ -36,10 +36,9 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
-#if USE_FLIPMODE==1
-	// Flip모드에서는 매프레임 설정 필요
+	//그릴대상 설정
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
-#endif
+
 	Color color(0.0f, 0.5f, 0.5f, 1.0f);
 	// 화면 칠하기.
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
@@ -121,10 +120,6 @@ bool TutorialApp::InitD3D()
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView));
-
-#if !USE_FLIPMODE
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, nullptr);
-#endif
 
 	return true;
 }
