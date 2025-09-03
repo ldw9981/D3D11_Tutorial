@@ -147,11 +147,11 @@ bool GameApp::Run(HINSTANCE hInstance)
 				TranslateMessage(&m_msg); // 키입력관련 메시지 변환  WM_KEYDOWN -> WM_CHAR
 				DispatchMessage(&m_msg);
 			}
-			else
-			{
-				Update();
-				Render();
-			}
+			
+			
+			Update();
+			Render();
+			
 		}
 	}
 	catch (const std::exception& e)

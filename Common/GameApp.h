@@ -36,8 +36,8 @@ public:
 	bool Initialize();
 	void Uninitialize();
 	bool Run(HINSTANCE hInstance);
-	virtual void Update(); // 상속 받은 클래스에서 구현
-	virtual void Render(); // 상속 받은 클래스에서 구현
+	void Update(); // 상속 받은 클래스에서 구현
+	void Render(); // 상속 받은 클래스에서 구현
 	virtual void OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker,
 		const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker);
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);		

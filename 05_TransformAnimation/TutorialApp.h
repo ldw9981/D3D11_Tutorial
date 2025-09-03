@@ -35,9 +35,10 @@ public:
 	Matrix                m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_Projection;			// 단위장치좌표계( Normalized Device Coordinate) 공간으로 변환을 위한 행렬.
 
-	virtual bool Initialize(UINT Width, UINT Height);
-	virtual void Update();
-	virtual void Render();
+	bool OnInitialize() override;
+	void OnUninitialize() override;
+	void OnUpdate() override;
+	void OnRender() override;
 
 	bool InitD3D();
 	void UninitD3D();
