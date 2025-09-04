@@ -102,7 +102,7 @@ void SAFE_DELETE(T* p)
 LPCWSTR GetComErrorString(HRESULT hr);
 std::string GetComErrorStringA(HRESULT hr);
 
-
+void CheckDXGIDebug();
 
 
 // Helper class for COM exceptions

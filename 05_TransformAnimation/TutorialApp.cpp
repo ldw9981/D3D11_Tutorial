@@ -1,11 +1,17 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
-#include <d3dcompiler.h>
 
+#include <directxtk/simplemath.h>
+#include <dxgi1_3.h>
+#include <wrl/client.h>
 
-#pragma comment (lib, "d3d11.lib")
-#pragma comment(lib,"d3dcompiler.lib")
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")  // 꼭 필요!
+#pragma comment(lib, "d3dcompiler.lib")
 
+using namespace DirectX::SimpleMath;
+using Microsoft::WRL::ComPtr;
 
 // 정점 선언.
 struct Vertex
@@ -42,6 +48,8 @@ void TutorialApp::OnUninitialize()
 {	
 	UninitScene();
 	UninitD3D();
+	
+	CheckDXGIDebug();	// report d3d leak
 }
 
 void TutorialApp::OnUpdate()
@@ -63,8 +71,7 @@ void TutorialApp::OnUpdate()
 void TutorialApp::OnRender()
 {
 	//그릴대상 설정
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
-
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color); 	
@@ -103,41 +110,74 @@ void TutorialApp::OnRender()
 
 bool TutorialApp::InitD3D()
 {	
-	HRESULT hr = 0;	// 결과값.
+	HRESULT hr = 0;
 
-	// 스왑체인 속성 설정 구조체 생성.
-	DXGI_SWAP_CHAIN_DESC swapDesc = {};
-	swapDesc.BufferCount = 1;
-	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = m_hWnd;	// 스왑체인 출력할 창 핸들 값.
-	swapDesc.Windowed = true;		// 창 모드 여부 설정.
-	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	// 백버퍼(텍스처)의 가로/세로 크기 설정.
-	swapDesc.BufferDesc.Width = m_ClientWidth;
-	swapDesc.BufferDesc.Height = m_ClientHeight;
-	// 화면 주사율 설정.
-	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-	// 샘플링 관련 설정.
-	swapDesc.SampleDesc.Count = 1;
-	swapDesc.SampleDesc.Quality = 0;
-
-	UINT creationFlags = 0;
+	// 1. D3D11 Device,DeviceContext 생성
+	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
-	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
+	// 그래픽 카드 하드웨어의 스펙으로 호환되는 가장 높은 DirectX 기능레벨로 생성하여 드라이버가 작동 한다.
+	// 인터페이스는 Direc3D11 이지만 GPU드라이버는 D3D12 드라이버가 작동할수도 있다.
+	D3D_FEATURE_LEVEL featureLevels[] = { // index 0부터 순서대로 시도한다.
+		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0,D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
+	};
+	D3D_FEATURE_LEVEL actualFeatureLevel; // 최종 피처 레벨을 저장할 변수
 
-	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
-	ID3D11Texture2D* pBackBufferTexture = nullptr;
+	HR_T(D3D11CreateDevice(
+		nullptr,
+		D3D_DRIVER_TYPE_HARDWARE,
+		0,
+		creationFlags,
+		featureLevels,
+		ARRAYSIZE(featureLevels),
+		D3D11_SDK_VERSION,
+		&m_pDevice,
+		&actualFeatureLevel,
+		&m_pDeviceContext
+	));
+
+	// 2. 스왑체인 생성을 위한 DXGI Factory 생성
+	UINT dxgiFactoryFlags = 0;
+#ifdef _DEBUG
+	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
+
+	ComPtr<IDXGIFactory2> pFactory;
+	HR_T(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&pFactory)));
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+	swapChainDesc.BufferCount = 2;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
+	swapChainDesc.Width = m_ClientWidth;
+	swapChainDesc.Height = m_ClientHeight;
+	// 하나의 픽셀이 채널 RGBA 각 8비트 형식으로 표현되며 
+	// Unsigned Normalized Integer 8비트 정수(0~255)단계를 부동소수점으로 정규화한 0.0~1.0으로 매핑하여 표현한다.
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // 스왑 체인의 백 버퍼가 렌더링 파이프라인의 최종 출력 대상으로 사용
+	swapChainDesc.SampleDesc.Count = 1;  // 멀티샘플링 사용 안함
+	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE; // Recommended for flip models
+	swapChainDesc.Stereo = FALSE;  // 스테레오 3D 렌더링을 비활성화
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // 전체 화면 전환을 허용
+	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  창의 크기와 백 버퍼의 크기가 다를 때. 백버퍼 크기에 맞게 스케일링 하지 않는다.
+
+	HR_T(pFactory->CreateSwapChainForHwnd(
+		m_pDevice,
+		m_hWnd,
+		&swapChainDesc,
+		nullptr,
+		nullptr,
+		&m_pSwapChain
+	));
+
+	// 3. 렌더타겟 뷰 생성.  렌더 타겟 뷰는 "여기다가 그림을 그려라"라고 GPU에게 알려주는 역할을 하는 객체.
+	// 텍스처와 영구적 연결되는 객체이다. 
+	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
-	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
-	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
-
+	//텍스처는 내부 참조 증가
+	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView)); 
+	
 	//5. 뷰포트 설정.	
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
@@ -162,28 +202,26 @@ bool TutorialApp::InitD3D()
 	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
 
-	ID3D11Texture2D* textureDepthStencil = nullptr;
-	HR_T( m_pDevice->CreateTexture2D(&descDepth, nullptr, &textureDepthStencil));
+	ComPtr<ID3D11Texture2D> pTextureDepthStencil;
+	HR_T( m_pDevice->CreateTexture2D(&descDepth, nullptr, pTextureDepthStencil.GetAddressOf()));
 	
 	// Create the depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
 	descDSV.Format = descDepth.Format;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
-	HR_T( m_pDevice->CreateDepthStencilView(textureDepthStencil, &descDSV, &m_pDepthStencilView));	
-	SAFE_RELEASE(textureDepthStencil);
-
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
-
+	HR_T( m_pDevice->CreateDepthStencilView(pTextureDepthStencil.Get(), &descDSV, &m_pDepthStencilView));
+	
 	return true;
 }
 
 void TutorialApp::UninitD3D()
 {
+	SAFE_RELEASE(m_pDepthStencilView);
+	SAFE_RELEASE(m_pRenderTargetView);
 	SAFE_RELEASE(m_pDevice);
 	SAFE_RELEASE(m_pDeviceContext);
 	SAFE_RELEASE(m_pSwapChain);
-	SAFE_RELEASE(m_pRenderTargetView);
 }
 
 // 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
@@ -294,10 +332,10 @@ bool TutorialApp::InitScene()
 
 void TutorialApp::UninitScene()
 {
+	SAFE_RELEASE(m_pConstantBuffer);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pVertexShader);
 	SAFE_RELEASE(m_pPixelShader);
 	SAFE_RELEASE(m_pInputLayout);
 	SAFE_RELEASE(m_pIndexBuffer);
-	SAFE_RELEASE(m_pDepthStencilView);
 }
