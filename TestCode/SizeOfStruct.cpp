@@ -67,11 +67,13 @@ struct alignas(16) Test3  // alignas가 적용된 멤버가 있으면 그 멤버의 정렬 요구�
 	float d;         
 };  
 
-struct Test4  
+struct alignas(16) Test4  // alignas가 적용된 멤버가 있으면 그 멤버의 정렬 요구사항이 구조체 전체에 적용됩니다.
 {
-	XMFLOAT3A a;	// XM_ALIGNED_STRUCT(16)를 사용한다. 이멤버는 16바이트 경계정렬 이지만 뒤쪽 float을 16바이트에 포함시키지않음.
-	// 패딩 4바이트 추가
+	float a;
 	float b;
+	// b이후에 8바이트 패딩 추가
+	alignas(16) Math::Vector2 c;	// 이멤버는 정렬 요구사항이 16바이트 
+	alignas(16) Math::Vector2 d;	// 이멤버는 정렬 요구사항이 16바이트 
 };
 
 void SizeOfStruct()
@@ -108,4 +110,6 @@ void SizeOfStruct()
 	std::cout << "alignof(Test4) = " << alignof(Test4) << "\n";
 	std::cout << "offset of a = " << offsetof(Test4, a) << "\n";
 	std::cout << "offset of b = " << offsetof(Test4, b) << "\n";
+	std::cout << "offset of c = " << offsetof(Test4, c) << "\n";
+	std::cout << "offset of d = " << offsetof(Test4, d) << "\n";
 }
