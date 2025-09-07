@@ -147,11 +147,11 @@ bool GameApp::Run(HINSTANCE hInstance)
 				TranslateMessage(&m_msg); // 키입력관련 메시지 변환  WM_KEYDOWN -> WM_CHAR
 				DispatchMessage(&m_msg);
 			}
-			
-			
-			Update();
-			Render();
-			
+			else
+			{
+				Update();
+				Render();
+			}						
 		}
 	}
 	catch (const std::exception& e)
@@ -175,7 +175,9 @@ void GameApp::Update()
 
 void GameApp::Render()
 {
+	// Clear
 	OnRender();
+	// Present
 }
 
 void GameApp::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker, const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker)
