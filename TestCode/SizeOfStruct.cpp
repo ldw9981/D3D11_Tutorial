@@ -25,7 +25,7 @@ MyMixedData의 최종 크기는 12바이트입니다.
 struct MyMixedData2
 {
 	MyMixedData a;  //?
-	double c;	// 8Byte
+	double b;	// 8Byte
 };
 /*
 MyMixedData a : 크기 12바이트, 정렬 요구사항 4바이트(가장 큰 멤버의 정렬 요구사항을 따름).
@@ -83,12 +83,12 @@ void SizeOfStruct()
 	std::cout << "offset of a = " << offsetof(MyMixedData, a) << "\n";
 	std::cout << "offset of b = " << offsetof(MyMixedData, b) << "\n";
 	std::cout << "offset of c = " << offsetof(MyMixedData, c) << "\n";
-	std::cout << "offset of c = " << offsetof(MyMixedData, d) << "\n";
+	std::cout << "offset of d = " << offsetof(MyMixedData, d) << "\n";
 
 	std::cout << "\nMyMixedData2" << " " << sizeof(MyMixedData2) << "\n";
 	std::cout << "alignof(MyMixedData2) = " << alignof(MyMixedData2) << "\n";
 	std::cout << "offset of a = " << offsetof(MyMixedData2, a) << "\n";
-	std::cout << "offset of c = " << offsetof(MyMixedData2, c) << "\n";
+	std::cout << "offset of b = " << offsetof(MyMixedData2, b) << "\n";
 
 	std::cout << "\nTest2" << " " << sizeof(Test2) << "\n";
 	std::cout << "alignof(Test2) = " << alignof(Test2) << "\n";
