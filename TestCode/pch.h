@@ -14,7 +14,9 @@
 #include <memory>
 #include <string>
 
+#include <directxtk/SimpleMath.h>
 
-
-
+namespace Math = DirectX::SimpleMath;
+using namespace DirectX;
+using namespace DirectX::SimpleMath;
 #endif //PCH_H
