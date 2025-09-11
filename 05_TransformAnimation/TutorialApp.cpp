@@ -85,7 +85,7 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 
-	// Update variables for the first cube
+	
 	ConstantBuffer cb1;
 	cb1.mWorld = XMMatrixTranspose(m_World1);
 	cb1.mView = XMMatrixTranspose(m_View);
@@ -96,11 +96,11 @@ void TutorialApp::OnRender()
 
 	
 	// Update variables for the second cube	
-	ConstantBuffer cb2;
-	cb2.mWorld = XMMatrixTranspose(m_World2);
-	cb2.mView = XMMatrixTranspose(m_View);
-	cb2.mProjection = XMMatrixTranspose(m_Projection);
-	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb2, 0, 0);
+	
+	cb1.mWorld = XMMatrixTranspose(m_World2);
+	cb1.mView = XMMatrixTranspose(m_View);
+	cb1.mProjection = XMMatrixTranspose(m_Projection);
+	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
 	
 	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 
