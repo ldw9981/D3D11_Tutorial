@@ -39,6 +39,7 @@ public:
 
 	Matrix				  m_CameraInverse;		// 카메라의 역행렬
 	Vector3 m_RotationDegree = {0,0,0};
+	Vector3 m_Scale = { 1.0, 1.0f , 1.0f};
 
 	XMFLOAT4 m_LightColors[2] =		// 라이트 색상
 	{

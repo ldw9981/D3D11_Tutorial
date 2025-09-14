@@ -19,6 +19,7 @@ struct ConstantBuffer
 	Matrix mWorld;
 	Matrix mView;
 	Matrix mProjection;
+	Matrix mNormalMatrix;
 
 	Vector4 vLightDir[2];
 	Vector4 vLightColor[2];
@@ -50,13 +51,13 @@ void TutorialApp::OnUninitialize()
 void TutorialApp::OnUpdate()
 {
 	float t = GameTimer::m_Instance->TotalTime();
-	m_World = XMMatrixRotationY(t);
+	m_World = XMMatrixScaling(m_Scale.x,m_Scale.y,m_Scale.z) * XMMatrixRotationY(t);
 
 	
 	m_LightDirsEvaluated[0] = m_InitialLightDirs[0];
 
 	// Rotate the second light around the origin
-	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+	XMMATRIX mRotate = XMMatrixRotationY(-1.0f * t);
 	XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
 	vLightDir = XMVector3Transform(vLightDir, mRotate);
 	XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);
@@ -70,7 +71,7 @@ void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 	//그릴대상 설정
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 
 	
 	// Clear 
@@ -82,6 +83,10 @@ void TutorialApp::OnRender()
 	cb1.mWorld = XMMatrixTranspose(m_World);
 	cb1.mView = XMMatrixTranspose(m_View);
 	cb1.mProjection = XMMatrixTranspose(m_Projection);
+	XMMATRIX invWorld = XMMatrixInverse(nullptr, m_World);
+	XMMATRIX normalMath = XMMatrixTranspose(invWorld); // (M^-1)^T
+	XMStoreFloat4x4(&cb1.mNormalMatrix, XMMatrixTranspose(normalMath));
+
 	cb1.vLightDir[0] = m_LightDirsEvaluated[0];
 	cb1.vLightDir[1] = m_LightDirsEvaluated[1];
 	cb1.vLightColor[0] = m_LightColors[0];
@@ -172,6 +177,13 @@ void TutorialApp::RenderImGUI()
 	ImGui::InputFloat4("I m[3]", m_CameraInverse.m[3]);
 
 
+
+
+	ImGui::InputFloat3("Scale", &m_Scale.x);
+	ImGui::ColorEdit3("Light0", (float*)&m_LightColors[0].x);
+	ImGui::ColorEdit3("Light1", (float*)&m_LightColors[1].x);
+
+
 	ImGui::End();
 
 
@@ -251,7 +263,7 @@ bool TutorialApp::InitD3D()
 	HR_T(m_pDevice->CreateDepthStencilView(textureDepthStencil, &descDSV, &m_pDepthStencilView));
 	SAFE_RELEASE(textureDepthStencil);
 
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
+	
 
 	return true;
 }
