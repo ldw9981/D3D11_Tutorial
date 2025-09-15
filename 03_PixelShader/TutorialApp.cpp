@@ -190,7 +190,7 @@ bool TutorialApp::InitScene()
 
 	// 2. Render() 에서 파이프라인에 바인딩할  버텍스 셰이더 생성	
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main","vs_4_0",&vertexShaderBuffer));		
+	HR_T(CompileShaderFromFile(L"../Shaders/03_BasicVertexShader.hlsl", "main","vs_4_0",&vertexShaderBuffer));		
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
 
@@ -207,7 +207,7 @@ bool TutorialApp::InitScene()
 
 	// 4. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+	HR_T(CompileShaderFromFile(L"../Shaders/03_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T( m_pDevice->CreatePixelShader( pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
 	SAFE_RELEASE(pixelShaderBuffer);	// 버퍼 더이상 필요없음.

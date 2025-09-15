@@ -1,4 +1,4 @@
-#include "Shared.fxh"
+#include "03_Shared.hlsli"
 // 정점 셰이더.
 
 
