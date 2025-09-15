@@ -313,7 +313,7 @@ bool TutorialApp::InitScene()
 
 
 	// 7. Render() 에서 파이프라인에 바인딩할 쉐이더 리소스와 샘플러 생성
-	HR_T( CreateDDSTextureFromFile(m_pDevice, L"seafloor.dds", nullptr, &m_pTextureRV));
+	HR_T( CreateDDSTextureFromFile(m_pDevice, L"../resource/seafloor.dds", nullptr, &m_pTextureRV));
 	
 	D3D11_SAMPLER_DESC sampDesc = {};
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
