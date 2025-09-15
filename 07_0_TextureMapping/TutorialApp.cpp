@@ -291,7 +291,7 @@ bool TutorialApp::InitScene()
 	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer));
 
 	// Load the Texture
-	HR_T( CreateDDSTextureFromFile(m_pDevice, L"seafloor.dds", nullptr, &m_pTextureRV));
+	HR_T( CreateDDSTextureFromFile(m_pDevice, L"../resource/seafloor.dds", nullptr, &m_pTextureRV));
 
 	// Create the sample state
 	D3D11_SAMPLER_DESC sampDesc = {};
