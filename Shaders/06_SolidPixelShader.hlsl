@@ -1,9 +1,10 @@
-#include <shared.fxh>
+#include "06_Shared.hlsli"
+
 
 //--------------------------------------------------------------------------------------
-// Pixel Shader
+// PSSolid - render a solid color
 //--------------------------------------------------------------------------------------
 float4 main(PS_INPUT input) : SV_Target
 {
-    return input.Color;
+    return vOutputColor;
 }

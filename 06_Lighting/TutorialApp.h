@@ -38,7 +38,7 @@ public:
 	XMFLOAT4 m_LightColors[2] =		// 라이트 색상
 	{
 		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f)
+		XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f)
 	};
 	XMFLOAT4 m_InitialLightDirs[2] =	// 초기 라이트 방향
 	{

@@ -158,11 +158,6 @@
     <Image Include="small.ico" />
     <Image Include="TextRendering.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Effects.fx">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

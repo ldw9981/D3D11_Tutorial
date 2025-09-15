@@ -1,5 +1,6 @@
-#include "Shared.fxh"
+#include <04_0_shared.hlsli>
 
+// «»ºø ºŒ¿Ã¥ı(Ω¶¿Ã¥ı/ºŒ¿Ã¥ı).
 float4 main(PS_INPUT input) : SV_TARGET
 {
     return input.color;

@@ -31,15 +31,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl">
+    <FxCompile Include="..\Shaders\04_1_BasicPixelShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="BasicVertexShader.hlsl">
+    <FxCompile Include="..\Shaders\04_1_BasicVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shared.fxh">
+    <None Include="..\Shaders\04_1_Shared.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

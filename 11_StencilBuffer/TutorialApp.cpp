@@ -333,7 +333,7 @@ bool TutorialApp::InitScene()
 
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	HR_T(CompileShaderFromFile(L"../shaders/11_BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
 
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
@@ -375,7 +375,7 @@ bool TutorialApp::InitScene()
 
 	// 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+	HR_T(CompileShaderFromFile(L"../shaders/11_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
 	SAFE_RELEASE(pixelShaderBuffer);
@@ -390,7 +390,7 @@ bool TutorialApp::InitScene()
 	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer));
 
 	// Load the Texture
-	HR_T( CreateDDSTextureFromFile(m_pDevice, L"seafloor.dds", nullptr, &m_pTextureRV));
+	HR_T( CreateDDSTextureFromFile(m_pDevice, L"../resource/seafloor.dds", nullptr, &m_pTextureRV));
 
 	// Create the sample state
 	D3D11_SAMPLER_DESC sampDesc = {};

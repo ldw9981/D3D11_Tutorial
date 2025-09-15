@@ -1,9 +1,10 @@
-#include "Shared.fxh"
+#include "10_Shared.hlsli"
+
 
 //--------------------------------------------------------------------------------------
-// Pixel Shader
+// PSSolid - render a solid color
 //--------------------------------------------------------------------------------------
 float4 main(PS_INPUT input) : SV_Target
 {
-    return txDiffuse.Sample(samLinear, input.Tex);
+    return vOutputColor;
 }

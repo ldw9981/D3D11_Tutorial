@@ -198,7 +198,7 @@ bool TutorialApp::InitScene()
 	
 	// 2. Render에서 파이프라인에 바인딩할  버텍스 셰이더 생성
 	ID3DBlob* vertexShaderBuffer = nullptr; // 버텍스 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
-	HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), // 필요한 데이터를 복사하며 객체 생성 
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
 	
@@ -216,7 +216,7 @@ bool TutorialApp::InitScene()
 
 	// 4. Render에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3DBlob* pixelShaderBuffer = nullptr; // 픽셀 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
-	HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
+	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
 	HR_T( m_pDevice->CreatePixelShader(	  // 필요한 데이터를 복사하며 객체 생성 
 		pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
