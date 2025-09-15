@@ -1,4 +1,4 @@
-#include <shared.fxh>
+#include <04_shared.hlsli>
 // ¡§¡° ºŒ¿Ã¥ı.
 PS_INPUT main(float4 pos : POSITION, float4 color : COLOR)
 {

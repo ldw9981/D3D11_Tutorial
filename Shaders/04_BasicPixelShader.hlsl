@@ -1,4 +1,4 @@
-#include <shared.fxh>
+#include <04_shared.hlsli>
 
 // «»ºø ºŒ¿Ã¥ı(Ω¶¿Ã¥ı/ºŒ¿Ã¥ı).
 float4 main(PS_INPUT input) : SV_TARGET
