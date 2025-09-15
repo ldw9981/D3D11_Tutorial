@@ -139,14 +139,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Shaders\04_Shared.hlsli" />
+    <None Include="..\Shaders\04_0_Shared.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\Shaders\04_BasicPixelShader.hlsl">
+    <FxCompile Include="..\Shaders\04_0_BasicPixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="..\Shaders\04_BasicVertexShader.hlsl">
+    <FxCompile Include="..\Shaders\04_0_BasicVertexShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>

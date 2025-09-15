@@ -31,18 +31,18 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl">
+    <FxCompile Include="..\Shaders\06_BasicPixelShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="BasicVertexShader.hlsl">
+    <FxCompile Include="..\Shaders\06_BasicVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="SolidPixelShader.hlsl">
+    <FxCompile Include="..\Shaders\06_SolidPixelShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shared.fxh">
+    <None Include="..\Shaders\06_Shared.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

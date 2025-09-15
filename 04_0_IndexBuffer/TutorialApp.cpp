@@ -165,7 +165,7 @@ bool TutorialApp::InitScene()
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 } 
 	};
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"../Shaders/04_BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));	
+	HR_T(CompileShaderFromFile(L"../Shaders/04_0_BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));	
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));
 
@@ -191,7 +191,7 @@ bool TutorialApp::InitScene()
 
 	// 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	HR_T( CompileShaderFromFile(L"../Shaders/04_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
+	HR_T( CompileShaderFromFile(L"../Shaders/04_0_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
 	HR_T( m_pDevice->CreatePixelShader( pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
 	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.

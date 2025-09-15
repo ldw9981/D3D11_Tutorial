@@ -533,10 +533,10 @@ bool InitScene()
 
 	//Compile Shaders from shader file
 //	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "VS", "vs_4_0", 0, 0, 0, &VS_Buffer, 0, 0);
-	hr = CompileShaderFromFile(L"Effects.fx", 0, "VS", "vs_4_0", &VS_Buffer);
+	hr = CompileShaderFromFile(L"../shaders/12_Effects.hlsl", 0, "VS", "vs_4_0", &VS_Buffer);
 
 	//	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "PS", "ps_4_0", 0, 0, 0, &PS_Buffer, 0, 0);
-	hr = CompileShaderFromFile(L"Effects.fx", 0, "PS", "ps_4_0", &PS_Buffer);
+	hr = CompileShaderFromFile(L"../shaders/12_Effects.hlsl", 0, "PS", "ps_4_0", &PS_Buffer);
 
 	//Create the Shader Objects
 	hr = d3d11Device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), NULL, &VS);
