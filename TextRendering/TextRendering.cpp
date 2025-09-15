@@ -709,7 +709,7 @@ bool InitScene()
 	blendDesc.AlphaToCoverageEnable = false;
 	blendDesc.RenderTarget[0] = rtbd;
 
-	hr = CreateTextureFromFile(d3d11Device, L"braynzar.jpg", &CubesTexture);
+	hr = CreateTextureFromFile(d3d11Device, L"../resource/braynzar.jpg", &CubesTexture);
 
 	// Describe the Sample State
 	D3D11_SAMPLER_DESC sampDesc;

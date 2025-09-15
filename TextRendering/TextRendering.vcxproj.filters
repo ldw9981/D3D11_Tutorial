@@ -52,7 +52,4 @@
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Effects.fx" />
-  </ItemGroup>
 </Project>
