@@ -31,10 +31,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\Shaders\14_ToneMappingVS.hlsl">
+    <FxCompile Include="..\Shaders\14_QuadVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\Shaders\14_ToneMappingPS.hlsl">
+    <FxCompile Include="..\Shaders\14_ToneMappingPS_HDR_OS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="..\Shaders\14_BasicPixelShader.hlsl">
@@ -44,6 +44,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="..\Shaders\14_SolidPixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\14_ToneMappingPS_HDR_CUSTOM.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\14_ToneMappingPS_LDR.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

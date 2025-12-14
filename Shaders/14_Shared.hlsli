@@ -10,6 +10,9 @@ cbuffer ConstantBuffer : register(b0)
     float4 vLightDir[2];
     float4 vLightColor[2];
     float4 vOutputColor;
+    float  gMaxHDRNits;
+    float gExposure;
+    float padding[2];
 }
 
 

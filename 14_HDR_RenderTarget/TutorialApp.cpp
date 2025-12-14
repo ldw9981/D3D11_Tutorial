@@ -5,11 +5,11 @@
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
+#include <dxgi1_4.h>	// swapchain3
+#include <dxgi1_6.h>	// swapchain3
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
-
-
 
 
 struct ConstantBuffer
@@ -21,6 +21,9 @@ struct ConstantBuffer
 	Vector4 vLightDir[2];
 	Vector4 vLightColor[2];
 	Vector4 vOutputColor;
+	float monitorMaxNits=100.0f;
+	float gExposure=1.0f;
+	float padding[2];
 };
 
 bool TutorialApp::OnInitialize()
@@ -46,14 +49,12 @@ void TutorialApp::OnUninitialize()
 
 void TutorialApp::OnUpdate()
 {
-	float t = GameTimer::m_Instance->TotalTime();
-	m_World = XMMatrixRotationY(t);
-
+	float t = XMConvertToRadians(m_rotationAngle);	
 	
 	m_LightDirsEvaluated[0] = m_InitialLightDirs[0];
 
 	// Rotate the second light around the origin
-	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+	XMMATRIX mRotate = XMMatrixRotationY(t);
 	XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
 	vLightDir = XMVector3Transform(vLightDir, mRotate);
 	XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);
@@ -77,11 +78,14 @@ void TutorialApp::OnRender()
 	cb1.mProjection = XMMatrixTranspose(m_Projection);
 	cb1.vLightDir[0] = m_LightDirsEvaluated[0];
 	cb1.vLightDir[1] = m_LightDirsEvaluated[1];
-	cb1.vLightColor[0] = m_LightColors[0];
-	cb1.vLightColor[0] *= m_LightIntensity[0];
-	cb1.vLightColor[1] = m_LightColors[1];
-	cb1.vLightColor[1] *= m_LightIntensity[1];
+	cb1.vLightColor[0] = Vector4(m_LightColors[0]) * m_LightIntensity[0];
+	cb1.vLightColor[0].w = 0.0f;
+
+	cb1.vLightColor[1] = Vector4(m_LightColors[1]) * m_LightIntensity[1];
+	cb1.vLightColor[1].w = 0.0f;
 	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+	cb1.monitorMaxNits = m_MonitorMaxNits;
+	cb1.gExposure = m_Exposure;
 	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
 	
@@ -128,7 +132,22 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout);
 	m_pDeviceContext->IASetIndexBuffer(m_pQuadIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->VSSetShader(m_pQuadVertexShader, nullptr, 0);
-	m_pDeviceContext->PSSetShader(m_pQuadPixelShader, nullptr, 0);
+	
+	switch (m_format)
+	{
+	case DXGI_FORMAT_R16G16B16A16_FLOAT:
+		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingHDR_OS, nullptr, 0);
+		break;
+	case DXGI_FORMAT_R10G10B10A2_UNORM:
+		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingHDR_CUSTOM, nullptr, 0);
+		break;
+	default:
+		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingLDR, nullptr, 0);
+		break;
+	}
+
+	
+
 	m_pDeviceContext->PSSetShaderResources(0, 1, &m_pHdrShaderResourceView);
 	m_pDeviceContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
 	m_pDeviceContext->DrawIndexed(m_nQuadIndices, 0, 0);
@@ -146,39 +165,9 @@ void TutorialApp::OnRender()
 
 bool TutorialApp::InitD3D()
 {
-	HRESULT hr = 0;	// 결과값.
+	//CreateBackBufferRenderTargetView(DXGI_FORMAT_R16G16B16A16_FLOAT); // HDR by OS Tone Mapping
+	CreateBackBufferRenderTargetView(DXGI_FORMAT_R10G10B10A2_UNORM); // HDR by Custom Tone Mapping
 
-	// 스왑체인 속성 설정 구조체 생성.
-	DXGI_SWAP_CHAIN_DESC swapDesc = {};
-	swapDesc.BufferCount = 2;
-	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = m_hWnd;	// 스왑체인 출력할 창 핸들 값.
-	swapDesc.Windowed = true;		// 창 모드 여부 설정.
-	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	// 백버퍼(텍스처)의 가로/세로 크기 설정.
-	swapDesc.BufferDesc.Width = m_ClientWidth;
-	swapDesc.BufferDesc.Height = m_ClientHeight;
-	// 화면 주사율 설정.
-	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-	// 샘플링 관련 설정.
-	swapDesc.SampleDesc.Count = 1;
-	swapDesc.SampleDesc.Quality = 0;
-
-	UINT creationFlags = 0;
-#ifdef _DEBUG
-	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
-	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
-
-	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
-	ID3D11Texture2D* pBackBufferTexture = nullptr;
-	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
-	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
 	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
@@ -249,6 +238,128 @@ bool TutorialApp::InitD3D()
 	return true;
 }
 
+//  DXGI_FORMAT_R8G8B8A8_UNORM : LDR
+//  DXGI_FORMAT_R10G10B10A2_UNORM   : HDR with Shader
+//  DXGI_FORMAT_R16G16B16A16_FLOAT : HDR with OS
+void TutorialApp::CreateBackBufferRenderTargetView(DXGI_FORMAT format)
+{
+	m_format = format;
+	if (!(format == DXGI_FORMAT_R8G8B8A8_UNORM ||
+		format == DXGI_FORMAT_R10G10B10A2_UNORM ||
+		format == DXGI_FORMAT_R16G16B16A16_FLOAT))
+	{
+		m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	}
+
+	HRESULT hr = 0;	// 결과값.
+
+	// 스왑체인 속성 설정 구조체 생성.
+	DXGI_SWAP_CHAIN_DESC swapDesc = {};
+	swapDesc.BufferCount = 2;
+	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapDesc.OutputWindow = m_hWnd;	// 스왑체인 출력할 창 핸들 값.
+	swapDesc.Windowed = true;		// 창 모드 여부 설정.
+	swapDesc.BufferDesc.Format = m_format;
+	// 백버퍼(텍스처)의 가로/세로 크기 설정.
+	swapDesc.BufferDesc.Width = m_ClientWidth;
+	swapDesc.BufferDesc.Height = m_ClientHeight;
+	// 화면 주사율 설정.
+	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+	// 샘플링 관련 설정.
+	swapDesc.SampleDesc.Count = 1;
+	swapDesc.SampleDesc.Quality = 0;
+
+	UINT creationFlags = 0;
+#ifdef _DEBUG
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
+	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
+		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
+
+	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
+	ID3D11Texture2D* pBackBufferTexture = nullptr;
+	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
+	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
+	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
+
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
+	HR_T(m_pSwapChain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&swapChain3));
+	if( m_format ==  DXGI_FORMAT_R16G16B16A16_FLOAT )
+	{		
+		// Enable 10-bit or 16-bit output in the swap chain
+		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709));
+	}
+	else if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
+	{		
+		// G2084 (PQ EOTF)와 P2020 (Rec. 2020 Primaries) 명시
+		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020));
+	}	
+
+	HR_T(GetMonitorMaxNits_DX11(m_pSwapChain, m_MonitorMaxNits));
+}
+
+HRESULT TutorialApp::GetMonitorMaxNits_DX11(IDXGISwapChain* pSwapChain, /* DX11에서는 IDXGISwapChain*을 받습니다. */ float& outMaxLuminance)
+{
+	// 스왑 체인을 IDXGISwapChain3 이상으로 캐스팅 시도
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
+	HRESULT hr = pSwapChain->QueryInterface(IID_PPV_ARGS(&swapChain3));
+
+	if (FAILED(hr))
+	{
+		// DXGI 1.3 인터페이스를 얻지 못하면 HDR 메타데이터 접근이 불가능합니다.
+		outMaxLuminance = 0.0f;
+		return hr;
+	}
+
+	// 1. 연결된 출력 장치(Monitor) 찾기
+	Microsoft::WRL::ComPtr<IDXGIOutput> output;
+	Microsoft::WRL::ComPtr<IDXGIOutput6> output6;
+
+	// 현재 스왑 체인이 연결된 출력(모니터)을 가져옵니다.
+	hr = swapChain3->GetContainingOutput(output.GetAddressOf());
+	if (FAILED(hr))
+	{
+		outMaxLuminance = 0.0f;
+		return hr;
+	}
+
+	// 2. IDXGIOutput6 인터페이스로 캐스팅 (HDR 메타데이터 접근을 위해)
+	hr = output.As(&output6);
+	if (FAILED(hr))
+	{
+		// 6 버전 인터페이스를 얻지 못했다면 HDR 지원이 미흡할 수 있습니다.
+		outMaxLuminance = 0.0f;
+		return hr;
+	}
+
+	// 3. HDR 메타데이터 구조체 요청
+	DXGI_OUTPUT_DESC1 desc;
+	hr = output6->GetDesc1(&desc);
+	if (FAILED(hr))
+	{
+		outMaxLuminance = 0.0f;
+		return hr;
+	}
+
+	// 4. 최대 휘도 (Max Luminance) 추출
+	// SetColorSpace1에서 G2084_NONE_P2020를 사용했다면 이 값은 유효합니다.
+	if (desc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
+	{
+		// MaxLuminance는 cd/m² (Nits) 단위입니다.
+		outMaxLuminance = (float)desc.MaxLuminance;
+	}
+	else
+	{
+		// SDR 모드이거나 지원하지 않는 컬러 스페이스인 경우
+		outMaxLuminance = 100.0f; // 기본 SDR Nits 값 설정 (대체값)
+	}
+
+	return S_OK;
+}
+
 void TutorialApp::UninitD3D()
 {
 	SAFE_RELEASE(m_pHdrShaderResourceView);
@@ -303,7 +414,9 @@ void TutorialApp::UninitScene()
 
 	SAFE_RELEASE(m_pQuadVertexBuffer);
 	SAFE_RELEASE(m_pQuadVertexShader);
-	SAFE_RELEASE(m_pQuadPixelShader);
+	SAFE_RELEASE(m_pPS_ToneMappingHDR_CUSTOM);
+	SAFE_RELEASE(m_pPS_ToneMappingHDR_OS);
+	SAFE_RELEASE(m_pPS_ToneMappingLDR);
 	SAFE_RELEASE(m_pQuadInputLayout);
 	SAFE_RELEASE(m_pQuadIndexBuffer);
 	
@@ -348,7 +461,7 @@ void TutorialApp::CreateQuad()
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	HR_T(CompileShaderFromFile(L"../Shaders/14_QuadVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pQuadInputLayout));
 
@@ -374,9 +487,22 @@ void TutorialApp::CreateQuad()
 
 	// 픽셀 셰이더 생성
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+
+
+	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_LDR.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &m_pQuadPixelShader));
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingLDR));
+	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
+
+	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_HDR_OS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingHDR_OS));
+	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
+
+
+	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_HDR_CUSTOM.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingHDR_CUSTOM));
 	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
 }
 
@@ -544,10 +670,11 @@ void TutorialApp::RenderImGUI()
 
 		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
-
-		ImGui::SliderFloat("Light0 intensity", &m_LightIntensity[0], 0.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 1.5f);
+		ImGui::SliderFloat("Light0 intensity", &m_LightIntensity[0], 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color		
-		ImGui::SliderFloat("Light1 intensity", &m_LightIntensity[1], 0.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::SliderFloat("Light1 rotation", &m_rotationAngle, 0.0f, 360.0f);
+		ImGui::SliderFloat("Light1 intensity", &m_LightIntensity[1], 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light1 color", (float*)&m_LightColors[1]); // Edit 3 floats representing a color	
 		ImGui::End();
 	}
