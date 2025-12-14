@@ -690,8 +690,15 @@ void TutorialApp::RenderImGUI()
 
 		
 		
-		m_isHDRSupported ? ImGui::Text("HDR Mode") : ImGui::Text("LDR Mode");
+		m_isHDRSupported ? ImGui::Text("HDR Support") : ImGui::Text("No HDR Support");
 		
+		if( m_format == DXGI_FORMAT_R10G10B10A2_UNORM )
+			ImGui::Text("Current Format: R10G10B10A2_UNORM (HDR)");
+		else if (m_format == DXGI_FORMAT_R8G8B8A8_UNORM)
+			ImGui::Text("Current Format: R8G8B8A8_UNORM (LDR)");
+		else
+			ImGui::Text("Current Format: unknown");
+
 		ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 1.5f);
 		ImGui::SliderFloat("Light0 intensity", &m_LightIntensity[0], 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color		
