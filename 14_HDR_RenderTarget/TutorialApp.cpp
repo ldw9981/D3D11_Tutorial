@@ -88,6 +88,8 @@ void TutorialApp::OnRender()
 	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 	cb1.monitorMaxNits = m_MonitorMaxNits;
 	cb1.gExposure = m_Exposure;
+
+
 	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
 	
@@ -167,7 +169,7 @@ bool TutorialApp::InitD3D()
 	DXGI_FORMAT result;
 	m_isHDRSupported = CheckHDRSupportAndGetMaxNits(m_MonitorMaxNits, result);
 	
-	if(m_isHDRSupported)
+	if(!m_forceLDR && m_isHDRSupported)
 		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R10G10B10A2_UNORM); // HDR
 	else
 		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R8G8B8A8_UNORM); // LDR
@@ -698,12 +700,12 @@ void TutorialApp::RenderImGUI()
 			ImGui::Text("Current Format: R8G8B8A8_UNORM (LDR ToneMapping)");
 		else
 			ImGui::Text("Current Format: unknown");
-
-		ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 1.5f);
-		ImGui::SliderFloat("Light0 intensity", &m_LightIntensity[0], 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+					
+		ImGui::DragFloat("Exposure", &m_Exposure, 0.1f, -5.0f, 5.0f);
+		ImGui::DragFloat("Light0 intensity", &m_LightIntensity[0], 0.01f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color		
 		ImGui::SliderFloat("Light1 rotation", &m_rotationAngle, 0.0f, 360.0f);
-		ImGui::SliderFloat("Light1 intensity", &m_LightIntensity[1], 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::DragFloat("Light1 intensity", &m_LightIntensity[1], 0.01f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light1 color", (float*)&m_LightColors[1]); // Edit 3 floats representing a color	
 		ImGui::End();
 	}

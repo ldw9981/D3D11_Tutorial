@@ -52,7 +52,8 @@ public:
 	UINT m_CubeVertexBufferOffset = 0;
 	ID3D11Buffer* m_pCubeIndexBuffer = nullptr;
 	int m_nCubeIndices = 0;
-
+	bool m_forceLDR = false;
+	bool m_UseACESFilm = true;
 
 
 	DXGI_FORMAT m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
