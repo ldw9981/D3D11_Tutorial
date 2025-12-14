@@ -293,11 +293,10 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 	HR_T(m_pSwapChain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&swapChain3));
 	if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
 	{		
-		// G2084 (PQ EOTF)와 P2020 (Rec. 2020 Primaries) 명시
+		// EOTF = PQ (ST.2084 / G2084)  , 색역(Primaries) = Rec.2020 , RGB Full Range
+		// 이 스왑체인의 0.0~1.0 값은 선형 RGB나 감마 값이 아니라 PQ로 인코딩된 HDR10 신호로 해석하라”
 		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020));
-	}	
-
-	
+	}		
 }
 
 bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& outFormat)
