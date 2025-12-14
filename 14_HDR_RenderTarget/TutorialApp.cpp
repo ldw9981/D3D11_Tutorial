@@ -702,10 +702,10 @@ void TutorialApp::RenderImGUI()
 			ImGui::Text("Current Format: unknown");
 					
 		ImGui::DragFloat("Exposure", &m_Exposure, 0.1f, -5.0f, 5.0f);
-		ImGui::DragFloat("Light0 intensity", &m_LightIntensity[0], 0.001f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::DragFloat("Light0 intensity", &m_LightIntensity[0], 0.01f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color		
 		ImGui::SliderFloat("Light1 rotation", &m_rotationAngle, 0.0f, 360.0f);
-		ImGui::DragFloat("Light1 intensity", &m_LightIntensity[1], 0.001f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::DragFloat("Light1 intensity", &m_LightIntensity[1], 0.01f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light1 color", (float*)&m_LightColors[1]); // Edit 3 floats representing a color	
 		ImGui::End();
 	}
