@@ -693,9 +693,9 @@ void TutorialApp::RenderImGUI()
 		m_isHDRSupported ? ImGui::Text("HDR Support") : ImGui::Text("No HDR Support");
 		
 		if( m_format == DXGI_FORMAT_R10G10B10A2_UNORM )
-			ImGui::Text("Current Format: R10G10B10A2_UNORM (HDR)");
+			ImGui::Text("Current Format: R10G10B10A2_UNORM (HDR ToneMapping)");
 		else if (m_format == DXGI_FORMAT_R8G8B8A8_UNORM)
-			ImGui::Text("Current Format: R8G8B8A8_UNORM (LDR)");
+			ImGui::Text("Current Format: R8G8B8A8_UNORM (LDR ToneMapping)");
 		else
 			ImGui::Text("Current Format: unknown");
 
