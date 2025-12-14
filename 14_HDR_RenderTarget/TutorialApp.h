@@ -77,9 +77,9 @@ public:
 	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// 계산된 라이트 방향
 	float m_rotationAngle = 0.0f;
 
-	float m_LightIntensity[2] = { 1.0f,1.0f };	// 라이트 세기
+	float m_LightIntensity[2] = { 0.1f,1.0f };	// 라이트 세기
 	float m_MonitorMaxNits=0.0f;
-	float m_Exposure = 1.0f;
+	float m_Exposure = 0.0f;
 	bool m_isHDRSupported = false;
 
 	bool OnInitialize() override;
