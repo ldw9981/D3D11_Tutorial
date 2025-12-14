@@ -14,15 +14,15 @@ using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
 // 정점 선언.
-struct Vertex
+struct CubeVertex
 {
 	Vector3 position;		// 정점 위치 정보.
 	Vector4 color;			// 정점 색상 정보.
 
-	Vertex(float x, float y, float z) : position(x, y, z) { }
-	Vertex(Vector3 position) : position(position) { }
+	CubeVertex(float x, float y, float z) : position(x, y, z) { }
+	CubeVertex(Vector3 position) : position(position) { }
 
-	Vertex(Vector3 position, Vector4 color)
+	CubeVertex(Vector3 position, Vector4 color)
 		: position(position), color(color) { }
 };
 
@@ -82,7 +82,7 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pLightConstantBuffer);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
 
 	
@@ -90,9 +90,9 @@ void TutorialApp::OnRender()
 	cb1.mWorld = XMMatrixTranspose(m_World1);
 	cb1.mView = XMMatrixTranspose(m_View);
 	cb1.mProjection = XMMatrixTranspose(m_Projection);
-	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
-	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nQuadIndices, 0, 0);
 
 	
 	// Update variables for the second cube	
@@ -100,9 +100,9 @@ void TutorialApp::OnRender()
 	cb1.mWorld = XMMatrixTranspose(m_World2);
 	cb1.mView = XMMatrixTranspose(m_View);
 	cb1.mProjection = XMMatrixTranspose(m_Projection);
-	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 	
-	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nQuadIndices, 0, 0);
 
 	// Present the information rendered to the back buffer to the front buffer (the screen)
 	m_pSwapChain->Present(0, 0);
@@ -235,7 +235,7 @@ bool TutorialApp::InitScene()
 	HRESULT hr=0; // 결과값.
 
 	// 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비		
-	Vertex vertices[] = // Local or Object or Model Space    position
+	CubeVertex vertices[] = // Local or Object or Model Space    position
 	{
 		{ Vector3(-1.0f, 1.0f, -1.0f),	Vector4(0.0f, 0.0f, 1.0f, 1.0f) },
 		{ Vector3(1.0f, 1.0f, -1.0f),	Vector4(0.0f, 1.0f, 0.0f, 1.0f) },
@@ -248,7 +248,7 @@ bool TutorialApp::InitScene()
 	};
 
 	D3D11_BUFFER_DESC bd = {};
-	bd.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	bd.ByteWidth = sizeof(CubeVertex) * ARRAYSIZE(vertices);
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0;
@@ -256,7 +256,7 @@ bool TutorialApp::InitScene()
 	vbData.pSysMem = vertices;			// 배열 데이터 할당.
 	HR_T(m_pDevice->CreateBuffer(&bd, &vbData, &m_pVertexBuffer));
 
-	m_VertexBufferStride = sizeof(Vertex); 	// 버텍스 버퍼의 정보
+	m_VertexBufferStride = sizeof(CubeVertex); 	// 버텍스 버퍼의 정보
 	m_VertexBufferOffset = 0;
 	
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
@@ -289,7 +289,7 @@ bool TutorialApp::InitScene()
 	};
 
 	// 인덱스 개수 저장.
-	m_nIndices = ARRAYSIZE(indices);
+	m_nQuadIndices = ARRAYSIZE(indices);
 
 	bd.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -315,7 +315,7 @@ bool TutorialApp::InitScene()
 	bd.ByteWidth = sizeof(ConstantBuffer);
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = 0;
-	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer));
+	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pLightConstantBuffer));
 
 	
 	// 쉐이더에 상수버퍼에 전달할 시스템 메모리 데이터 초기화
@@ -332,7 +332,7 @@ bool TutorialApp::InitScene()
 
 void TutorialApp::UninitScene()
 {
-	SAFE_RELEASE(m_pConstantBuffer);
+	SAFE_RELEASE(m_pLightConstantBuffer);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pVertexShader);
 	SAFE_RELEASE(m_pPixelShader);

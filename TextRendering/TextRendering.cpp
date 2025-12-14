@@ -130,10 +130,10 @@ struct cbPerObject
 cbPerObject cbPerObj;
 
 //Vertex Structure and Vertex Layout (Input Layout)//
-struct Vertex	//Overloaded Vertex Structure
+struct CubeVertex	//Overloaded Vertex Structure
 {
-	Vertex() {}
-	Vertex(float x, float y, float z,
+	CubeVertex() {}
+	CubeVertex(float x, float y, float z,
 		float u, float v)
 		: pos(x, y, z), texCoord(u, v) {}
 
@@ -472,13 +472,13 @@ void CleanUp()
 void InitD2DScreenTexture()
 {
 	//Create the vertex buffer
-	Vertex v[] =
+	CubeVertex v[] =
 	{
 		// Front Face
-		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-		Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-		Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-		Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+		CubeVertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+		CubeVertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+		CubeVertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+		CubeVertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
 	};
 
 	DWORD indices[] = {
@@ -506,7 +506,7 @@ void InitD2DScreenTexture()
 	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
+	vertexBufferDesc.ByteWidth = sizeof(CubeVertex) * 4;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
@@ -547,43 +547,43 @@ bool InitScene()
 	d3d11DevCon->PSSetShader(PS, 0, 0);
 
 	//Create the vertex buffer
-	Vertex v[] =
+	CubeVertex v[] =
 	{
 		// Front Face
-		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-		Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-		Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-		Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+		CubeVertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+		CubeVertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+		CubeVertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+		CubeVertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
 
 		// Back Face
-		Vertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f),
-		Vertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f),
-		Vertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f),
+		CubeVertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
+		CubeVertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f),
+		CubeVertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f),
+		CubeVertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f),
 
 		// Top Face
-		Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f),
-		Vertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f),
-		Vertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f),
-		Vertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f),
+		CubeVertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f),
+		CubeVertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f),
+		CubeVertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f),
+		CubeVertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f),
 
 		// Bottom Face
-		Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
-		Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-		Vertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f),
-		Vertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f),
+		CubeVertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+		CubeVertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+		CubeVertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f),
+		CubeVertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f),
 
 		// Left Face
-		Vertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f),
-		Vertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f),
-		Vertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-		Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+		CubeVertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f),
+		CubeVertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f),
+		CubeVertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+		CubeVertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
 
 		// Right Face
-		Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-		Vertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-		Vertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f),
-		Vertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f),
+		CubeVertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+		CubeVertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+		CubeVertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f),
+		CubeVertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f),
 	};
 
 	DWORD indices[] = {
@@ -630,7 +630,7 @@ bool InitScene()
 	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * 24;
+	vertexBufferDesc.ByteWidth = sizeof(CubeVertex) * 24;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
@@ -829,7 +829,7 @@ void RenderText(std::wstring text)
 	//Set the d2d Index buffer
 	d3d11DevCon->IASetIndexBuffer(d2dIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	//Set the d2d vertex buffer
-	UINT stride = sizeof(Vertex);
+	UINT stride = sizeof(CubeVertex);
 	UINT offset = 0;
 	d3d11DevCon->IASetVertexBuffers(0, 1, &d2dVertBuffer, &stride, &offset);
 
@@ -863,7 +863,7 @@ void DrawScene()
 	//Set the cubes index buffer
 	d3d11DevCon->IASetIndexBuffer(squareIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	//Set the cubes vertex buffer
-	UINT stride = sizeof(Vertex);
+	UINT stride = sizeof(CubeVertex);
 	UINT offset = 0;
 	d3d11DevCon->IASetVertexBuffers(0, 1, &squareVertBuffer, &stride, &offset);
 	///////////////**************new**************////////////////////

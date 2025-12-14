@@ -14,7 +14,7 @@ using namespace DirectX::SimpleMath;
 using namespace Microsoft::WRL;
 
 // 정점 선언.
-struct Vertex
+struct CubeVertex
 {
 	Vector3 position;		// 위치 정보.
 };
@@ -54,7 +54,7 @@ void TutorialApp::OnRender()
 
 	// Draw계열 함수를 호출하기전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.	
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정.
-	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_VertextBufferStride, &m_VertextBufferOffset);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_QuadVertextBufferStride, &m_QuadVertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
@@ -172,7 +172,7 @@ bool TutorialApp::InitScene()
 	//   |     /         `      |   |
 	//	 |   v0-----------v2    |  /
 	// (-1,-1,0)-------------(1,-1,0)
-	Vertex vertices[] =
+	CubeVertex vertices[] =
 	{
 		Vector3(-0.5,-0.5,0.5), // v0    
 		Vector3(0,0.5,0.5),		// v1    
@@ -181,7 +181,7 @@ bool TutorialApp::InitScene()
 
 	D3D11_BUFFER_DESC vbDesc = {};
 	m_VertexCount = ARRAYSIZE(vertices);	// 정점의 수
-	vbDesc.ByteWidth = sizeof(Vertex) * m_VertexCount; // 버텍스 버퍼의 크기(Byte).
+	vbDesc.ByteWidth = sizeof(CubeVertex) * m_VertexCount; // 버텍스 버퍼의 크기(Byte).
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER; // 정점 버퍼로 사용.
 	vbDesc.MiscFlags = 0;
@@ -193,8 +193,8 @@ bool TutorialApp::InitScene()
 	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));
 
 	// 버텍스 버퍼 정보 
-	m_VertextBufferStride = sizeof(Vertex); // 버텍스 하나의 크기
-	m_VertextBufferOffset = 0;	// 버텍스 시작 주소에서 더할 오프셋 주소
+	m_QuadVertextBufferStride = sizeof(CubeVertex); // 버텍스 하나의 크기
+	m_QuadVertextBufferOffset = 0;	// 버텍스 시작 주소에서 더할 오프셋 주소
 	
 	// 2. Render에서 파이프라인에 바인딩할  버텍스 셰이더 생성
 	ID3DBlob* vertexShaderBuffer = nullptr; // 버텍스 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체

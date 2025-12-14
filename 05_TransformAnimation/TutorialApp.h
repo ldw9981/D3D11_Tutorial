@@ -28,8 +28,8 @@ public:
 	UINT m_VertexBufferStride = 0;						// 버텍스 하나의 크기.
 	UINT m_VertexBufferOffset = 0;						// 버텍스 버퍼의 오프셋.
 	ID3D11Buffer* m_pIndexBuffer = nullptr;				// 버텍스 버퍼.
-	int m_nIndices = 0;									// 인덱스 개수.
-	ID3D11Buffer* m_pConstantBuffer = nullptr;			// 상수 버퍼.
+	int m_nQuadIndices = 0;									// 인덱스 개수.
+	ID3D11Buffer* m_pLightConstantBuffer = nullptr;			// 상수 버퍼.
 
 	Matrix                m_World1;				// 월드좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_World2;				// 월드좌표계 공간으로 변환을 위한 행렬.

@@ -8,7 +8,7 @@
 
 
 // 정점 선언.
-struct Vertex
+struct CubeVertex
 {
 	Vector3 Pos;		// 정점 위치 정보.
 	Vector2 Tex;
@@ -68,9 +68,9 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pLightConstantBuffer);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pConstantBuffer);
+	m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pLightConstantBuffer);
 	m_pDeviceContext->PSSetShaderResources(0, 1, &m_pTextureRV);
 	m_pDeviceContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
 
@@ -81,9 +81,9 @@ void TutorialApp::OnRender()
 	cb1.mWorld = XMMatrixTranspose(m_World);
 	cb1.mView = XMMatrixTranspose(m_View);
 	cb1.mProjection = XMMatrixTranspose(m_Projection);
-	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
-	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nQuadIndices, 0, 0);
 
 	m_pSwapChain->Present(0, 0);	// Present our back buffer to our front buffer
 }
@@ -184,7 +184,7 @@ bool TutorialApp::InitScene()
 	HRESULT hr=0; // 결과값.
 	// 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
 	// Local or Object or Model Space
-	Vertex vertices[] =
+	CubeVertex vertices[] =
 	{
 		{ Vector3(-1.0f, 1.0f, -1.0f), Vector2(1.0f, 0.0f) },
 		{ Vector3(1.0f, 1.0f, -1.0f), Vector2(0.0f, 0.0f) },
@@ -218,7 +218,7 @@ bool TutorialApp::InitScene()
 	};
 
 	D3D11_BUFFER_DESC bd = {};
-	bd.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	bd.ByteWidth = sizeof(CubeVertex) * ARRAYSIZE(vertices);
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0;
@@ -228,7 +228,7 @@ bool TutorialApp::InitScene()
 	HR_T( m_pDevice->CreateBuffer(&bd, &vbData, &m_pVertexBuffer));	
 
 	// 버텍스 버퍼 정보
-	m_VertexBufferStride = sizeof(Vertex);
+	m_VertexBufferStride = sizeof(CubeVertex);
 	m_VertexBufferOffset = 0;
 
 
@@ -261,7 +261,7 @@ bool TutorialApp::InitScene()
 	};
 
 	// 인덱스 개수 저장.
-	m_nIndices = ARRAYSIZE(indices);
+	m_nQuadIndices = ARRAYSIZE(indices);
 
 	bd = {};
 	bd.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
@@ -288,7 +288,7 @@ bool TutorialApp::InitScene()
 	bd.ByteWidth = sizeof(ConstantBuffer);
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = 0;
-	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pConstantBuffer));
+	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pLightConstantBuffer));
 
 	// Load the Texture
 	HR_T( CreateDDSTextureFromFile(m_pDevice, L"../resource/seafloor.dds", nullptr, &m_pTextureRV));

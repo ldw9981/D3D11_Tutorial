@@ -8,7 +8,7 @@
 
 
 // 정점 선언.
-struct Vertex
+struct CubeVertex
 {
 	Vector3 Pos;		// 정점 위치 정보.
 	Vector2 Tex;
@@ -98,7 +98,7 @@ void TutorialApp::OnRender()
 	cb.vMeshColor = m_vMeshColor;
 	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame, 0, nullptr, &cb, 0, 0);
 
-	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nQuadIndices, 0, 0);
 
 	//
 	// Present our back buffer to our front buffer
@@ -203,7 +203,7 @@ bool TutorialApp::InitScene()
 	HRESULT hr=0; // 결과값.
 	// 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
 	// Local or Object or Model Space
-	Vertex vertices[] =
+	CubeVertex vertices[] =
 	{
 		{ Vector3(-1.0f, 1.0f, -1.0f), Vector2(1.0f, 0.0f) },
 		{ Vector3(1.0f, 1.0f, -1.0f), Vector2(0.0f, 0.0f) },
@@ -236,7 +236,7 @@ bool TutorialApp::InitScene()
 		{ Vector3(-1.0f, 1.0f, 1.0f), Vector2(1.0f, 0.0f) },
 	};
 	D3D11_BUFFER_DESC bd = {};
-	bd.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	bd.ByteWidth = sizeof(CubeVertex) * ARRAYSIZE(vertices);
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0;
@@ -244,7 +244,7 @@ bool TutorialApp::InitScene()
 	vbData.pSysMem = vertices;
 	HR_T( m_pDevice->CreateBuffer(&bd, &vbData, &m_pVertexBuffer));
 		
-	m_VertexBufferStride = sizeof(Vertex);	// 버텍스 버퍼 정보
+	m_VertexBufferStride = sizeof(CubeVertex);	// 버텍스 버퍼 정보
 	m_VertexBufferOffset = 0;
 
 	// 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
@@ -273,7 +273,7 @@ bool TutorialApp::InitScene()
 		19,17,16, 18,17,19,
 		22,20,21, 23,20,22
 	};	
-	m_nIndices = ARRAYSIZE(indices);	// 인덱스 개수 저장.
+	m_nQuadIndices = ARRAYSIZE(indices);	// 인덱스 개수 저장.
 	bd = {};
 	bd.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;

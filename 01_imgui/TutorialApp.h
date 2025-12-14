@@ -2,7 +2,7 @@
 #include "../Common/GameApp.h"
 #include <dxgi1_4.h>
 #include <d3d11.h>
-#include <imgui.h>
+
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
 #include <string>

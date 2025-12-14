@@ -16,15 +16,15 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX::SimpleMath;
 
 // 정점 선언.
-struct Vertex
+struct CubeVertex
 {
 	Vector3 position;		// 정점 위치 정보.
 	Vector4 color;			// 정점 색상 정보.
 
-	Vertex(float x, float y, float z) : position(x, y, z) { }
-	Vertex(Vector3 position) : position(position) { }
+	CubeVertex(float x, float y, float z) : position(x, y, z) { }
+	CubeVertex(Vector3 position) : position(position) { }
 
-	Vertex(Vector3 position, Vector4 color)
+	CubeVertex(Vector3 position, Vector4 color)
 		: position(position), color(color) { }
 };
 
@@ -63,7 +63,7 @@ void TutorialApp::OnRender()
 
 	// Draw계열 함수를 호출하기전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.	
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정.
-	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_VertextBufferStride, &m_VertextBufferOffset);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_QuadVertextBufferStride, &m_QuadVertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
@@ -172,21 +172,21 @@ bool TutorialApp::InitScene()
 {
 	HRESULT hr=0; // 결과값.
 	// 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼및 버퍼 정보 준비
-	Vertex vertices[] =
+	CubeVertex vertices[] =
 	{
-		Vertex(Vector3(0.0f,  0.5f, 0.5f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-		Vertex(Vector3(0.5f, -0.5f, 0.5f), Vector4(0.0f, 1.0f, 0.0f, 1.0f)),
-		Vertex(Vector3(-0.5f, -0.5f, 0.5f), Vector4(0.0f, 0.0f, 1.0f, 1.0f))
+		CubeVertex(Vector3(0.0f,  0.5f, 0.5f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
+		CubeVertex(Vector3(0.5f, -0.5f, 0.5f), Vector4(0.0f, 1.0f, 0.0f, 1.0f)),
+		CubeVertex(Vector3(-0.5f, -0.5f, 0.5f), Vector4(0.0f, 0.0f, 1.0f, 1.0f))
 	};
 	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+	vbDesc.ByteWidth = sizeof(CubeVertex) * ARRAYSIZE(vertices);
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;	
 	D3D11_SUBRESOURCE_DATA vbData = {};
 	vbData.pSysMem = vertices;	// 배열 데이터 할당
 	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));	
-	m_VertextBufferStride = sizeof(Vertex);
-	m_VertextBufferOffset = 0;
+	m_QuadVertextBufferStride = sizeof(CubeVertex);
+	m_QuadVertextBufferOffset = 0;
 
 	// 2. Render() 에서 파이프라인에 바인딩할  버텍스 셰이더 생성	
 	ID3D10Blob* vertexShaderBuffer = nullptr;
