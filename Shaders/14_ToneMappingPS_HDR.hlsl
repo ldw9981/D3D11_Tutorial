@@ -37,18 +37,6 @@ float3 LinearToPQ(float3 linearColor, float maxNits)
     return pq;
 }
 
-// 입력: x는 모니터 Max Nits를 기준으로 정규화된 선형 RGB 값 (float3)
-// 출력: 0.0 ~ 1.0 범위의 압축된 선형 RGB 값 (float3)
-float3 ACESFilm(float3 x)
-{
-    float a = 2.51f;
-    float b = 0.03f;
-    float c = 2.43f;
-    float d = 0.59f;
-    float e = 0.14f;
-    return saturate(x * (a * x + b) / (x * (c * x + d) + e));
-}
-
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {
      // 1. 선형 HDR 값 로드 (Nits 값으로 간주)

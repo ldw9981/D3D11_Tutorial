@@ -31,9 +31,9 @@ public:
 
 	// Quad 렌더링에 필요한 객체들.
 	ID3D11VertexShader* m_pQuadVertexShader = nullptr;
-	ID3D11PixelShader* m_pPS_ToneMappingHDR_OS = nullptr;
+
 	ID3D11PixelShader* m_pPS_ToneMappingLDR = nullptr;
-	ID3D11PixelShader* m_pPS_ToneMappingHDR_CUSTOM = nullptr;
+	ID3D11PixelShader* m_pPS_ToneMappingHDR = nullptr;
 
 	ID3D11InputLayout* m_pQuadInputLayout = nullptr;
 	ID3D11Buffer* m_pQuadVertexBuffer = nullptr;
@@ -79,6 +79,7 @@ public:
 	float m_LightIntensity[2] = { 1.0f,1.0f };	// 라이트 세기
 	float m_MonitorMaxNits=0.0f;
 	float m_Exposure = 1.0f;
+	bool m_isHDRSupported = false;
 
 	bool OnInitialize() override;
 	void OnUninitialize() override;
@@ -87,8 +88,8 @@ public:
 
 	bool InitD3D();
 	void UninitD3D();
-	void CreateBackBufferRenderTargetView(DXGI_FORMAT format);
-	HRESULT GetMonitorMaxNits_DX11(IDXGISwapChain* pSwapChain, float& outMaxLuminance);
+	void CreateSwapChainAndBackBuffer(DXGI_FORMAT format);
+	bool CheckHDRSupportAndGetMaxNits(float& outMaxLuminance, DXGI_FORMAT& outFormat);
 
 	bool InitScene();		// 쉐이더,버텍스,인덱스
 	void UninitScene();

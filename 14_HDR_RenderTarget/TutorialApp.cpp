@@ -12,6 +12,8 @@
 #pragma comment(lib,"d3dcompiler.lib")
 
 
+using namespace Microsoft::WRL;
+
 struct ConstantBuffer
 {
 	Matrix mWorld;
@@ -134,12 +136,9 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->VSSetShader(m_pQuadVertexShader, nullptr, 0);
 	
 	switch (m_format)
-	{
-	case DXGI_FORMAT_R16G16B16A16_FLOAT:
-		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingHDR_OS, nullptr, 0);
-		break;
+	{	
 	case DXGI_FORMAT_R10G10B10A2_UNORM:
-		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingHDR_CUSTOM, nullptr, 0);
+		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingHDR, nullptr, 0);
 		break;
 	default:
 		m_pDeviceContext->PSSetShader(m_pPS_ToneMappingLDR, nullptr, 0);
@@ -165,9 +164,14 @@ void TutorialApp::OnRender()
 
 bool TutorialApp::InitD3D()
 {
-	//CreateBackBufferRenderTargetView(DXGI_FORMAT_R16G16B16A16_FLOAT); // HDR by OS Tone Mapping
-	CreateBackBufferRenderTargetView(DXGI_FORMAT_R10G10B10A2_UNORM); // HDR by Custom Tone Mapping
-
+	DXGI_FORMAT result;
+	m_isHDRSupported = CheckHDRSupportAndGetMaxNits(m_MonitorMaxNits, result);
+	
+	if(m_isHDRSupported)
+		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R10G10B10A2_UNORM); // HDR
+	else
+		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R8G8B8A8_UNORM); // LDR
+	
 	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
@@ -239,14 +243,12 @@ bool TutorialApp::InitD3D()
 }
 
 //  DXGI_FORMAT_R8G8B8A8_UNORM : LDR
-//  DXGI_FORMAT_R10G10B10A2_UNORM   : HDR with Shader
-//  DXGI_FORMAT_R16G16B16A16_FLOAT : HDR with OS
-void TutorialApp::CreateBackBufferRenderTargetView(DXGI_FORMAT format)
+//  DXGI_FORMAT_R10G10B10A2_UNORM   : HDR
+void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 {
 	m_format = format;
 	if (!(format == DXGI_FORMAT_R8G8B8A8_UNORM ||
-		format == DXGI_FORMAT_R10G10B10A2_UNORM ||
-		format == DXGI_FORMAT_R16G16B16A16_FLOAT))
+		format == DXGI_FORMAT_R10G10B10A2_UNORM ))
 	{
 		m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	}
@@ -287,77 +289,100 @@ void TutorialApp::CreateBackBufferRenderTargetView(DXGI_FORMAT format)
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
 	HR_T(m_pSwapChain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&swapChain3));
-	if( m_format ==  DXGI_FORMAT_R16G16B16A16_FLOAT )
-	{		
-		// Enable 10-bit or 16-bit output in the swap chain
-		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709));
-	}
-	else if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
+	if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
 	{		
 		// G2084 (PQ EOTF)와 P2020 (Rec. 2020 Primaries) 명시
 		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020));
 	}	
 
-	HR_T(GetMonitorMaxNits_DX11(m_pSwapChain, m_MonitorMaxNits));
+	
 }
 
-HRESULT TutorialApp::GetMonitorMaxNits_DX11(IDXGISwapChain* pSwapChain, /* DX11에서는 IDXGISwapChain*을 받습니다. */ float& outMaxLuminance)
+bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& outFormat)
 {
-	// 스왑 체인을 IDXGISwapChain3 이상으로 캐스팅 시도
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
-	HRESULT hr = pSwapChain->QueryInterface(IID_PPV_ARGS(&swapChain3));
-
+	ComPtr<IDXGIFactory4> pFactory;
+	HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
 	if (FAILED(hr))
 	{
-		// DXGI 1.3 인터페이스를 얻지 못하면 HDR 메타데이터 접근이 불가능합니다.
-		outMaxLuminance = 0.0f;
-		return hr;
+		LOG_ERRORA("ERROR: DXGI Factory 생성 실패.\n");
+		return false;
+	}
+	// 2. 주 그래픽 어댑터 (0번) 열거
+	ComPtr<IDXGIAdapter1> pAdapter;
+	UINT adapterIndex = 0;
+	while (pFactory->EnumAdapters1(adapterIndex, &pAdapter) != DXGI_ERROR_NOT_FOUND)
+	{
+		DXGI_ADAPTER_DESC1 desc;
+		pAdapter->GetDesc1(&desc);
+
+		// WARP 어댑터(소프트웨어)를 건너뛰고 주 어댑터만 사용하도록 선택할 수 있습니다.
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+		{
+			adapterIndex++;
+			pAdapter.Reset();
+			continue;
+		}
+		break;
 	}
 
-	// 1. 연결된 출력 장치(Monitor) 찾기
-	Microsoft::WRL::ComPtr<IDXGIOutput> output;
-	Microsoft::WRL::ComPtr<IDXGIOutput6> output6;
+	if (!pAdapter)
+	{
+		LOG_ERRORA("ERROR: 유효한 하드웨어 어댑터를 찾을 수 없습니다.\n");
+		return false;
+	}	
 
-	// 현재 스왑 체인이 연결된 출력(모니터)을 가져옵니다.
-	hr = swapChain3->GetContainingOutput(output.GetAddressOf());
+	// 3. 주 모니터 출력 (0번) 열거
+	ComPtr<IDXGIOutput> pOutput;
+	hr = pAdapter->EnumOutputs(0, &pOutput); // 0번 출력
 	if (FAILED(hr))
 	{
-		outMaxLuminance = 0.0f;
-		return hr;
+		LOG_ERRORA("ERROR: 주 모니터 출력(Output 0)을 찾을 수 없습니다.\n");
+		return false;
 	}
 
-	// 2. IDXGIOutput6 인터페이스로 캐스팅 (HDR 메타데이터 접근을 위해)
-	hr = output.As(&output6);
+	// 4. HDR 정보를 얻기 위해 IDXGIOutput6으로 쿼리
+	ComPtr<IDXGIOutput6> pOutput6;
+	hr = pOutput.As(&pOutput6);
 	if (FAILED(hr))
 	{
-		// 6 버전 인터페이스를 얻지 못했다면 HDR 지원이 미흡할 수 있습니다.
-		outMaxLuminance = 0.0f;
-		return hr;
+		printf("INFO: IDXGIOutput6 인터페이스를 얻을 수 없습니다. HDR 정보를 얻을 수 없습니다.\n");
+		outMaxNits = 100.0f;
+		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+		return false;
 	}
 
-	// 3. HDR 메타데이터 구조체 요청
-	DXGI_OUTPUT_DESC1 desc;
-	hr = output6->GetDesc1(&desc);
+	// 5. DXGI_OUTPUT_DESC1에서 HDR 정보 확인
+	DXGI_OUTPUT_DESC1 desc1 = {};
+	hr = pOutput6->GetDesc1(&desc1);
 	if (FAILED(hr))
 	{
-		outMaxLuminance = 0.0f;
-		return hr;
+		printf("ERROR: GetDesc1 호출 실패.\n");
+		return false;
 	}
 
-	// 4. 최대 휘도 (Max Luminance) 추출
-	// SetColorSpace1에서 G2084_NONE_P2020를 사용했다면 이 값은 유효합니다.
-	if (desc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
+	// 6. HDR 활성화 조건 분석
+	bool isHDRColorSpace = (desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+	outMaxNits = (float)desc1.MaxLuminance ;
+
+	// OS가 HDR을 켰을 때 MaxLuminance는 100 Nits(SDR 기준)를 초과합니다.
+	bool isHDRActive = outMaxNits > 100.0f;
+
+	if (isHDRColorSpace && isHDRActive)
 	{
-		// MaxLuminance는 cd/m² (Nits) 단위입니다.
-		outMaxLuminance = (float)desc.MaxLuminance;
+		// 최종 판단: HDR 지원 및 OS 활성화
+		outFormat = DXGI_FORMAT_R10G10B10A2_UNORM; // HDR 포맷 설정
+		printf("SUCCESS: HDR 활성화됨. MaxNits: %.1f, Format: R10G10B10A2_UNORM\n", outMaxNits);
+		return true;
 	}
 	else
 	{
-		// SDR 모드이거나 지원하지 않는 컬러 스페이스인 경우
-		outMaxLuminance = 100.0f; // 기본 SDR Nits 값 설정 (대체값)
+		// HDR 지원 안함 또는 OS에서 비활성화
+		outMaxNits = 100.0f; // SDR 기본값
+		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // SDR 포맷 설정
+		printf("INFO: HDR 비활성화. MaxNits: 100.0, Format: R8G8B8A8_UNORM\n");
+		return false;
 	}
-
-	return S_OK;
+	return true;
 }
 
 void TutorialApp::UninitD3D()
@@ -414,8 +439,7 @@ void TutorialApp::UninitScene()
 
 	SAFE_RELEASE(m_pQuadVertexBuffer);
 	SAFE_RELEASE(m_pQuadVertexShader);
-	SAFE_RELEASE(m_pPS_ToneMappingHDR_CUSTOM);
-	SAFE_RELEASE(m_pPS_ToneMappingHDR_OS);
+	SAFE_RELEASE(m_pPS_ToneMappingHDR);
 	SAFE_RELEASE(m_pPS_ToneMappingLDR);
 	SAFE_RELEASE(m_pQuadInputLayout);
 	SAFE_RELEASE(m_pQuadIndexBuffer);
@@ -494,15 +518,9 @@ void TutorialApp::CreateQuad()
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingLDR));
 	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
 
-	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_HDR_OS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_HDR.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingHDR_OS));
-	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
-
-
-	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_HDR_CUSTOM.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
-	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingHDR_CUSTOM));
+		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingHDR));
 	SAFE_RELEASE(pixelShaderBuffer);	// 픽셀 셰이더 버퍼 더이상 필요없음.
 }
 
@@ -670,6 +688,10 @@ void TutorialApp::RenderImGUI()
 
 		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
+		
+		
+		m_isHDRSupported ? ImGui::Text("HDR Mode") : ImGui::Text("LDR Mode");
+		
 		ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 1.5f);
 		ImGui::SliderFloat("Light0 intensity", &m_LightIntensity[0], 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color		
