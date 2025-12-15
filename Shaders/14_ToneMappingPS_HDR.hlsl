@@ -11,7 +11,8 @@ float3 Rec709ToRec2020(float3 color)
     return mul(conversion, color);
 }
 
-//최종 출력하고 싶은 Nits 값을 10000.0 으로 나눈 값을 넣어주어야 합니다.
+// PQ는 10,000nit 기준 이므로
+// color_for_PQ = linear01 * (displayMaxNits / 10000.0)
 float3 LinearToST2084(float3 color)
 {
     float m1 = 2610.0 / 4096.0 / 4;
@@ -27,21 +28,14 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
 {
      // 1. 선형 HDR 값 로드 (Nits 값으로 간주)
     float3 C_linear709 = gSceneHDR.Sample(gSamplerLinear, input.uv).rgb;  
-   
-    float exposureFactor = pow(2.0f, gExposure);
-    C_linear709 *= exposureFactor;
-    
-    float3 C_tonemapped;
-    C_tonemapped = ACESFilm(C_linear709);   
+    float3 C_exposure = C_linear709 * pow(2.0f, gExposure);    
+    float3 C_tonemapped = ACESFilm(C_exposure);
   
     const float st2084max = 10000.0;
     const float hdrScalar = gMaxHDRNits / st2084max;
-    float3 result;
-    result = Rec709ToRec2020(C_tonemapped);
-
-    // Apply the ST.2084 curve to the scene.
-    result = LinearToST2084(result * hdrScalar);
+    float3 C_Rec2020 = Rec709ToRec2020(C_tonemapped); 
+    float3 C_ST2084 = LinearToST2084(C_Rec2020 * hdrScalar);
     
     // 최종 PQ 인코딩된 값 [0.0, 1.0]을 R10G10B10A2_UNORM 백버퍼에 출력
-    return float4(result, 1.0);
+    return float4(C_ST2084, 1.0);
 }

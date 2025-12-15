@@ -131,6 +131,7 @@ void TutorialApp::OnRender()
 
 	// Render quad to back buffer with tone mapping	
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, nullptr);
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pQuadVertexBuffer, &m_QuadVertexBufferStride, &m_QuadVertexBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout);
