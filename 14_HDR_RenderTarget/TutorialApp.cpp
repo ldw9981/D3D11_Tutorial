@@ -156,12 +156,17 @@ void TutorialApp::OnRender()
 
 	RenderImGUI();
 
-	m_pSwapChain->Present(0, 0);
+	m_swapChain->Present(0, 0);
 }
 
 bool TutorialApp::InitD3D()
 {
 	ThrowIfFailed(CreateDXGIFactory2(m_dxgiFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory)));
+
+	// Check display HDR support and initialize ST.2084 support to match the display's support.
+    CheckDisplayHDRSupport();
+    m_enableST2084 = m_hdrSupport;
+    EnsureSwapChainColorSpace(m_currentSwapChainBitDepth, m_enableST2084);
 
 	DXGI_FORMAT result;
 	m_isHDRSupported = CheckHDRSupportAndGetMaxNits(m_MonitorMaxNits, result);
@@ -277,22 +282,24 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
+	ComPtr<IDXGISwapChain> pSwapChain;
 	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
+		D3D11_SDK_VERSION, &swapDesc, pSwapChain.GetAddressOf(), &m_pDevice, NULL, &m_pDeviceContext));
+
+	ThrowIfFailed(pSwapChain.As(&m_swapChain));	// QueryInterface SwapChain4
 
 	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
 	ID3D11Texture2D* pBackBufferTexture = nullptr;
-	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
+	HR_T(m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
 	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
+	
 
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
-	HR_T(m_pSwapChain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&swapChain3));
 	if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
 	{		
 		// EOTF = PQ (ST.2084 / G2084)  , 색역(Primaries) = Rec.2020 , RGB Full Range
 		// 이 스왑체인의 0.0~1.0 값은 선형 RGB나 감마 값이 아니라 PQ로 인코딩된 HDR10 신호로 해석하라”
-		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020));
+		HR_T(m_swapChain->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020));
 	}		
 }
 
@@ -478,7 +485,7 @@ void TutorialApp::UninitD3D()
 	SAFE_RELEASE(m_pRenderTargetView);
 	SAFE_RELEASE(m_pDevice);
 	SAFE_RELEASE(m_pDeviceContext);
-	SAFE_RELEASE(m_pSwapChain);
+	
 	
 }
 
