@@ -152,3 +152,106 @@ inline void HR_T_Impl(HRESULT hr, const char* file, int line, const char* func)
 HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
 HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView);
+
+
+
+///////////////////////////////////////////////////////////////
+// DX12ÀÇ DSSampleHelper
+inline std::string HrToString(HRESULT hr)
+{
+	char s_str[64] = {};
+	sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
+	return std::string(s_str);
+}
+
+class HrException : public std::runtime_error
+{
+public:
+	HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), m_hr(hr) {}
+	HRESULT Error() const { return m_hr; }
+private:
+	const HRESULT m_hr;
+};
+
+#define SAFE_RELEASE(p) if (p) (p)->Release()
+
+inline void ThrowIfFailed(HRESULT hr)
+{
+	if (FAILED(hr))
+	{
+		throw HrException(hr);
+	}
+}
+
+inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
+{
+	if (path == nullptr)
+	{
+		throw std::exception();
+	}
+
+	DWORD size = GetModuleFileName(nullptr, path, pathSize);
+	if (size == 0 || size == pathSize)
+	{
+		// Method failed or path was truncated.
+		throw std::exception();
+	}
+
+	WCHAR* lastSlash = wcsrchr(path, L'\\');
+	if (lastSlash)
+	{
+		*(lastSlash + 1) = L'\0';
+	}
+}
+
+
+
+#ifdef D3D_COMPILE_STANDARD_FILE_INCLUDE
+inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+	const std::wstring& filename,
+	const D3D_SHADER_MACRO* defines,
+	const std::string& entrypoint,
+	const std::string& target)
+{
+	UINT compileFlags = 0;
+#if defined(_DEBUG) || defined(DBG)
+	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+	HRESULT hr;
+
+	Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errors;
+	hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
+
+	if (errors != nullptr)
+	{
+		OutputDebugStringA((char*)errors->GetBufferPointer());
+	}
+	ThrowIfFailed(hr);
+
+	return byteCode;
+}
+#endif
+
+// Resets all elements in a ComPtr array.
+template<class T>
+void ResetComPtrArray(T* comPtrArray)
+{
+	for (auto& i : *comPtrArray)
+	{
+		i.Reset();
+	}
+}
+
+
+// Resets all elements in a unique_ptr array.
+template<class T>
+void ResetUniquePtrArray(T* uniquePtrArray)
+{
+	for (auto& i : *uniquePtrArray)
+	{
+		i.reset();
+	}
+}

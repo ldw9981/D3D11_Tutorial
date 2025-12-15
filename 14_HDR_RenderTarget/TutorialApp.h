@@ -5,10 +5,20 @@
 #include <directxtk/SimpleMath.h>
 #include <dxgiformat.h>
 #include <wrl/client.h>
+#include <d3dcompiler.h>
+
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx11.h>
+#include <dxgi1_4.h>	// swapchain3
+#include <dxgi1_6.h>	// swapchain3
+#include <combaseapi.h>
+
+#pragma comment (lib, "d3d11.lib")
+#pragma comment(lib,"d3dcompiler.lib")
 
 
-
-
+using namespace Microsoft::WRL;
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
 
@@ -16,7 +26,32 @@ class TutorialApp :
 	public GameApp
 {
 public:
+	enum SwapChainBitDepth
+	{
+		_8 = 0,
+		_10,
+		_16,
+		SwapChainBitDepthCount
+	};
+
+	enum RootConstants
+	{
+		ReferenceWhiteNits = 0,
+		DisplayCurve,
+		RootConstantsCount
+	};
+
+	enum DisplayCurve
+	{
+		sRGB = 0,    // The display expects an sRGB signal.
+		ST2084,        // The display expects an HDR10 signal.
+		None        // The display expects a linear signal.
+	};
+
 	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스 
+	ComPtr<IDXGIFactory4> m_dxgiFactory;
+	UINT m_dxgiFactoryFlags;
+
 	ID3D11Device* m_pDevice = nullptr;						// 디바이스	
 	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// 즉시 디바이스 컨텍스트
 	IDXGISwapChain* m_pSwapChain = nullptr;					// 스왑체인
@@ -61,7 +96,8 @@ public:
 	Matrix                m_World;				// 월드좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
 	Matrix                m_Projection;			// 단위장치좌표계( Normalized Device Coordinate) 공간으로 변환을 위한 행렬.
-
+	// Window bounds
+	RECT m_windowBounds;
 
 	XMFLOAT4 m_LightColors[2] =		// 라이트 색상
 	{
@@ -81,7 +117,12 @@ public:
 	float m_MonitorMaxNits=0.0f;
 	float m_Exposure = 0.0f;
 	bool m_isHDRSupported = false;
+	// Color.
+	bool m_hdrSupport = false;
+	bool m_enableST2084 = false;
+	float m_referenceWhiteNits = 80.0f;    // The reference brightness level of the display.
 
+	void SetWindowBounds(int left, int top, int right, int bottom);
 	bool OnInitialize() override;
 	void OnUninitialize() override;
 	void OnUpdate() override;
@@ -91,6 +132,8 @@ public:
 	void UninitD3D();
 	void CreateSwapChainAndBackBuffer(DXGI_FORMAT format);
 	bool CheckHDRSupportAndGetMaxNits(float& outMaxLuminance, DXGI_FORMAT& outFormat);
+
+	void CheckDisplayHDRSupport();
 
 	bool InitScene();		// 쉐이더,버텍스,인덱스
 	void UninitScene();
@@ -102,6 +145,9 @@ public:
 	void CreateQuad();
 	void CreateCube();
 
+
+
+	void EnsureSwapChainColorSpace(SwapChainBitDepth swapChainBitDepth, bool enableST2084);
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };
 

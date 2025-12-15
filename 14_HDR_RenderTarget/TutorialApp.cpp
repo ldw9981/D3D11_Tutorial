@@ -1,18 +1,5 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
-#include <d3dcompiler.h>
-
-#include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
-#include <dxgi1_4.h>	// swapchain3
-#include <dxgi1_6.h>	// swapchain3
-
-#pragma comment (lib, "d3d11.lib")
-#pragma comment(lib,"d3dcompiler.lib")
-
-
-using namespace Microsoft::WRL;
 
 struct ConstantBuffer
 {
@@ -27,6 +14,14 @@ struct ConstantBuffer
 	float gExposure=1.0f;
 	float padding[2];
 };
+
+void TutorialApp::SetWindowBounds(int left, int top, int right, int bottom)
+{
+	m_windowBounds.left = static_cast<LONG>(left);
+	m_windowBounds.top = static_cast<LONG>(top);
+	m_windowBounds.right = static_cast<LONG>(right);
+	m_windowBounds.bottom = static_cast<LONG>(bottom);
+}
 
 bool TutorialApp::OnInitialize()
 {
@@ -166,6 +161,8 @@ void TutorialApp::OnRender()
 
 bool TutorialApp::InitD3D()
 {
+	ThrowIfFailed(CreateDXGIFactory2(m_dxgiFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory)));
+
 	DXGI_FORMAT result;
 	m_isHDRSupported = CheckHDRSupportAndGetMaxNits(m_MonitorMaxNits, result);
 	
@@ -384,6 +381,91 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 		return false;
 	}
 	return true;
+}
+
+// To detect HDR support, we will need to check the color space in the primary DXGI output associated with the app at
+// this point in time (using window/display intersection). 
+
+// Compute the overlay area of two rectangles, A and B.
+// (ax1, ay1) = left-top coordinates of A; (ax2, ay2) = right-bottom coordinates of A
+// (bx1, by1) = left-top coordinates of B; (bx2, by2) = right-bottom coordinates of B
+inline int ComputeIntersectionArea(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int by2)
+{
+	return max(0, min(ax2, bx2) - max(ax1, bx1)) * max(0, min(ay2, by2) - max(ay1, by1));
+}
+
+void TutorialApp::CheckDisplayHDRSupport()
+{
+	// If the display's advanced color state has changed (e.g. HDR display plug/unplug, or OS HDR setting on/off), 
+	// then this app's DXGI factory is invalidated and must be created anew in order to retrieve up-to-date display information. 
+	if (m_dxgiFactory->IsCurrent() == false)
+	{
+		ThrowIfFailed(
+			CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))
+		);
+	}
+
+	// First, the method must determine the app's current display. 
+	// We don't recommend using IDXGISwapChain::GetContainingOutput method to do that because of two reasons:
+	//    1. Swap chains created with CreateSwapChainForComposition do not support this method.
+	//    2. Swap chains will return a stale dxgi output once DXGIFactory::IsCurrent() is false. In addition, 
+	//       we don't recommend re-creating swapchain to resolve the stale dxgi output because it will cause a short 
+	//       period of black screen.
+	// Instead, we suggest enumerating through the bounds of all dxgi outputs and determine which one has the greatest 
+	// intersection with the app window bounds. Then, use the DXGI output found in previous step to determine if the 
+	// app is on a HDR capable display. 
+
+	// Retrieve the current default adapter.
+	ComPtr<IDXGIAdapter1> dxgiAdapter;
+	ThrowIfFailed(m_dxgiFactory->EnumAdapters1(0, &dxgiAdapter));
+
+	// Iterate through the DXGI outputs associated with the DXGI adapter,
+	// and find the output whose bounds have the greatest overlap with the
+	// app window (i.e. the output for which the intersection area is the
+	// greatest).
+
+	UINT i = 0;
+	ComPtr<IDXGIOutput> currentOutput;
+	ComPtr<IDXGIOutput> bestOutput;
+	float bestIntersectArea = -1;
+
+	while (dxgiAdapter->EnumOutputs(i, &currentOutput) != DXGI_ERROR_NOT_FOUND)
+	{
+		// Get the retangle bounds of the app window
+		int ax1 = m_windowBounds.left;
+		int ay1 = m_windowBounds.top;
+		int ax2 = m_windowBounds.right;
+		int ay2 = m_windowBounds.bottom;
+
+		// Get the rectangle bounds of current output
+		DXGI_OUTPUT_DESC desc;
+		ThrowIfFailed(currentOutput->GetDesc(&desc));
+		RECT r = desc.DesktopCoordinates;
+		int bx1 = r.left;
+		int by1 = r.top;
+		int bx2 = r.right;
+		int by2 = r.bottom;
+
+		// Compute the intersection
+		int intersectArea = ComputeIntersectionArea(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2);
+		if (intersectArea > bestIntersectArea)
+		{
+			bestOutput = currentOutput;
+			bestIntersectArea = static_cast<float>(intersectArea);
+		}
+
+		i++;
+	}
+
+	// Having determined the output (display) upon which the app is primarily being 
+	// rendered, retrieve the HDR capabilities of that display by checking the color space.
+	ComPtr<IDXGIOutput6> output6;
+	ThrowIfFailed(bestOutput.As(&output6));
+
+	DXGI_OUTPUT_DESC1 desc1;
+	ThrowIfFailed(output6->GetDesc1(&desc1));
+
+	m_hdrSupport = (desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
 }
 
 void TutorialApp::UninitD3D()
@@ -638,6 +720,42 @@ void TutorialApp::CreateCube()
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pSolidPixelShader));
 	SAFE_RELEASE(pixelShaderBuffer);	
+}
+
+// DirectX supports two combinations of swapchain pixel formats and colorspaces for HDR content.
+// Option 1: FP16 + DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
+// Option 2: R10G10B10A2 + DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
+// Calling this function to ensure the correct color space for the different pixel formats.
+void TutorialApp::EnsureSwapChainColorSpace(SwapChainBitDepth swapChainBitDepth, bool enableST2084)
+{
+	DXGI_COLOR_SPACE_TYPE colorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+	switch (swapChainBitDepth)
+	{
+	case _8:
+		m_rootConstants[DisplayCurve] = sRGB;
+		break;
+
+	case _10:
+		colorSpace = enableST2084 ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+		m_rootConstants[DisplayCurve] = enableST2084 ? ST2084 : sRGB;
+		break;
+
+	case _16:
+		colorSpace = DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
+		m_rootConstants[DisplayCurve] = None;
+		break;
+	}
+
+	if (m_currentSwapChainColorSpace != colorSpace)
+	{
+		UINT colorSpaceSupport = 0;
+		if (SUCCEEDED(m_swapChain->CheckColorSpaceSupport(colorSpace, &colorSpaceSupport)) &&
+			((colorSpaceSupport & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) == DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT))
+		{
+			ThrowIfFailed(m_swapChain->SetColorSpace1(colorSpace));
+			m_currentSwapChainColorSpace = colorSpace;
+		}
+	}
 }
 
 bool TutorialApp::InitImGUI()
