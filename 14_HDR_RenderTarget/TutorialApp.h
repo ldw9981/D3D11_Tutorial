@@ -41,13 +41,27 @@ public:
 		DisplayCurve,
 		RootConstantsCount
 	};
-
+	struct DisplayChromaticities
+	{
+		float RedX;
+		float RedY;
+		float GreenX;
+		float GreenY;
+		float BlueX;
+		float BlueY;
+		float WhiteX;
+		float WhiteY;
+	};
 	enum DisplayCurve
 	{
 		sRGB = 0,    // The display expects an sRGB signal.
 		ST2084,        // The display expects an HDR10 signal.
 		None        // The display expects a linear signal.
 	};
+
+	static const float ClearColor[4];
+	static const float HDRMetaDataPool[4][4];
+	static const UINT FrameCount = 2;
 
 	// 렌더링 파이프라인을 구성하는 필수 객체의 인터페이스 
 	ComPtr<IDXGIFactory4> m_dxgiFactory;
@@ -57,6 +71,8 @@ public:
 	DXGI_COLOR_SPACE_TYPE m_currentSwapChainColorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
 	SwapChainBitDepth m_currentSwapChainBitDepth= _10;
 	UINT m_dxgiFactoryFlags=0;
+	UINT m_hdrMetaDataPoolIdx = 0;
+
 
 	ID3D11Device* m_pDevice = nullptr;						// 디바이스	
 	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// 즉시 디바이스 컨텍스트
@@ -82,6 +98,7 @@ public:
 	UINT m_QuadVertexBufferOffset = 0;
 	ID3D11Buffer* m_pQuadIndexBuffer = nullptr;
 	int m_nQuadIndices = 0;
+
 
 	// Cube 렌더링에 필요한 객체들.
 	ID3D11VertexShader* m_pCubeVertexShader = nullptr;
@@ -145,10 +162,12 @@ public:
 
 	bool InitD3D();
 	void UninitD3D();
-	void CreateSwapChainAndBackBuffer(DXGI_FORMAT format);
+	void BackBuffer(DXGI_FORMAT format);
 	bool CheckHDRSupportAndGetMaxNits(float& outMaxLuminance, DXGI_FORMAT& outFormat);
 
 	void CheckDisplayHDRSupport();
+
+
 
 	bool InitScene();		// 쉐이더,버텍스,인덱스
 	void UninitScene();
@@ -161,6 +180,9 @@ public:
 	void CreateCube();
 
 
+
+
+	void SetHDRMetaData(float MaxOutputNits /*=1000.0f*/, float MinOutputNits /*=0.001f*/, float MaxCLL /*=2000.0f*/, float MaxFALL /*=500.0f*/);
 
 	void EnsureSwapChainColorSpace(SwapChainBitDepth swapChainBitDepth, bool enableST2084);
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

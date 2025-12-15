@@ -1,6 +1,17 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
 
+const float TutorialApp::ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+const float TutorialApp::HDRMetaDataPool[4][4] =
+{
+    // MaxOutputNits, MinOutputNits, MaxCLL, MaxFALL
+    // These values are made up for testing. You need to figure out those numbers for your app.
+    { 1000.0f, 0.001f, 2000.0f, 500.0f },
+    { 500.0f, 0.001f, 2000.0f, 500.0f },
+    { 500.0f, 0.100f, 500.0f, 100.0f },
+    { 2000.0f, 1.000f, 2000.0f, 1000.0f }
+};
+
 struct ConstantBuffer
 {
 	Matrix mWorld;
@@ -167,6 +178,26 @@ bool TutorialApp::InitD3D()
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
+
+
+	// 스왑체인 속성 설정 구조체 생성.
+	DXGI_SWAP_CHAIN_DESC swapDesc = {};
+	swapDesc.BufferCount = 2;
+	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapDesc.OutputWindow = m_hWnd;	// 스왑체인 출력할 창 핸들 값.
+	swapDesc.Windowed = true;		// 창 모드 여부 설정.
+	swapDesc.BufferDesc.Format = m_format;
+	// 백버퍼(텍스처)의 가로/세로 크기 설정.
+	swapDesc.BufferDesc.Width = m_ClientWidth;
+	swapDesc.BufferDesc.Height = m_ClientHeight;
+	// 화면 주사율 설정.
+	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+	// 샘플링 관련 설정.
+	swapDesc.SampleDesc.Count = 1;
+	swapDesc.SampleDesc.Quality = 0;
+
 	ComPtr<IDXGISwapChain> pSwapChain;
 	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, pSwapChain.GetAddressOf(), &m_pDevice, NULL, &m_pDeviceContext));
@@ -178,14 +209,16 @@ bool TutorialApp::InitD3D()
     CheckDisplayHDRSupport();
     m_enableST2084 = m_hdrSupport;
     EnsureSwapChainColorSpace(m_currentSwapChainBitDepth, m_enableST2084);
+	SetHDRMetaData(HDRMetaDataPool[m_hdrMetaDataPoolIdx][0], HDRMetaDataPool[m_hdrMetaDataPoolIdx][1], HDRMetaDataPool[m_hdrMetaDataPoolIdx][2], HDRMetaDataPool[m_hdrMetaDataPoolIdx][3]);
 
-	DXGI_FORMAT result;
-	m_isHDRSupported = CheckHDRSupportAndGetMaxNits(m_MonitorMaxNits, result);
+
+//	DXGI_FORMAT result;
+//	m_isHDRSupported = CheckHDRSupportAndGetMaxNits(m_MonitorMaxNits, result);
 	
-	if(!m_forceLDR && m_isHDRSupported)
-		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R10G10B10A2_UNORM); // HDR
+	if(!m_forceLDR && m_hdrSupport)
+		BackBuffer(DXGI_FORMAT_R10G10B10A2_UNORM); // HDR
 	else
-		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R8G8B8A8_UNORM); // LDR
+		BackBuffer(DXGI_FORMAT_R8G8B8A8_UNORM); // LDR
 	
 	// 렌더 타겟을 최종 출력 파이프라인에 바인딩합니다.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
@@ -259,7 +292,7 @@ bool TutorialApp::InitD3D()
 
 //  DXGI_FORMAT_R8G8B8A8_UNORM : LDR
 //  DXGI_FORMAT_R10G10B10A2_UNORM   : HDR
-void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
+void TutorialApp::BackBuffer(DXGI_FORMAT format)
 {
 	m_format = format;
 	if (!(format == DXGI_FORMAT_R8G8B8A8_UNORM ||
@@ -268,29 +301,7 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 		m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	}
 
-	HRESULT hr = 0;	// 결과값.
-
-	// 스왑체인 속성 설정 구조체 생성.
-	DXGI_SWAP_CHAIN_DESC swapDesc = {};
-	swapDesc.BufferCount = 2;
-	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = m_hWnd;	// 스왑체인 출력할 창 핸들 값.
-	swapDesc.Windowed = true;		// 창 모드 여부 설정.
-	swapDesc.BufferDesc.Format = m_format;
-	// 백버퍼(텍스처)의 가로/세로 크기 설정.
-	swapDesc.BufferDesc.Width = m_ClientWidth;
-	swapDesc.BufferDesc.Height = m_ClientHeight;
-	// 화면 주사율 설정.
-	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-	// 샘플링 관련 설정.
-	swapDesc.SampleDesc.Count = 1;
-	swapDesc.SampleDesc.Quality = 0;
-
-	
-
-	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
+	HRESULT hr = 0;	// 결과값.	
 	ID3D11Texture2D* pBackBufferTexture = nullptr;
 	HR_T(m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
@@ -731,6 +742,65 @@ void TutorialApp::CreateCube()
 	SAFE_RELEASE(pixelShaderBuffer);	
 }
 
+// Set HDR meta data for output display to master the content and the luminance values of the content.
+// An app should estimate and set appropriate metadata based on its contents.
+// For demo purpose, we simply made up a few set of metadata for you to experience the effect of appling meta data.
+// Please see details in https://msdn.microsoft.com/en-us/library/windows/desktop/mt732700(v=vs.85).aspx.
+void TutorialApp::SetHDRMetaData(float MaxOutputNits /*=1000.0f*/, float MinOutputNits /*=0.001f*/, float MaxCLL /*=2000.0f*/, float MaxFALL /*=500.0f*/)
+{
+	if (!m_swapChain)
+	{
+		return;
+	}
+
+	// Clean the hdr metadata if the display doesn't support HDR
+	if (!m_hdrSupport)
+	{
+		ThrowIfFailed(m_swapChain->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_NONE, 0, nullptr));
+		return;
+	}
+
+	static const DisplayChromaticities DisplayChromaticityList[] =
+	{
+		{ 0.64000f, 0.33000f, 0.30000f, 0.60000f, 0.15000f, 0.06000f, 0.31270f, 0.32900f }, // Display Gamut Rec709 
+		{ 0.70800f, 0.29200f, 0.17000f, 0.79700f, 0.13100f, 0.04600f, 0.31270f, 0.32900f }, // Display Gamut Rec2020
+	};
+
+	// Select the chromaticity based on HDR format of the DWM.
+	int selectedChroma = 0;
+	if (m_currentSwapChainBitDepth == _16 && m_currentSwapChainColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709)
+	{
+		selectedChroma = 0;
+	}
+	else if (m_currentSwapChainBitDepth == _10 && m_currentSwapChainColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
+	{
+		selectedChroma = 1;
+	}
+	else
+	{
+		// Reset the metadata since this is not a supported HDR format.
+		ThrowIfFailed(m_swapChain->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_NONE, 0, nullptr));
+		return;
+	}
+
+	// Set HDR meta data
+	const DisplayChromaticities& Chroma = DisplayChromaticityList[selectedChroma];
+	DXGI_HDR_METADATA_HDR10 HDR10MetaData = {};
+	HDR10MetaData.RedPrimary[0] = static_cast<UINT16>(Chroma.RedX * 50000.0f);
+	HDR10MetaData.RedPrimary[1] = static_cast<UINT16>(Chroma.RedY * 50000.0f);
+	HDR10MetaData.GreenPrimary[0] = static_cast<UINT16>(Chroma.GreenX * 50000.0f);
+	HDR10MetaData.GreenPrimary[1] = static_cast<UINT16>(Chroma.GreenY * 50000.0f);
+	HDR10MetaData.BluePrimary[0] = static_cast<UINT16>(Chroma.BlueX * 50000.0f);
+	HDR10MetaData.BluePrimary[1] = static_cast<UINT16>(Chroma.BlueY * 50000.0f);
+	HDR10MetaData.WhitePoint[0] = static_cast<UINT16>(Chroma.WhiteX * 50000.0f);
+	HDR10MetaData.WhitePoint[1] = static_cast<UINT16>(Chroma.WhiteY * 50000.0f);
+	HDR10MetaData.MaxMasteringLuminance = static_cast<UINT>(MaxOutputNits * 10000.0f);
+	HDR10MetaData.MinMasteringLuminance = static_cast<UINT>(MinOutputNits * 10000.0f);
+	HDR10MetaData.MaxContentLightLevel = static_cast<UINT16>(MaxCLL);
+	HDR10MetaData.MaxFrameAverageLightLevel = static_cast<UINT16>(MaxFALL);
+	ThrowIfFailed(m_swapChain->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_HDR10, sizeof(DXGI_HDR_METADATA_HDR10), &HDR10MetaData));
+}
+
 // DirectX supports two combinations of swapchain pixel formats and colorspaces for HDR content.
 // Option 1: FP16 + DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
 // Option 2: R10G10B10A2 + DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
@@ -818,7 +888,7 @@ void TutorialApp::RenderImGUI()
 
 		
 		
-		m_isHDRSupported ? ImGui::Text("HDR Support") : ImGui::Text("No HDR Support");
+		m_hdrSupport ? ImGui::Text("HDR Support") : ImGui::Text("No HDR Support");
 		
 		if( m_format == DXGI_FORMAT_R10G10B10A2_UNORM )
 			ImGui::Text("Current Format: R10G10B10A2_UNORM (HDR ToneMapping)");
