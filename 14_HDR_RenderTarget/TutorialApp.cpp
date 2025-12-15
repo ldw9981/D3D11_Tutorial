@@ -162,6 +162,17 @@ void TutorialApp::OnRender()
 bool TutorialApp::InitD3D()
 {
 	ThrowIfFailed(CreateDXGIFactory2(m_dxgiFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory)));
+	UINT creationFlags = 0;
+#ifdef _DEBUG
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
+	ComPtr<IDXGISwapChain> pSwapChain;
+	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
+		D3D11_SDK_VERSION, &swapDesc, pSwapChain.GetAddressOf(), &m_pDevice, NULL, &m_pDeviceContext));
+
+	ThrowIfFailed(pSwapChain.As(&m_swapChain));	// QueryInterface SwapChain4
+	
 
 	// Check display HDR support and initialize ST.2084 support to match the display's support.
     CheckDisplayHDRSupport();
@@ -277,16 +288,7 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
-	UINT creationFlags = 0;
-#ifdef _DEBUG
-	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-	// 1. 장치 생성.   2.스왑체인 생성. 3.장치 컨텍스트 생성.
-	ComPtr<IDXGISwapChain> pSwapChain;
-	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
-		D3D11_SDK_VERSION, &swapDesc, pSwapChain.GetAddressOf(), &m_pDevice, NULL, &m_pDeviceContext));
-
-	ThrowIfFailed(pSwapChain.As(&m_swapChain));	// QueryInterface SwapChain4
+	
 
 	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
 	ID3D11Texture2D* pBackBufferTexture = nullptr;
