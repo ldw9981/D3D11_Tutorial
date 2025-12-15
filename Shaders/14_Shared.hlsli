@@ -42,7 +42,7 @@ struct PS_INPUT_QUAD
 };
 
 
-// 입력: x는 모니터 Max Nits를 기준으로 정규화된 선형 RGB 값 (float3)
+// 입력: Linear 공간의 HDR RGB 색상값
 // 출력: 0.0 ~ 1.0 범위의 압축된 선형 RGB 값 (float3)
 float3 ACESFilm(float3 x)
 {
