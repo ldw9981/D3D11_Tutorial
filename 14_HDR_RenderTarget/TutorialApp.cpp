@@ -200,18 +200,15 @@ bool TutorialApp::InitD3D()
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
 	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	descDepth.CPUAccessFlags = 0;
-	descDepth.MiscFlags = 0;
-
-	ID3D11Texture2D* textureDepthStencil = nullptr;
-	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, &textureDepthStencil));
-
-	// Create the depth stencil view
+	descDepth.MiscFlags = 0;	
+	ComPtr<ID3D11Texture2D> depthStencilTex;
+	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, depthStencilTex.GetAddressOf()));	
+	
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
 	descDSV.Format = descDepth.Format;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
-	HR_T(m_pDevice->CreateDepthStencilView(textureDepthStencil, &descDSV, &m_pDepthStencilView));
-	SAFE_RELEASE(textureDepthStencil);
+	HR_T(m_pDevice->CreateDepthStencilView(depthStencilTex.Get(), &descDSV, &m_pDepthStencilView));
 
 	
 	//Create HDR Render Target and its view
@@ -285,12 +282,11 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
 
 	// 4. 렌더타겟뷰 생성.  (백버퍼를 이용하는 렌더타겟뷰)	
-	ID3D11Texture2D* pBackBufferTexture = nullptr;
-	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
-	SAFE_RELEASE(pBackBufferTexture);	//외부 참조 카운트를 감소시킨다.
-
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
+	ComPtr<ID3D11Texture2D> backBufferTexture;		
+	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBufferTexture.GetAddressOf()));
+	HR_T(m_pDevice->CreateRenderTargetView(backBufferTexture.Get(), NULL, &m_pRenderTargetView));  // 텍스처는 내부 참조 증가
+	
+	ComPtr<IDXGISwapChain3> swapChain3;
 	HR_T(m_pSwapChain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&swapChain3));
 	if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
 	{		

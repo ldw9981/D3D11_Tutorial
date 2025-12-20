@@ -8,7 +8,7 @@
 
 
 
-
+using namespace Microsoft::WRL;
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
 
