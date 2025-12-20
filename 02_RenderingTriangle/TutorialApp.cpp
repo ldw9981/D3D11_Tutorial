@@ -1,17 +1,6 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
-#include <directxtk/simplemath.h>
-#include <dxgidebug.h>
-#include <dxgi1_3.h>
-#include <d3dcompiler.h>
-#include <wrl/client.h>
 
-#pragma comment (lib, "d3d11.lib")
-#pragma comment(lib,"d3dcompiler.lib")
-#pragma comment(lib,"dxgi.lib")
-
-using namespace DirectX::SimpleMath;
-using namespace Microsoft::WRL;
 
 // 정점 선언.
 struct CubeVertex
@@ -46,18 +35,18 @@ void TutorialApp::OnRender()
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
 	//그릴대상 설정
-	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+	m_pDeviceContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), NULL);
 
 
 	// 화면 칠하기.
-	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
+	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), color);
 
 	// Draw계열 함수를 호출하기전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.	
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정.
-	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_QuadVertextBufferStride, &m_QuadVertextBufferOffset);
-	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
-	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
-	m_pDeviceContext->PSSetShader(m_pPixelShader, nullptr, 0);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &m_QuadVertextBufferStride, &m_QuadVertextBufferOffset);
+	m_pDeviceContext->IASetInputLayout(m_pInputLayout.Get());
+	m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
 	
 	// Render a triangle	
 	m_pDeviceContext->Draw(m_VertexCount, 0);
@@ -76,9 +65,8 @@ bool TutorialApp::InitD3D()
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 	// 그래픽 카드 하드웨어의 스펙으로 호환되는 가장 높은 DirectX 기능레벨로 생성하여 드라이버가 작동 한다.
-	// 인터페이스는 Direc3D11 이지만 GPU드라이버는 D3D12 드라이버가 작동할수도 있다.
 	D3D_FEATURE_LEVEL featureLevels[] = { // index 0부터 순서대로 시도한다.
-		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0,D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
+		D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
 	};
 	D3D_FEATURE_LEVEL actualFeatureLevel; // 최종 피처 레벨을 저장할 변수
 
@@ -90,9 +78,9 @@ bool TutorialApp::InitD3D()
 		featureLevels,
 		ARRAYSIZE(featureLevels),
 		D3D11_SDK_VERSION,
-		&m_pDevice,
+		m_pDevice.GetAddressOf(),
 		&actualFeatureLevel,
-		&m_pDeviceContext
+		m_pDeviceContext.GetAddressOf()
 	));
 
 	// 2. 스왑체인 생성을 위한 DXGI Factory 생성
@@ -121,19 +109,19 @@ bool TutorialApp::InitD3D()
 	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  창의 크기와 백 버퍼의 크기가 다를 때. 백버퍼 크기에 맞게 스케일링 하지 않는다.
 
 	HR_T(pFactory->CreateSwapChainForHwnd(
-		m_pDevice,
+		m_pDevice.Get(),
 		m_hWnd,
 		&swapChainDesc,
 		nullptr,
 		nullptr,
-		&m_pSwapChain
+		m_pSwapChain.GetAddressOf()
 	));
 
 	// 3. 렌더타겟 뷰 생성.  렌더 타겟 뷰는 "여기다가 그림을 그려라"라고 GPU에게 알려주는 역할을 하는 객체.
 	// 텍스처와 영구적 연결되는 객체이다. 
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView));
+	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
 
 	// 뷰포트 설정.	
 	D3D11_VIEWPORT viewport={};
@@ -149,10 +137,7 @@ bool TutorialApp::InitD3D()
 
 void TutorialApp::UninitD3D()
 {
-	SAFE_RELEASE(m_pRenderTargetView);
-	SAFE_RELEASE(m_pSwapChain);
-	SAFE_RELEASE(m_pDeviceContext);
-	SAFE_RELEASE(m_pDevice);
+
 }
 
 bool TutorialApp::InitScene()
@@ -190,17 +175,17 @@ bool TutorialApp::InitScene()
 	// 정점 버퍼 생성.
 	D3D11_SUBRESOURCE_DATA vbData = {};
 	vbData.pSysMem = vertices;	// 버퍼를 생성할때 복사할 데이터의 주소 설정 
-	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));
+	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pVertexBuffer.GetAddressOf()));
 
 	// 버텍스 버퍼 정보 
 	m_QuadVertextBufferStride = sizeof(CubeVertex); // 버텍스 하나의 크기
 	m_QuadVertextBufferOffset = 0;	// 버텍스 시작 주소에서 더할 오프셋 주소
 	
 	// 2. Render에서 파이프라인에 바인딩할  버텍스 셰이더 생성
-	ID3DBlob* vertexShaderBuffer = nullptr; // 버텍스 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
-	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+	ComPtr<ID3DBlob> vertexShaderBuffer = nullptr; // 버텍스 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
+	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicVertexShader.hlsl", "main", "vs_4_0", vertexShaderBuffer.GetAddressOf()));
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), // 필요한 데이터를 복사하며 객체 생성 
-		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
+		vertexShaderBuffer->GetBufferSize(), NULL, m_pVertexShader.GetAddressOf()));
 	
 	// 3. Render() 에서 파이프라인에 바인딩할 InputLayout 생성 	
 	D3D11_INPUT_ELEMENT_DESC layout[] =  // 인풋 레이아웃은 버텍스 쉐이더가 입력받을 데이터의 형식을 지정한다.
@@ -209,26 +194,25 @@ bool TutorialApp::InitScene()
 	};
 	// 버텍스 셰이더의 Input에 지정된 내용과 같은지 검증하면서 InputLayout을 생성한다.
 	HR_T(hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
-		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));	
-
-	SAFE_RELEASE(vertexShaderBuffer); // 복사했으니 버퍼는 해제 가능
+		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), m_pInputLayout.GetAddressOf()));
 
 
 	// 4. Render에서 파이프라인에 바인딩할 픽셀 셰이더 생성
-	ID3DBlob* pixelShaderBuffer = nullptr; // 픽셀 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
-	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));	
+	ComPtr<ID3DBlob> pixelShaderBuffer = nullptr; // 픽셀 세이더 HLSL의 컴파일된 결과(바이트코드)를 담을수 있는 버퍼 객체
+	
+	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicPixelShader.hlsl", "main", "ps_4_0", pixelShaderBuffer.GetAddressOf()));
 	HR_T( m_pDevice->CreatePixelShader(	  // 필요한 데이터를 복사하며 객체 생성 
 		pixelShaderBuffer->GetBufferPointer(),
-		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
-	SAFE_RELEASE(pixelShaderBuffer); // 복사했으니 버퍼는 해제 가능
+		pixelShaderBuffer->GetBufferSize(), NULL, m_pPixelShader.GetAddressOf()));
+	
 	
 	return true;
 }
 
 void TutorialApp::UninitScene()
 {
-	SAFE_RELEASE(m_pVertexBuffer);
-	SAFE_RELEASE(m_pInputLayout);
-	SAFE_RELEASE(m_pVertexShader);
-	SAFE_RELEASE(m_pPixelShader);
+	//SAFE_RELEASE(m_pVertexBuffer);
+	//SAFE_RELEASE(m_pInputLayout);
+	//SAFE_RELEASE(m_pVertexShader);
+	//SAFE_RELEASE(m_pPixelShader);
 }
