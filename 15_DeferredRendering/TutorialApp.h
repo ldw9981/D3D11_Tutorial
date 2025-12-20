@@ -32,6 +32,7 @@ public:
 
     ComPtr<ID3D11Texture2D> m_pDepthTexture = nullptr;
     ComPtr<ID3D11DepthStencilView> m_pDepthDSV = nullptr;
+    ComPtr<ID3D11ShaderResourceView> m_pDepthSRV = nullptr;
 
     // G-Buffer (Color, Normal, PositionVS)
     static constexpr int GBufferCount = 3;
@@ -60,6 +61,11 @@ public:
     int m_QuadIndexCount = 0;
 
     ComPtr<ID3D11SamplerState> m_pSamplerLinear = nullptr;
+
+    // Depth-Stencil States
+    ComPtr<ID3D11DepthStencilState> m_pDSS_GeometryPass = nullptr;   // 오브젝트 마킹 (Bit 0)
+    ComPtr<ID3D11DepthStencilState> m_pDSS_LightVolume = nullptr;    // 라이트 볼륨 마킹 (Bit 1)
+    ComPtr<ID3D11DepthStencilState> m_pDSS_LightPass = nullptr;      // 최종 조명 계산 (Bit 0 & 1)
 
     // Constant buffers
     ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;

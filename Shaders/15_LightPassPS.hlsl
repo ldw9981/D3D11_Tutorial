@@ -2,8 +2,8 @@
 
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {
-    float2 uv = input.uv;
-
+    float2 uv = input.uv;  
+    
     float3 albedo = gGBufferAlbedo.Sample(gSamplerLinear, uv).rgb;
     float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, uv).rgb;
     float3 posVS = gGBufferPosition.Sample(gSamplerLinear, uv).xyz;

@@ -16,6 +16,7 @@ cbuffer CBLight : register(b0)
 Texture2D gGBufferAlbedo   : register(t0);
 Texture2D gGBufferNormal   : register(t1);
 Texture2D gGBufferPosition : register(t2);
+Texture2D gDepthBuffer : register(t3);
 SamplerState gSamplerLinear : register(s0);
 
 struct VS_INPUT_CUBE

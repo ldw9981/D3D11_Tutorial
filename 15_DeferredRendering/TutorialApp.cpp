@@ -58,8 +58,8 @@ void TutorialApp::OnUpdate()
 void TutorialApp::OnRender()
 {
     // 1) Geometry pass -> GBuffer MRTs
-    float clearAlbedo[4] = { 0.02f, 0.02f, 0.02f, 1.0f };
-    float clearNormal[4] = { 0.5f, 0.5f, 1.0f, 1.0f };
+    float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     float clearPos[4] = { 0, 0, 0, 1 };
 
     m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0].Get(), clearAlbedo);
@@ -148,14 +148,31 @@ void TutorialApp::OnRender()
     // ImGui Window - G-Buffer Debug View
     ImGui::Begin("G-Buffer Debug View");
     
+    // 첫 번째 줄: Color, Normal
+    ImGui::BeginGroup();
     ImGui::Text("Color (Albedo)");
     ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
+    ImGui::EndGroup();
     
-    ImGui::Text("Normal (View Space)");
+    ImGui::SameLine();
+    
+    ImGui::BeginGroup();
+    ImGui::Text("Normal");
     ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
+    ImGui::EndGroup();
     
-    ImGui::Text("Position (View Space)");
+    // 두 번째 줄: Position, Depth
+    ImGui::BeginGroup();
+    ImGui::Text("Position");
     ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
+    ImGui::EndGroup();
+    
+    ImGui::SameLine();
+    
+    ImGui::BeginGroup();
+    ImGui::Text("Depth Buffer");
+    ImGui::Image((ImTextureID)m_pDepthSRV.Get(), ImVec2(128, 128));
+    ImGui::EndGroup();
     
     ImGui::End();
 
@@ -278,14 +295,28 @@ bool TutorialApp::CreateDepthBuffer()
     descDepth.Height = m_ClientHeight;
     descDepth.MipLevels = 1;
     descDepth.ArraySize = 1;
-    descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; // Typeless로 변경하여 SRV 생성 가능하게
     descDepth.SampleDesc.Count = 1;
     descDepth.SampleDesc.Quality = 0;
     descDepth.Usage = D3D11_USAGE_DEFAULT;
-    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV 플래그 추가
 
     HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, m_pDepthTexture.GetAddressOf()));
-    HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), nullptr, m_pDepthDSV.GetAddressOf()));
+
+    // Depth Stencil View 생성
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Texture2D.MipSlice = 0;
+    HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), &dsvDesc, m_pDepthDSV.GetAddressOf()));
+
+    // Shader Resource View 생성 (Depth를 텐스처로 읽기 위해)
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    HR_T(m_pDevice->CreateShaderResourceView(m_pDepthTexture.Get(), &srvDesc, m_pDepthSRV.GetAddressOf()));
 
     return true;
 }
