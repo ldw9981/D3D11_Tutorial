@@ -172,25 +172,47 @@ void TutorialApp::RenderDeferred()
 	ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
 	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
 
-	CBGeometry cbGeom;
-	cbGeom.World = m_World.Transpose();
-	cbGeom.View = m_View.Transpose();
-	cbGeom.Projection = m_Projection.Transpose();
-	cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
-	m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
-
+	// 파이프라인 상태 설정
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
-
 	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
-	m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
+	// 5x5 그리드로 25개 큐브 렌더링 (XY 평면)
+	CBGeometry cbGeom;
+	cbGeom.View = m_View.Transpose();
+	cbGeom.Projection = m_Projection.Transpose();
+	cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
 
+	const int gridSize = 5;
+	const float spacing = 5.0f;
+	const float offset = (gridSize - 1) * spacing * 0.5f; // 중앙 정렬
+    
+	for (int y = 0; y < gridSize; y++)
+	{
+		for (int x = 0; x < gridSize; x++)
+		{
+			for (int z = 0; z < gridSize; z++)
+			{
+				Vector3 position(
+					x * spacing - offset,
+					y * spacing - offset,
+					z * spacing - offset
+				);
+
+				Matrix world = Matrix::CreateTranslation(position);
+				cbGeom.World = world.Transpose();
+
+				m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
+				m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
+            }
+		}
+	}
+    
 	// 2) Light pass -> back buffer
 	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
@@ -346,7 +368,7 @@ bool TutorialApp::InitScene()
 
     // Put camera a bit back (camera itself is driven by GameApp input too)
     m_Camera.Reset();
-    m_Camera.m_Position = Vector3(0.0f, 2.0f, -6.0f);
+    m_Camera.m_Position = Vector3(0.0f, 2.0f, -50.0f);
     m_Camera.m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
     m_Camera.Update(0.0f);
     m_Camera.GetViewMatrix(m_View);
