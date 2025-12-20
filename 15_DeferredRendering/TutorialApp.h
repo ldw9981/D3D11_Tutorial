@@ -80,12 +80,15 @@ public:
     Vector3 m_LightColor = Vector3(1.0f, 1.0f, 1.0f);
     float m_LightRadius = 6.0f;
     float m_Exposure = 1.0f;
+	bool m_UseDeferredRendering = true;
 
     bool OnInitialize() override;
     void OnUninitialize();
     void OnUpdate();
     void OnRender() override;
 
+    void RenderFoward();
+	void RenderDeferred();
     virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:

@@ -57,128 +57,233 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
-    // 1) Geometry pass -> GBuffer MRTs
-    float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    float clearPos[4] = { 0, 0, 0, 1 };
+    if(m_UseDeferredRendering)
+        RenderDeferred();
+    else
+		RenderFoward();
+}
 
-    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0].Get(), clearAlbedo);
-    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[1].Get(), clearNormal);
-    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2].Get(), clearPos);
-    m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+void TutorialApp::RenderFoward()
+{
+	// 1) Geometry pass -> GBuffer MRTs
+	float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	float clearPos[4] = { 0, 0, 0, 1 };
 
-    ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
-    m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
 
-    CBGeometry cbGeom;
-    cbGeom.World = m_World.Transpose();
-    cbGeom.View = m_View.Transpose();
-    cbGeom.Projection = m_Projection.Transpose();
-    cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
 
-    m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
-    m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
-    m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
 
-    m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
-    m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
-    m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+	// 2) Light pass -> back buffer
+	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
+	CBGeometry cbGeom;
+	cbGeom.World = m_World.Transpose();
+	cbGeom.View = m_View.Transpose();
+	cbGeom.Projection = m_Projection.Transpose();
+	cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
+	m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
 
-    m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
+	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
 
-    // 2) Light pass -> back buffer
-    float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
-    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
-    m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
+	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
-    // Transform light to view-space
-    Vector3 lightPosVS = Vector3::Transform(m_LightPosWorld, m_View);
+	m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
 
-    CBLight cbLight;
-    cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
-    cbLight.LightColor_Exposure = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, m_Exposure);
-    cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
+	// ImGui Rendering
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
-    ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
-
-    m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_pDeviceContext->IASetVertexBuffers(0, 1, m_pQuadVB.GetAddressOf(), &m_QuadVBStride, &m_QuadVBOffset);
-    m_pDeviceContext->IASetIndexBuffer(m_pQuadIB.Get(), DXGI_FORMAT_R16_UINT, 0);
-    m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout.Get());
-
-    m_pDeviceContext->VSSetShader(m_pQuadVS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetShader(m_pLightPS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
-
-    m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
-    m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
-
-    m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
-
-    // Unbind SRVs
-    ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
-    m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
-
-    // ImGui Rendering
-    ImGui_ImplDX11_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
-
-    // ImGui Window - Settings
-    ImGui::Begin("Deferred Rendering Settings");
-    
-    ImGui::Text("Camera Info");
-    ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
-    Vector3 forward = m_Camera.GetForward();
-    ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
-    ImGui::Separator();
-    
-    ImGui::Text("Light Settings");
-    ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
-    ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);
-    ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
-    ImGui::Separator();
+	// ImGui Window - Settings
+	ImGui::Begin("Forward Rendering Settings");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::End();
+    ImGui::Separator();
 
-    // ImGui Window - G-Buffer Debug View
-    ImGui::Begin("G-Buffer Debug View");
-    
-    // 첫 번째 줄: Color, Normal
-    ImGui::BeginGroup();
-    ImGui::Text("Color (Albedo)");
-    ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
-    ImGui::EndGroup();
-    
-    ImGui::SameLine();
-    
-    ImGui::BeginGroup();
-    ImGui::Text("Normal");
-    ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
-    ImGui::EndGroup();
-    
-    // 두 번째 줄: Position, Depth
-    ImGui::BeginGroup();
-    ImGui::Text("Position");
-    ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
-    ImGui::EndGroup();
-    
-    ImGui::SameLine();
-    
-    ImGui::BeginGroup();
-    ImGui::Text("Depth Buffer");
-    ImGui::Image((ImTextureID)m_pDepthSRV.Get(), ImVec2(128, 128));
-    ImGui::EndGroup();
-    
-    ImGui::End();
+    ImGui::Checkbox("Deferred Rendering", (bool*)&m_UseDeferredRendering);
+	ImGui::Text("Camera Info");
+	ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
+	Vector3 forward = m_Camera.GetForward();
+	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
+	ImGui::Separator();
 
-    ImGui::Render();
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-    HR_T(m_pSwapChain->Present(0, 0));
+	ImGui::Text("Light Settings");
+	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
+	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);
+	ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
+	ImGui::Separator();
+	
+	ImGui::End();
+
+	// ImGui Window - G-Buffer Debug View
+	ImGui::Begin("G-Buffer Debug View");
+
+	// 첫 번째 줄: Color, Normal
+	ImGui::BeginGroup();
+	ImGui::Text("Color (Albedo)");
+	ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	ImGui::SameLine();
+
+	ImGui::BeginGroup();
+	ImGui::Text("Normal");
+	ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	// 두 번째 줄: Position, Depth
+	ImGui::BeginGroup();
+	ImGui::Text("Position");
+	ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	ImGui::SameLine();
+
+	ImGui::BeginGroup();
+	ImGui::Text("Depth Buffer");
+	ImGui::Image((ImTextureID)m_pDepthSRV.Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	ImGui::End();
+
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	HR_T(m_pSwapChain->Present(0, 0));
+}
+
+void TutorialApp::RenderDeferred()
+{
+	// 1) Geometry pass -> GBuffer MRTs
+	float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	float clearPos[4] = { 0, 0, 0, 1 };
+
+	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0].Get(), clearAlbedo);
+	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[1].Get(), clearNormal);
+	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2].Get(), clearPos);
+	m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
+	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
+
+	CBGeometry cbGeom;
+	cbGeom.World = m_World.Transpose();
+	cbGeom.View = m_View.Transpose();
+	cbGeom.Projection = m_Projection.Transpose();
+	cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
+	m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
+
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
+	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
+
+	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+
+	m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
+
+	// 2) Light pass -> back buffer
+	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
+
+	// Transform light to view-space
+	Vector3 lightPosVS = Vector3::Transform(m_LightPosWorld, m_View);
+
+	CBLight cbLight;
+	cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
+	cbLight.LightColor_Exposure = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, m_Exposure);
+	cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
+	m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
+
+	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
+
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pQuadVB.GetAddressOf(), &m_QuadVBStride, &m_QuadVBOffset);
+	m_pDeviceContext->IASetIndexBuffer(m_pQuadIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+	m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout.Get());
+
+	m_pDeviceContext->VSSetShader(m_pQuadVS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetShader(m_pLightPS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
+
+	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
+	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
+
+	m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
+
+	// Unbind SRVs
+	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
+	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
+
+	// ImGui Rendering
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	// ImGui Window - Settings
+    ImGui::Begin("Deferred Rendering Settings");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Checkbox("Deferred Rendering", (bool*)&m_UseDeferredRendering);
+    ImGui::Separator();
+
+	ImGui::Text("Camera Info");
+	ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
+	Vector3 forward = m_Camera.GetForward();
+	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
+	ImGui::Separator();
+
+	ImGui::Text("Light Settings");
+	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
+	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);
+	ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
+	ImGui::Separator();
+	
+	ImGui::End();
+
+	// ImGui Window - G-Buffer Debug View
+	ImGui::Begin("G-Buffer Debug View");
+
+	// 첫 번째 줄: Color, Normal
+	ImGui::BeginGroup();
+	ImGui::Text("Color (Albedo)");
+	ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	ImGui::SameLine();
+
+	ImGui::BeginGroup();
+	ImGui::Text("Normal");
+	ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	// 두 번째 줄: Position, Depth
+	ImGui::BeginGroup();
+	ImGui::Text("Position");
+	ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	ImGui::SameLine();
+
+	ImGui::BeginGroup();
+	ImGui::Text("Depth Buffer");
+	ImGui::Image((ImTextureID)m_pDepthSRV.Get(), ImVec2(128, 128));
+	ImGui::EndGroup();
+
+	ImGui::End();
+
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	HR_T(m_pSwapChain->Present(0, 0));
 }
 
 bool TutorialApp::InitD3D()
