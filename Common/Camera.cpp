@@ -21,7 +21,7 @@ void Camera::Reset()
 {
 	m_World = Matrix::Identity;
 	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-	m_Position = Vector3(0.0f, 0.0f, -30.0f);
+	m_Position = Vector3(0.0f, 0.0f, -100.0f);
 }
 
 void Camera::Update(float elapsedTime)

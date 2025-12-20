@@ -1,6 +1,5 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
-
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d11.lib")
@@ -32,11 +31,15 @@ bool TutorialApp::OnInitialize()
     if (!InitScene())
         return false;
 
+    if (!InitImGui())
+        return false;
+
     return true;
 }
 
 void TutorialApp::OnUninitialize()
 {
+    UninitImGui();
     UninitScene();
     UninitD3D();
 }
@@ -59,36 +62,37 @@ void TutorialApp::OnRender()
     float clearNormal[4] = { 0.5f, 0.5f, 1.0f, 1.0f };
     float clearPos[4] = { 0, 0, 0, 1 };
 
-    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0], clearAlbedo);
-    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[1], clearNormal);
-    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2], clearPos);
-    m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0].Get(), clearAlbedo);
+    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[1].Get(), clearNormal);
+    m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2].Get(), clearPos);
+    m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-    m_pDeviceContext->OMSetRenderTargets(GBufferCount, m_pGBufferRTVs, m_pDepthDSV);
+    ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
+    m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
 
     CBGeometry cbGeom;
     cbGeom.World = m_World.Transpose();
     cbGeom.View = m_View.Transpose();
     cbGeom.Projection = m_Projection.Transpose();
     cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBGeometry, 0, nullptr, &cbGeom, 0, 0);
+    m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
 
     m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pCubeVB, &m_CubeVBStride, &m_CubeVBOffset);
-    m_pDeviceContext->IASetIndexBuffer(m_pCubeIB, DXGI_FORMAT_R16_UINT, 0);
-    m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout);
+    m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
+    m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+    m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
 
-    m_pDeviceContext->VSSetShader(m_pGBufferVS, nullptr, 0);
-    m_pDeviceContext->VSSetConstantBuffers(0, 1, &m_pCBGeometry);
-    m_pDeviceContext->PSSetShader(m_pGBufferPS, nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pCBGeometry);
+    m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+    m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+    m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
+    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
     m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
 
     // 2) Light pass -> back buffer
-    float clearBB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    m_pDeviceContext->OMSetRenderTargets(1, &m_pBackBufferRTV, nullptr);
-    m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV, clearBB);
+    float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
+    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+    m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
 
     // Transform light to view-space
     Vector3 lightPosVS = Vector3::Transform(m_LightPosWorld, m_View);
@@ -97,21 +101,21 @@ void TutorialApp::OnRender()
     cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
     cbLight.LightColor_Exposure = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, m_Exposure);
     cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBLight, 0, nullptr, &cbLight, 0, 0);
+    m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
 
-    ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0], m_pGBufferSRVs[1], m_pGBufferSRVs[2] };
+    ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
 
     m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pQuadVB, &m_QuadVBStride, &m_QuadVBOffset);
-    m_pDeviceContext->IASetIndexBuffer(m_pQuadIB, DXGI_FORMAT_R16_UINT, 0);
-    m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout);
+    m_pDeviceContext->IASetVertexBuffers(0, 1, m_pQuadVB.GetAddressOf(), &m_QuadVBStride, &m_QuadVBOffset);
+    m_pDeviceContext->IASetIndexBuffer(m_pQuadIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+    m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout.Get());
 
-    m_pDeviceContext->VSSetShader(m_pQuadVS, nullptr, 0);
-    m_pDeviceContext->PSSetShader(m_pLightPS, nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(0, 1, &m_pCBLight);
+    m_pDeviceContext->VSSetShader(m_pQuadVS.Get(), nullptr, 0);
+    m_pDeviceContext->PSSetShader(m_pLightPS.Get(), nullptr, 0);
+    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
 
     m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
-    m_pDeviceContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
+    m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
 
     m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
 
@@ -119,7 +123,45 @@ void TutorialApp::OnRender()
     ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
     m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
 
-    m_pSwapChain->Present(0, 0);
+    // ImGui Rendering
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    // ImGui Window - Settings
+    ImGui::Begin("Deferred Rendering Settings");
+    
+    ImGui::Text("Camera Info");
+    ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
+    Vector3 forward = m_Camera.GetForward();
+    ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
+    ImGui::Separator();
+    
+    ImGui::Text("Light Settings");
+    ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
+    ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);
+    ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
+    ImGui::Separator();
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+
+    // ImGui Window - G-Buffer Debug View
+    ImGui::Begin("G-Buffer Debug View");
+    
+    ImGui::Text("Color (Albedo)");
+    ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
+    
+    ImGui::Text("Normal (View Space)");
+    ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
+    
+    ImGui::Text("Position (View Space)");
+    ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
+    
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    HR_T(m_pSwapChain->Present(0, 0));
 }
 
 bool TutorialApp::InitD3D()
@@ -147,16 +189,7 @@ bool TutorialApp::InitD3D()
 
 void TutorialApp::UninitD3D()
 {
-    ReleaseGBuffer();
-
-    SAFE_RELEASE(m_pDepthDSV);
-    SAFE_RELEASE(m_pDepthTexture);
-
-    SAFE_RELEASE(m_pBackBufferRTV);
-
-    SAFE_RELEASE(m_pSwapChain);
-    SAFE_RELEASE(m_pDeviceContext);
-    SAFE_RELEASE(m_pDevice);
+ 
 }
 
 bool TutorialApp::InitScene()
@@ -180,10 +213,10 @@ bool TutorialApp::InitScene()
         bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
         bd.ByteWidth = sizeof(CBGeometry);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, &m_pCBGeometry));
+        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBGeometry.GetAddressOf()));
 
         bd.ByteWidth = sizeof(CBLight);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, &m_pCBLight));
+        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBLight.GetAddressOf()));
     }
 
     // Scene matrices
@@ -196,29 +229,15 @@ bool TutorialApp::InitScene()
     m_Camera.Update(0.0f);
     m_Camera.GetViewMatrix(m_View);
 
-    m_Projection = Matrix::CreatePerspectiveFieldOfView(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
+    	
+	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 1.0f, 10000.0f);
 
     return true;
 }
 
 void TutorialApp::UninitScene()
 {
-    SAFE_RELEASE(m_pCBLight);
-    SAFE_RELEASE(m_pCBGeometry);
-
-    SAFE_RELEASE(m_pSamplerLinear);
-
-    SAFE_RELEASE(m_pQuadIB);
-    SAFE_RELEASE(m_pQuadVB);
-    SAFE_RELEASE(m_pQuadInputLayout);
-    SAFE_RELEASE(m_pLightPS);
-    SAFE_RELEASE(m_pQuadVS);
-
-    SAFE_RELEASE(m_pCubeIB);
-    SAFE_RELEASE(m_pCubeVB);
-    SAFE_RELEASE(m_pCubeInputLayout);
-    SAFE_RELEASE(m_pGBufferPS);
-    SAFE_RELEASE(m_pGBufferVS);
+  
 }
 
 bool TutorialApp::CreateSwapChainAndBackBuffer()
@@ -243,12 +262,11 @@ bool TutorialApp::CreateSwapChainAndBackBuffer()
 #endif
 
     HR_T(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
-        nullptr, 0, D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, nullptr, &m_pDeviceContext));
+        nullptr, 0, D3D11_SDK_VERSION, &swapDesc, m_pSwapChain.GetAddressOf(), m_pDevice.GetAddressOf(), nullptr, m_pDeviceContext.GetAddressOf()));
 
-    ID3D11Texture2D* backBuffer = nullptr;
-    HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer));
-    HR_T(m_pDevice->CreateRenderTargetView(backBuffer, nullptr, &m_pBackBufferRTV));
-    SAFE_RELEASE(backBuffer);
+    ComPtr<ID3D11Texture2D> backBuffer;
+    HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf()));
+    HR_T(m_pDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, m_pBackBufferRTV.GetAddressOf()));
 
     return true;
 }
@@ -266,8 +284,8 @@ bool TutorialApp::CreateDepthBuffer()
     descDepth.Usage = D3D11_USAGE_DEFAULT;
     descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
-    HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, &m_pDepthTexture));
-    HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture, nullptr, &m_pDepthDSV));
+    HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, m_pDepthTexture.GetAddressOf()));
+    HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), nullptr, m_pDepthDSV.GetAddressOf()));
 
     return true;
 }
@@ -282,9 +300,9 @@ bool TutorialApp::CreateGBuffer()
     };
 
     RTDesc formats[GBufferCount] = {
-        { DXGI_FORMAT_R8G8B8A8_UNORM },
-        { DXGI_FORMAT_R16G16B16A16_FLOAT },
-        { DXGI_FORMAT_R16G16B16A16_FLOAT },
+        { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // Color (Albedo) - 4바이트
+        { DXGI_FORMAT_R8G8B8A8_UNORM },     // Normal - 4바이트 (단위벡터이므로 8비트 충분)
+        { DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionVS - 8바이트
     };
 
     for (int i = 0; i < GBufferCount; ++i)
@@ -299,9 +317,9 @@ bool TutorialApp::CreateGBuffer()
         td.Usage = D3D11_USAGE_DEFAULT;
         td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-        HR_T(m_pDevice->CreateTexture2D(&td, nullptr, &m_pGBufferTextures[i]));
-        HR_T(m_pDevice->CreateRenderTargetView(m_pGBufferTextures[i], nullptr, &m_pGBufferRTVs[i]));
-        HR_T(m_pDevice->CreateShaderResourceView(m_pGBufferTextures[i], nullptr, &m_pGBufferSRVs[i]));
+        HR_T(m_pDevice->CreateTexture2D(&td, nullptr, m_pGBufferTextures[i].GetAddressOf()));
+        HR_T(m_pDevice->CreateRenderTargetView(m_pGBufferTextures[i].Get(), nullptr, m_pGBufferRTVs[i].GetAddressOf()));
+        HR_T(m_pDevice->CreateShaderResourceView(m_pGBufferTextures[i].Get(), nullptr, m_pGBufferSRVs[i].GetAddressOf()));
     }
 
     return true;
@@ -311,9 +329,9 @@ void TutorialApp::ReleaseGBuffer()
 {
     for (int i = 0; i < GBufferCount; ++i)
     {
-        SAFE_RELEASE(m_pGBufferSRVs[i]);
-        SAFE_RELEASE(m_pGBufferRTVs[i]);
-        SAFE_RELEASE(m_pGBufferTextures[i]);
+        m_pGBufferSRVs[i].Reset();
+        m_pGBufferRTVs[i].Reset();
+        m_pGBufferTextures[i].Reset();
     }
 }
 
@@ -364,7 +382,7 @@ bool TutorialApp::CreateCube()
     vbDesc.Usage = D3D11_USAGE_DEFAULT;
     D3D11_SUBRESOURCE_DATA vbData = {};
     vbData.pSysMem = vertices;
-    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pCubeVB));
+    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pCubeVB.GetAddressOf()));
     m_CubeVBStride = sizeof(CubeVertex);
     m_CubeVBOffset = 0;
 
@@ -386,7 +404,7 @@ bool TutorialApp::CreateCube()
     ibDesc.Usage = D3D11_USAGE_DEFAULT;
     D3D11_SUBRESOURCE_DATA ibData = {};
     ibData.pSysMem = indices;
-    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, &m_pCubeIB));
+    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pCubeIB.GetAddressOf()));
 
     return true;
 }
@@ -413,7 +431,7 @@ bool TutorialApp::CreateQuad()
     vbDesc.Usage = D3D11_USAGE_DEFAULT;
     D3D11_SUBRESOURCE_DATA vbData = {};
     vbData.pSysMem = vertices;
-    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pQuadVB));
+    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pQuadVB.GetAddressOf()));
     m_QuadVBStride = sizeof(QuadVertex);
     m_QuadVBOffset = 0;
 
@@ -426,7 +444,7 @@ bool TutorialApp::CreateQuad()
     ibDesc.Usage = D3D11_USAGE_DEFAULT;
     D3D11_SUBRESOURCE_DATA ibData = {};
     ibData.pSysMem = indices;
-    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, &m_pQuadIB));
+    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pQuadIB.GetAddressOf()));
 
     return true;
 }
@@ -435,8 +453,8 @@ bool TutorialApp::CreateShaders()
 {
     // Geometry pass
     {
-        ID3DBlob* vsBlob = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferVS.hlsl", "main", "vs_4_0", &vsBlob));
+        ComPtr<ID3DBlob> vsBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
 
         D3D11_INPUT_ELEMENT_DESC layout[] =
         {
@@ -444,20 +462,18 @@ bool TutorialApp::CreateShaders()
             { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
 
-        HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &m_pCubeInputLayout));
-        HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_pGBufferVS));
-        SAFE_RELEASE(vsBlob);
+        HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pCubeInputLayout.GetAddressOf()));
+        HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pGBufferVS.GetAddressOf()));
 
-        ID3DBlob* psBlob = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferPS.hlsl", "main", "ps_4_0", &psBlob));
-        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pGBufferPS));
-        SAFE_RELEASE(psBlob);
+        ComPtr<ID3DBlob> psBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
+        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pGBufferPS.GetAddressOf()));
     }
 
     // Light pass
     {
-        ID3DBlob* vsBlob = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_QuadVS.hlsl", "main", "vs_4_0", &vsBlob));
+        ComPtr<ID3DBlob> vsBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_QuadVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
 
         D3D11_INPUT_ELEMENT_DESC layout[] =
         {
@@ -465,14 +481,12 @@ bool TutorialApp::CreateShaders()
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
 
-        HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &m_pQuadInputLayout));
-        HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_pQuadVS));
-        SAFE_RELEASE(vsBlob);
+        HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pQuadInputLayout.GetAddressOf()));
+        HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pQuadVS.GetAddressOf()));
 
-        ID3DBlob* psBlob = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_LightPassPS.hlsl", "main", "ps_4_0", &psBlob));
-        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pLightPS));
-        SAFE_RELEASE(psBlob);
+        ComPtr<ID3DBlob> psBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_LightPassPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
+        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pLightPS.GetAddressOf()));
     }
 
     return true;
@@ -488,7 +502,37 @@ bool TutorialApp::CreateStates()
     sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-    HR_T(m_pDevice->CreateSamplerState(&sampDesc, &m_pSamplerLinear));
+    HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerLinear.GetAddressOf()));
 
     return true;
+}
+
+bool TutorialApp::InitImGui()
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplWin32_Init(m_hWnd);
+    ImGui_ImplDX11_Init(m_pDevice.Get(), m_pDeviceContext.Get());
+
+    return true;
+}
+
+void TutorialApp::UninitImGui()
+{
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+}
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+		return true;
+
+    return __super::WndProc(hWnd, message, wParam, lParam);
 }
