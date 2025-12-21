@@ -18,7 +18,7 @@ namespace
     struct CBPointLight
     {
         Vector4 LightPosVS_Radius; // xyz = positionVS, w = radius
-        Vector4 LightColor; // rgb = light color
+        Vector4 LightColor; // rgb = light color       
     };
     struct CBDirectionalLight
     {
@@ -51,12 +51,21 @@ void TutorialApp::OnUpdate()
 {	
     m_Camera.GetViewMatrix(m_View);
 
-    // Simple light animation
-    float t = GameTimer::m_Instance->TotalTime();
+    // Animate all point lights (even inactive ones, so they're ready when activated)
+    float t = GameTimer::m_Instance->TotalTime() * 0.1f;
 	
-    m_LightPosWorld.x = 10.0f * cosf(t + m_LightVariance.x);
-    m_LightPosWorld.y = 10.0f * sinf(t + m_LightVariance.y);
-    m_LightPosWorld.z = 10.0f * cosf(t + m_LightVariance.z);	
+    for (int i = 0; i < MAX_POINT_LIGHTS; ++i)
+    {
+        // Each light has different animation parameters based on its index
+        float offsetX = (float)i * 0.5f;
+        float offsetY = (float)i * 0.7f;
+        
+        float scale = 5.0f + (i % 5) * 2.0f; // Vary movement scale
+        
+        m_PointLights[i].position.x = scale * cosf(t * 0.5f + offsetX);
+        m_PointLights[i].position.y = scale * sinf(t * 0.3f + offsetY);
+        m_PointLights[i].position.z = 0.0f; // Z axis fixed at 0
+    }
 }
 
 void TutorialApp::OnRender()
@@ -117,10 +126,6 @@ void TutorialApp::RenderFoward()
 	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
 	ImGui::Separator();
 
-	ImGui::Text("Light Settings");	ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);	ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);
-	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
-	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);	
-	ImGui::Separator();
 	
 	ImGui::End();
 
@@ -200,35 +205,18 @@ void TutorialApp::RenderDeferred()
 	{
 		for (int x = 0; x < gridSize; x++)
 		{
-			for (int z = 0; z < gridSize; z++)
-			{
-				Vector3 position(
-					x * spacing - offset,
-					y * spacing - offset,
-					z * spacing - offset
-				);
+			Vector3 position(
+				x * spacing - offset,
+				y * spacing - offset,
+				0.0f  // Z축 제거
+			);
 
-				Matrix world = Matrix::CreateTranslation(position);
-				cbGeom.World = world.Transpose();
+			Matrix world = Matrix::CreateTranslation(position);
+			cbGeom.World = world.Transpose();
 
-				m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
-				m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
-            }
+			m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
+			m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
 		}
-	}
-
-	// Draw test sphere at x = 50
-	{
-		Matrix worldSphere = Matrix::CreateScale(1.0f) * Matrix::CreateTranslation(Vector3(30.0f, 0.0f, 0.0f));
-		cbGeom.World = worldSphere.Transpose();
-		cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f); 
-
-		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
-		
-		m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
-		m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
-		
-		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 	}
     
 	/////////////////////////////////////////////////////////////////////////
@@ -261,35 +249,18 @@ void TutorialApp::RenderDeferred()
     m_pDeviceContext->UpdateSubresource(m_pCBDirectionalLight.Get(), 0, nullptr, &cbDirLight, 0, 0);
 
     m_pDeviceContext->PSSetShader(m_pDirectionLightPS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBDirectionalLight.GetAddressOf());
+    m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBDirectionalLight.GetAddressOf());
     m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
 
     //////////////////////////////////////////////////////////////////////////
     // 3) Point Light Pass (Light Volume - sphere, additive)
     m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 
-    // Transform light to view-space
-    Vector3 lightPosVS = Vector3::Transform(m_LightPosWorld, m_View);
-
-    CBPointLight cbLight;
-    cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
-    cbLight.LightColor = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, 0.0f);   
-    m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
-
-    // Update screen size for pixel shader
+    // Update screen size for pixel shader (only once)
     Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
     m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);
 
-    // Render light volume (sphere scaled by light radius)
-    Matrix worldSphere = Matrix::CreateScale(m_LightRadius) * Matrix::CreateTranslation(m_LightPosWorld);
-    
-    CBGeometry cbLightVolume;
-    cbLightVolume.World = worldSphere.Transpose();
-    cbLightVolume.View = m_View.Transpose();
-    cbLightVolume.Projection = m_Projection.Transpose();
-    cbLightVolume.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
-
+    // Set up pipeline state for light volumes
     m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
     m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
@@ -299,10 +270,37 @@ void TutorialApp::RenderDeferred()
     m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
     
     m_pDeviceContext->PSSetShader(m_pLightVolumePS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
-    m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBScreenSize.GetAddressOf());
+    m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBPointLight.GetAddressOf());
+    m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBScreenSize.GetAddressOf());
 
-	m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
+    // Render active point lights
+    for (int i = 0; i < m_ActiveLightCount; ++i)
+    {
+        const auto& light = m_PointLights[i];
+
+        // Apply global radius scale
+        float actualRadius = light.radius * m_GlobalLightRadiusScale;
+
+        // Transform light to view-space
+        Vector3 lightPosVS = Vector3::Transform(light.position, m_View);
+
+        CBPointLight cbLight;
+        cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, actualRadius);
+        cbLight.LightColor = Vector4(light.color.x, light.color.y, light.color.z, 0.0f);
+   
+        m_pDeviceContext->UpdateSubresource(m_pCBPointLight.Get(), 0, nullptr, &cbLight, 0, 0);
+
+        // Render light volume (sphere scaled by light radius)
+        Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);
+        
+        CBGeometry cbLightVolume;
+        cbLightVolume.World = worldSphere.Transpose();
+        cbLightVolume.View = m_View.Transpose();
+        cbLightVolume.Projection = m_Projection.Transpose();
+		cbLightVolume.BaseColor = cbLight.LightColor;
+        m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
+        m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
+    }
 
     // Disable blending
     m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
@@ -310,6 +308,41 @@ void TutorialApp::RenderDeferred()
 	// Unbind SRVs
 	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
+
+	/////////////////////////////////////////////////////////////////////////
+	// 4) Draw small spheres at active light positions
+	/////////////////////////////////////////////////////////////////////////
+	
+	{
+		// Set rendering states for wireframe spheres
+		
+		m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+		m_pDeviceContext->PSSetShader(m_pSolidPS.Get(), nullptr, 0);
+
+		m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
+		m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+
+		// Draw small sphere at each active light position
+		for (int i = 0; i < m_ActiveLightCount; ++i)
+		{
+			const auto& light = m_PointLights[i];
+
+			// 0.1 scale for small indicator spheres
+			Matrix worldSphere = Matrix::CreateScale(0.1f) * Matrix::CreateTranslation(light.position);
+
+			CBGeometry cbSphere;
+			cbSphere.World = worldSphere.Transpose();
+			cbSphere.View = m_View.Transpose();
+			cbSphere.Projection = m_Projection.Transpose();
+			cbSphere.BaseColor = Vector4(light.color.x, light.color.y, light.color.z, 1.0f); // Use light color
+
+			m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
+			m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
+		}
+
+		// Restore default rasterizer state
+		m_pDeviceContext->RSSetState(nullptr);
+	}
 
 	// ImGui Rendering
 	ImGui_ImplDX11_NewFrame();
@@ -328,10 +361,10 @@ void TutorialApp::RenderDeferred()
 	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
 	ImGui::Separator();
 
-	ImGui::Text("Light Settings");	
-    ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);   
-	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
-	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);	
+	ImGui::Text("Point Light Settings");
+	ImGui::SliderInt("Active Light Count", &m_ActiveLightCount, 1, MAX_POINT_LIGHTS);
+	ImGui::SliderFloat("Global Light Radius Scale", &m_GlobalLightRadiusScale, 0.1f, 3.0f);
+	ImGui::ColorEdit3("First Light Color", (float*)&m_PointLights[0].color);
 	ImGui::Separator();
 
 	ImGui::Text("Directional Light Settings");
@@ -433,7 +466,7 @@ bool TutorialApp::InitScene()
         HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBGeometry.GetAddressOf()));
 
         bd.ByteWidth = sizeof(CBPointLight);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBLight.GetAddressOf()));
+        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBPointLight.GetAddressOf()));
 
         bd.ByteWidth = sizeof(CBDirectionalLight);
         HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBDirectionalLight.GetAddressOf()));
@@ -454,6 +487,22 @@ bool TutorialApp::InitScene()
 
     	
 	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 1.0f, 10000.0f);
+
+    // Initialize point lights randomly
+    srand(42); // Fixed seed for reproducibility
+    for (int i = 0; i < MAX_POINT_LIGHTS; ++i)
+    {
+        float x = (rand() % 200 - 100) / 10.0f; // -10 to 10
+        float y = (rand() % 200 - 100) / 10.0f;
+        
+        m_PointLights[i].position = Vector3(x, y, 0.0f); // Z fixed at 0
+        m_PointLights[i].color = Vector3(
+            (rand() % 100) / 100.0f + 0.2f,
+            (rand() % 100) / 100.0f + 0.2f,
+            (rand() % 100) / 100.0f + 0.2f
+        );
+        m_PointLights[i].radius = 3.0f + (rand() % 30) / 10.0f; // 3.0 to 6.0
+    }
 
     return true;
 }
@@ -810,6 +859,10 @@ bool TutorialApp::CreateShaders()
         ComPtr<ID3DBlob> psVolBlob;
         HR_T(CompileShaderFromFile(L"../Shaders/15_LightVolumePS.hlsl", "main", "ps_4_0", psVolBlob.GetAddressOf()));
         HR_T(m_pDevice->CreatePixelShader(psVolBlob->GetBufferPointer(), psVolBlob->GetBufferSize(), nullptr, m_pLightVolumePS.GetAddressOf()));
+
+        ComPtr<ID3DBlob> psWireBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_SolidPS.hlsl", "main", "ps_4_0", psWireBlob.GetAddressOf()));
+        HR_T(m_pDevice->CreatePixelShader(psWireBlob->GetBufferPointer(), psWireBlob->GetBufferSize(), nullptr, m_pSolidPS.GetAddressOf()));
     }
 
     return true;
@@ -838,6 +891,7 @@ bool TutorialApp::CreateStates()
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     HR_T(m_pDevice->CreateBlendState(&blendDesc, m_pBlendStateAdditive.GetAddressOf()));
+     
 
     return true;
 }

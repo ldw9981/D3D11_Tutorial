@@ -55,6 +55,7 @@ public:
     ComPtr<ID3D11PixelShader> m_pPointLightPS = nullptr;
     ComPtr<ID3D11PixelShader> m_pDirectionLightPS = nullptr;
     ComPtr<ID3D11PixelShader> m_pLightVolumePS = nullptr;
+    ComPtr<ID3D11PixelShader> m_pSolidPS = nullptr;
     ComPtr<ID3D11InputLayout> m_pQuadInputLayout = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadVB = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadIB = nullptr;
@@ -76,7 +77,7 @@ public:
 
     // Constant buffers
     ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;
-    ComPtr<ID3D11Buffer> m_pCBLight = nullptr;
+    ComPtr<ID3D11Buffer> m_pCBPointLight = nullptr;
     ComPtr<ID3D11Buffer> m_pCBDirectionalLight = nullptr;
     ComPtr<ID3D11Buffer> m_pCBScreenSize = nullptr;
 
@@ -85,14 +86,21 @@ public:
     Matrix m_View = Matrix::Identity;
     Matrix m_Projection = Matrix::Identity;
 
-    Vector3 m_LightPosWorld = Vector3(2.0f, 2.0f, -2.0f);
-    Vector3 m_LightColor = Vector3(1.0f, 1.0f, 1.0f);
-	Vector3 m_LightVariance = Vector3(0.0f, 0.0f, 0.0f);
-
-    float m_LightRadius = 6.0f;
-
+    // Point Lights
+    static const int MAX_POINT_LIGHTS = 100;
+    struct PointLightData
+    {
+        Vector3 position;
+        Vector3 color;
+        float radius;
+    };
+    PointLightData m_PointLights[MAX_POINT_LIGHTS];
+    int m_ActiveLightCount = 1;  // Number of lights to actually render (adjustable)
+    float m_GlobalLightRadiusScale = 1.0f;
+    
+ 
     // Directional Light
-    Vector3 m_DirLightDirection = Vector3(0.0f, -1.0f, 0.0f);
+    Vector3 m_DirLightDirection = Vector3(1.0f, -1.0f, 0.5f);
     Vector3 m_DirLightColor = Vector3(0.1f, 0.1f, 0.1f);
     float m_DirLightIntensity = 1.0f;
   

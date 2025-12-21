@@ -1,10 +1,6 @@
 #include "15_Shared.hlsli"
 
-cbuffer CBDirectionalLight : register(b0)
-{
-    float4 gDirLightDirectionVS_Int;  // xyz direction in view space, w intensity
-    float4 gDirLightColor;            // rgb color
-}
+
 
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {

@@ -1,16 +1,30 @@
+
+// 인덱스가 헷갈릴수있어서 한곳에 모아둠
 cbuffer CBGeometry : register(b0)
 {
     matrix World;
     matrix View;
     matrix Projection;
-    float4 gAlbedo;
+    float4 BaseColor;
+}
+cbuffer CBDirectionalLight : register(b1)
+{
+    float4 gDirLightDirectionVS_Int; // xyz direction in view space, w intensity
+    float4 gDirLightColor; // rgb color ,  w intensity
 }
 
-cbuffer CBPointLight : register(b0)
+cbuffer CBPointLight : register(b2)
 {
-    float4 gLightPosVS_Radius;      // xyz posVS, w radius
-    float4 gLightColor;    // rgb color
+    float4 gLightPosVS_Radius; // xyz posVS, w radius
+    float4 gLightColor; // rgb color
 }
+
+cbuffer CBScreenSize : register(b3)
+{
+    float2 gScreenSize;
+    float2 padding2;
+}
+
 
 Texture2D gGBufferBaseColor : register(t0);
 Texture2D gGBufferNormal   : register(t1);

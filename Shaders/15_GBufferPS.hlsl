@@ -12,7 +12,7 @@ GBufferOut main(VS_OUTPUT_GBUFFER input)
     GBufferOut o;
 
     // Albedo in linear space
-    o.Albedo = gAlbedo;
+    o.Albedo = BaseColor;
 
     // Encode normal from [-1,1] to [0,1]
     float3 n = normalize(input.normalVS);
