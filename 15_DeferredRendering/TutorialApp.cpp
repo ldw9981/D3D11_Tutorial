@@ -70,104 +70,7 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
-    if(m_UseDeferredRendering)
-        RenderDeferred();
-    else
-		RenderFoward();
-}
-
-void TutorialApp::RenderFoward()
-{
-	// 1) Geometry pass -> GBuffer MRTs
-	float clearBaseColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	float clearPos[4] = { 0, 0, 0, 1 };
-
-
-
-
-	// 2) Light pass -> back buffer
-	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
-	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
-	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
-	CBGeometry cbGeom;
-	cbGeom.World = m_World.Transpose();
-	cbGeom.View = m_View.Transpose();
-	cbGeom.Projection = m_Projection.Transpose();
-	cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
-
-	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
-	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
-	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
-
-	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
-	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
-
-	m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
-
-	// ImGui Rendering
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-
-	// ImGui Window - Settings
-	ImGui::Begin("Forward Rendering Settings");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::Separator();
-
-    ImGui::Checkbox("Deferred Rendering", (bool*)&m_UseDeferredRendering);
-	ImGui::Text("Camera Info");
-	ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
-	Vector3 forward = m_Camera.GetForward();
-	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
-	ImGui::Separator();
-
-	
-	ImGui::End();
-
-	// ImGui Window - G-Buffer Debug View
-	ImGui::Begin("G-Buffer Debug View");
-
-	// 첫 번째 줄: Color, Normal
-	ImGui::BeginGroup();
-	ImGui::Text("Color (Albedo)");
-	ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
-	ImGui::EndGroup();
-
-	ImGui::SameLine();
-
-	ImGui::BeginGroup();
-	ImGui::Text("Normal");
-	ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
-	ImGui::EndGroup();
-
-	// 두 번째 줄: Position, Depth
-	ImGui::BeginGroup();
-	ImGui::Text("Position");
-	ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
-	ImGui::EndGroup();
-
-	ImGui::SameLine();
-
-	ImGui::BeginGroup();
-	ImGui::Text("Depth Buffer");
-	ImGui::Image((ImTextureID)m_pDepthSRV.Get(), ImVec2(128, 128));
-	ImGui::EndGroup();
-
-	ImGui::End();
-
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-	HR_T(m_pSwapChain->Present(0, 0));
-}
-
-void TutorialApp::RenderDeferred()
-{
-    //////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 	// 1) Geometry pass -> GBuffer MRTs
 	float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -180,6 +83,7 @@ void TutorialApp::RenderDeferred()
 
 	ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
 	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
+
 
 	// 파이프라인 상태 설정
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -195,12 +99,12 @@ void TutorialApp::RenderDeferred()
 	CBGeometry cbGeom;
 	cbGeom.View = m_View.Transpose();
 	cbGeom.Projection = m_Projection.Transpose();
-    cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	const int gridSize = 5;
 	const float spacing = 5.0f;
 	const float offset = (gridSize - 1) * spacing * 0.5f; // 중앙 정렬
-    
+
 	for (int y = 0; y < gridSize; y++)
 	{
 		for (int x = 0; x < gridSize; x++)
@@ -218,11 +122,11 @@ void TutorialApp::RenderDeferred()
 			m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
 		}
 	}
-    
+
 	/////////////////////////////////////////////////////////////////////////
 	// 2)  Directional Light Pass (first)
 	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
-	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
 
 	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
@@ -234,75 +138,79 @@ void TutorialApp::RenderDeferred()
 	m_pDeviceContext->VSSetShader(m_pQuadVS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
-        
-    // No blending for the first light into the cleared back buffer.
-    float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
-    // Directional light in world space (no transformation needed)
-    Vector3 dirLightDirWS = m_DirLightDirection;
-    dirLightDirWS.Normalize();
+	// No blending for the first light into the cleared back buffer.
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
 
-    CBDirectionalLight cbDirLight;
-    cbDirLight.DirectionWS = Vector4(dirLightDirWS.x, dirLightDirWS.y, dirLightDirWS.z, m_DirLightIntensity);
-    cbDirLight.Color_Intensity = Vector4(m_DirLightColor.x, m_DirLightColor.y, m_DirLightColor.z, 1.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBDirectionalLight.Get(), 0, nullptr, &cbDirLight, 0, 0);
+	// Directional light in world space (no transformation needed)
+	Vector3 dirLightDirWS = m_DirLightDirection;
+	dirLightDirWS.Normalize();
 
-    m_pDeviceContext->PSSetShader(m_pDirectionLightPS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBDirectionalLight.GetAddressOf());
-    m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
+	CBDirectionalLight cbDirLight;
+	cbDirLight.DirectionWS = Vector4(dirLightDirWS.x, dirLightDirWS.y, dirLightDirWS.z, m_DirLightIntensity);
+	cbDirLight.Color_Intensity = Vector4(m_DirLightColor.x, m_DirLightColor.y, m_DirLightColor.z, 1.0f);
+	m_pDeviceContext->UpdateSubresource(m_pCBDirectionalLight.Get(), 0, nullptr, &cbDirLight, 0, 0);
 
-    //////////////////////////////////////////////////////////////////////////
-    // 3) Point Light Pass (Light Volume - sphere, additive)
-    m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->PSSetShader(m_pDirectionLightPS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBDirectionalLight.GetAddressOf());
+	m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
 
-    // Update screen size for pixel shader (only once)
-    Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
-    m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);
+	//////////////////////////////////////////////////////////////////////////
+	// 3) Point Light Pass (Light Volume - sphere, additive)
+	// Keep same render target and depth stencil as directional light pass
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
 
-    // Set up pipeline state for light volumes
-    m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
-    m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
-    m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get()); // Same layout (Position + Normal)
+	// Update screen size for pixel shader (only once)
+	Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
+	m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);
 
-    m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
-    m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
-    
-    m_pDeviceContext->PSSetShader(m_pLightVolumePS.Get(), nullptr, 0);
-    m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBPointLight.GetAddressOf());
-    m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBScreenSize.GetAddressOf());
+	// Set up pipeline state for light volumes
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
+	m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get()); // Same layout (Position + Normal)
 
-    // Render active point lights
-    for (int i = 0; i < m_ActiveLightCount; ++i)
-    {
-        const auto& light = m_PointLights[i];
+	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
-        // Apply global radius scale
-        float actualRadius = light.radius * m_GlobalLightRadiusScale;
+	m_pDeviceContext->PSSetShader(m_pLightVolumePS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBPointLight.GetAddressOf());
+	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBScreenSize.GetAddressOf());
 
-        // Light position in world space (no transformation needed)
-        Vector3 lightPosWS = light.position;
+	// Render active point lights
+	for (int i = 0; i < m_ActiveLightCount; ++i)
+	{
+		const auto& light = m_PointLights[i];
 
-        CBPointLight cbLight;
-        cbLight.LightPosWS_Radius = Vector4(lightPosWS.x, lightPosWS.y, lightPosWS.z, actualRadius);
-        cbLight.LightColor = Vector4(light.color.x, light.color.y, light.color.z, 0.0f);
-   
-        m_pDeviceContext->UpdateSubresource(m_pCBPointLight.Get(), 0, nullptr, &cbLight, 0, 0);
+		// Apply global radius scale
+		float actualRadius = light.radius * m_GlobalLightRadiusScale;
 
-        // Render light volume (sphere scaled by light radius)
-        Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);
-        
-        CBGeometry cbLightVolume;
-        cbLightVolume.World = worldSphere.Transpose();
-        cbLightVolume.View = m_View.Transpose();
-        cbLightVolume.Projection = m_Projection.Transpose();
+		// Light position in world space (no transformation needed)
+		Vector3 lightPosWS = light.position;
+
+		CBPointLight cbLight;
+		cbLight.LightPosWS_Radius = Vector4(lightPosWS.x, lightPosWS.y, lightPosWS.z, actualRadius);
+		cbLight.LightColor = Vector4(light.color.x, light.color.y, light.color.z, 0.0f);
+
+		m_pDeviceContext->UpdateSubresource(m_pCBPointLight.Get(), 0, nullptr, &cbLight, 0, 0);
+
+		// Render light volume (sphere scaled by light radius)
+		Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);
+
+		CBGeometry cbLightVolume;
+		cbLightVolume.World = worldSphere.Transpose();
+		cbLightVolume.View = m_View.Transpose();
+		cbLightVolume.Projection = m_Projection.Transpose();
 		cbLightVolume.BaseColor = cbLight.LightColor;
-        m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
-        m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
-    }
-    // Disable blending
-    m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
+		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
+	}
+	// Disable blending
+	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
 	// Unbind SRVs
 	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
@@ -310,7 +218,7 @@ void TutorialApp::RenderDeferred()
 
 	/////////////////////////////////////////////////////////////////////////
 	// 4) Draw small spheres at active light positions
-    {
+	{
 		// Set rendering states for spheres		
 		m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
 		m_pDeviceContext->PSSetShader(m_pSolidPS.Get(), nullptr, 0);
@@ -336,18 +244,23 @@ void TutorialApp::RenderDeferred()
 		}
 		m_pDeviceContext->RSSetState(nullptr);
 	}
+    DrawImGUI();
+    HR_T(m_pSwapChain->Present(0, 0));
+}
 
-    //////////////////////////////////////////////////////////////////////////
-	// ImGui Rendering
+void TutorialApp::DrawImGUI()
+{
+	//////////////////////////////////////////////////////////////////////////
+	 // ImGui Rendering
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
 	// ImGui Window - Settings
-    ImGui::Begin("Deferred Rendering Settings");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::Checkbox("Deferred Rendering", (bool*)&m_UseDeferredRendering);
-    ImGui::Separator();
+	ImGui::Begin("Deferred Rendering Settings");
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::Checkbox("Deferred Rendering", (bool*)&m_UseDeferredRendering);
+	ImGui::Separator();
 
 	ImGui::Text("Camera Info");
 	ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
@@ -366,7 +279,7 @@ void TutorialApp::RenderDeferred()
 	ImGui::ColorEdit3("Dir Light Color", (float*)&m_DirLightColor);
 	ImGui::SliderFloat("Dir Light Intensity", &m_DirLightIntensity, 0.0f, 2.0f);
 	ImGui::Separator();
-	
+
 	ImGui::End();
 
 	// ImGui Window - G-Buffer Debug View
@@ -402,7 +315,6 @@ void TutorialApp::RenderDeferred()
 
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-	HR_T(m_pSwapChain->Present(0, 0));
 }
 
 bool TutorialApp::InitD3D()
@@ -580,9 +492,9 @@ bool TutorialApp::CreateGBuffer()
     };
 
     RTDesc formats[GBufferCount] = {
-        { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // Color (Albedo) - 4바이트
+        { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // BaseColor  - 4바이트
         { DXGI_FORMAT_R8G8B8A8_UNORM },     // Normal - 4바이트 (단위벡터이므로 8비트 충분)
-        { DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionVS - 8바이트
+        { DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionWS - 8바이트
     };
 
     for (int i = 0; i < GBufferCount; ++i)
@@ -885,8 +797,22 @@ bool TutorialApp::CreateStates()
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     HR_T(m_pDevice->CreateBlendState(&blendDesc, m_pBlendStateAdditive.GetAddressOf()));
-     
 
+    // Depth Stencil State for light volumes (depth test ON, depth write OFF)
+    D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+    dsDesc.DepthEnable = TRUE;
+    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
+    dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    dsDesc.StencilEnable = FALSE;
+    HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateLightVolume.GetAddressOf()));
+     
+    // Depth Stencil State for GBuffer (depth test ON, depth write ON)
+    dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; 
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	dsDesc.StencilEnable = FALSE;
+    HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
     return true;
 }
 

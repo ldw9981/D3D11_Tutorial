@@ -75,6 +75,10 @@ public:
     // Blend State
     ComPtr<ID3D11BlendState> m_pBlendStateAdditive = nullptr;
 
+    // Depth Stencil State (for light volumes)
+    ComPtr<ID3D11DepthStencilState> m_pDSStateLightVolume = nullptr;
+	ComPtr<ID3D11DepthStencilState> m_pDSStateGBuffer;
+
     // Constant buffers
     ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;
     ComPtr<ID3D11Buffer> m_pCBPointLight = nullptr;
@@ -111,8 +115,7 @@ public:
     void OnUpdate() override;
     void OnRender() override;
 
-    void RenderFoward();
-	void RenderDeferred();
+    void DrawImGUI();
     virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:
