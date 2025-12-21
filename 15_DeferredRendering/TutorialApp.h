@@ -110,6 +110,8 @@ public:
 	float m_DirLightIntensity = 1.0f;
 
 	bool m_UseDeferredRendering = true;
+	bool m_EnableDirectionLightPass = true;
+	bool m_EnablePointLightPass = true;
 
 	bool OnInitialize() override;
 	void OnUninitialize();

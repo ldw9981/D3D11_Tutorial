@@ -89,13 +89,19 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearColor);
 
 	// Render Quad with Directional Light and G-Buffer Textures
-	RenderPassDirectionLight();
+	if (m_EnableDirectionLightPass)
+	{
+		RenderPassDirectionLight();
+	}
 
 	// Render Sphere with Point Light and G-Buffer Textures
-	RenderPassPointLights();
-	
-	// Render Point Lights Position as Solid Spheres
-	RenderPassLightPosition();
+	if (m_EnablePointLightPass)
+	{
+		RenderPassPointLights();
+		
+		// Render Point Lights Position as Solid Spheres
+		RenderPassLightPosition();
+	}
 
 	RenderPassGUI();
 
@@ -267,7 +273,7 @@ void TutorialApp::RenderPassLightPosition()
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
-	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
 
 	// Set rendering states for spheres		
 	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
@@ -318,16 +324,20 @@ void TutorialApp::RenderPassGUI()
 	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
 	ImGui::Separator();
 
+	ImGui::Text("Directional Light Settings");
+	ImGui::Checkbox("Enable Directional Light", &m_EnableDirectionLightPass);
+	ImGui::SliderFloat3("Direction", (float*)&m_DirLightDirection, -1.0f, 1.0f);
+	ImGui::ColorEdit3("Dir Light Color", (float*)&m_DirLightColor);
+	ImGui::SliderFloat("Dir Light Intensity", &m_DirLightIntensity, 0.0f, 2.0f);
+	ImGui::Separator();
+
 	ImGui::Text("Point Light Settings");
+	ImGui::Checkbox("Enable Point Light", &m_EnablePointLightPass);
 	ImGui::SliderInt("Active Light Count", &m_ActiveLightCount, 1, MAX_POINT_LIGHTS);
 	ImGui::SliderFloat("Global Light Radius Scale", &m_GlobalLightRadiusScale, 0.1f, 3.0f);
 	ImGui::ColorEdit3("First Light Color", (float*)&m_PointLights[0].color);
 	ImGui::Separator();
 
-	ImGui::Text("Directional Light Settings");
-	ImGui::SliderFloat3("Direction", (float*)&m_DirLightDirection, -1.0f, 1.0f);
-	ImGui::ColorEdit3("Dir Light Color", (float*)&m_DirLightColor);
-	ImGui::SliderFloat("Dir Light Intensity", &m_DirLightIntensity, 0.0f, 2.0f);
 	ImGui::Separator();
 
 	ImGui::End();
