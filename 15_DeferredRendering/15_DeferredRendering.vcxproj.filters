@@ -37,9 +37,6 @@
     <FxCompile Include="..\Shaders\15_GBufferPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\Shaders\15_QuadVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="..\Shaders\15_PointLightPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>

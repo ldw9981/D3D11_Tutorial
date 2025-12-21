@@ -50,6 +50,8 @@ struct VS_OUTPUT_GBUFFER
 struct VS_OUTPUT_LIGHTVOLUME
 {
     float4 positionCS : SV_Position;
+    float3 normalWS : TEXCOORD0;
+    float3 positionWS : TEXCOORD1;
 };
 
 struct VS_INPUT_QUAD
