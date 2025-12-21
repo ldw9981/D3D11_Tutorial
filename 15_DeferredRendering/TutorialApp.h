@@ -51,7 +51,8 @@ public:
 	int m_CubeIndexCount = 0;
 
 	// Light pass (fullscreen quad)
-	ComPtr<ID3D11VertexShader> m_pQuadVS = nullptr;
+	ComPtr<ID3D11VertexShader> m_pDirectionLightVS = nullptr;
+	ComPtr<ID3D11VertexShader> m_pPointLightVS = nullptr;
 	ComPtr<ID3D11PixelShader> m_pPointLightPS = nullptr;
 	ComPtr<ID3D11PixelShader> m_pDirectionLightPS = nullptr;
 	ComPtr<ID3D11PixelShader> m_pSolidPS = nullptr;

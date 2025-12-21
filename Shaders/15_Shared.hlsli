@@ -44,6 +44,11 @@ struct VS_OUTPUT_GBUFFER
     float3 positionWS : TEXCOORD1;
 };
 
+struct VS_OUTPUT_LIGHTVOLUME
+{
+    float4 positionCS : SV_Position;
+};
+
 struct VS_INPUT_QUAD
 {
     float3 position : POSITION;
