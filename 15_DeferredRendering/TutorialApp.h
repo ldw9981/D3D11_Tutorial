@@ -118,7 +118,8 @@ public:
 
 	void RenderPassGUI();
 	void RenderPassGBuffer();
-	void RenderPassLight();
+	void RenderPassDirectionLight();
+	void RenderPassPointLights();
 	void RenderPassLightPosition();
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override;

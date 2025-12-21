@@ -82,14 +82,19 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
 
+	// Render Objects to G-Buffer
+	RenderPassGBuffer();	
 
-	RenderPassGBuffer();
-
-	// Set back buffer as render target for ImGui rendering
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearColor);
 
-	RenderPassLight();
+	// Render Quad with Directional Light and G-Buffer Textures
+	RenderPassDirectionLight();
+
+	// Render Sphere with Point Light and G-Buffer Textures
+	RenderPassPointLights();
+	
+	// Render Point Lights Position as Solid Spheres
 	RenderPassLightPosition();
 
 	RenderPassGUI();
@@ -154,11 +159,8 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->OMSetRenderTargets(GBufferCount, nullRTVs, nullptr);
 }
 
-void TutorialApp::RenderPassLight()
+void TutorialApp::RenderPassDirectionLight()
 {
-	/////////////////////////////////////////////////////////////////////////
-	// 2)  Directional Light Pass (first)
-
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 
 	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
@@ -189,10 +191,20 @@ void TutorialApp::RenderPassLight()
 	m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBDirectionalLight.GetAddressOf());
 	m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
 
-	//////////////////////////////////////////////////////////////////////////
-	// 3) Point Light Pass (Light Volume - sphere, additive)
+	// Disable blending
+	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+
+	// Unbind any shader resources that might conflict with G-Buffer RTVs
+	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
+	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
+}
+
+// Point Light Pass (Light Volume - sphere, additive)	
+void TutorialApp::RenderPassPointLights()
+{	
 	// Keep same render target and depth stencil as directional light pass
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
 
@@ -209,6 +221,7 @@ void TutorialApp::RenderPassLight()
 	m_pDeviceContext->VSSetShader(m_pPointLightVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 
+	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
@@ -226,20 +239,19 @@ void TutorialApp::RenderPassLight()
 		float actualRadius = light.radius * m_GlobalLightRadiusScale;
 
 		// Light position in world space (no transformation needed)
-		Vector3 lightPosWS = light.position;		
+		Vector3 lightPosWS = light.position;
 		cbLight.LightPosWS_Radius = Vector4(lightPosWS.x, lightPosWS.y, lightPosWS.z, actualRadius);
 		cbLight.LightColor = Vector4(light.color.x, light.color.y, light.color.z, 0.0f);
 
 		m_pDeviceContext->UpdateSubresource(m_pCBPointLight.Get(), 0, nullptr, &cbLight, 0, 0);
 
 		// Render light volume (sphere scaled by light radius)
-		Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);		
-		cbLightVolume.World = worldSphere.Transpose();	
+		Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);
+		cbLightVolume.World = worldSphere.Transpose();
 		cbLightVolume.BaseColor = cbLight.LightColor;
 		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 	}
-
 
 	// Disable blending
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
@@ -249,35 +261,38 @@ void TutorialApp::RenderPassLight()
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
 }
 
+//  Draw small spheres at active light positions
 void TutorialApp::RenderPassLightPosition()
-{
-	/////////////////////////////////////////////////////////////////////////
-	// 4) Draw small spheres at active light positions
+{	
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
+
+	// Set rendering states for spheres		
+	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetShader(m_pSolidPS.Get(), nullptr, 0);
+	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
+	m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+
+	// Draw small sphere at each active light position
+	CBGeometry cbSphere;
+	for (int i = 0; i < m_ActiveLightCount; ++i)
 	{
-		// Set rendering states for spheres		
-		m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
-		m_pDeviceContext->PSSetShader(m_pSolidPS.Get(), nullptr, 0);
-		m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
-		m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+		const auto& light = m_PointLights[i];
 
-		// Draw small sphere at each active light position
-		CBGeometry cbSphere;
-		for (int i = 0; i < m_ActiveLightCount; ++i)
-		{
-			const auto& light = m_PointLights[i];
+		// 0.1 scale for small indicator spheres
+		Matrix worldSphere = Matrix::CreateScale(0.1f) * Matrix::CreateTranslation(light.position);
 
-			// 0.1 scale for small indicator spheres
-			Matrix worldSphere = Matrix::CreateScale(0.1f) * Matrix::CreateTranslation(light.position);
+		
+		cbSphere.World = worldSphere.Transpose();		
+		cbSphere.BaseColor = Vector4(light.color.x, light.color.y, light.color.z, 1.0f); // Use light color
 
-			
-			cbSphere.World = worldSphere.Transpose();		
-			cbSphere.BaseColor = Vector4(light.color.x, light.color.y, light.color.z, 1.0f); // Use light color
-
-			m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
-			m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
-		}
-		m_pDeviceContext->RSSetState(nullptr);
+		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
+		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 	}
+	m_pDeviceContext->RSSetState(nullptr);
+
 }
 
 void TutorialApp::RenderPassGUI()
