@@ -7,82 +7,83 @@
 
 namespace
 {
-    struct CBGeometry
-    {
-        Matrix World;
-        Matrix View;
-        Matrix Projection;
-        Vector4 BaseColor;
-    };
+	struct CBGeometry
+	{
+		Matrix World;
+		Matrix View;
+		Matrix Projection;
+		Vector4 BaseColor;
+	};
 
-    struct CBPointLight
-    {
-        Vector4 LightPosWS_Radius; // xyz = positionWS, w = radius
-        Vector4 LightColor; // rgb = light color       
-    };
-    struct CBDirectionalLight
-    {
-        Vector4 DirectionWS; // xyz = direction in world space, w unused
-        Vector4 Color_Intensity; // rgb = color, w = intensity
-    };}
+	struct CBPointLight
+	{
+		Vector4 LightPosWS_Radius; // xyz = positionWS, w = radius
+		Vector4 LightColor; // rgb = light color       
+	};
+	struct CBDirectionalLight
+	{
+		Vector4 DirectionWS; // xyz = direction in world space, w unused
+		Vector4 Color_Intensity; // rgb = color, w = intensity
+	};
+}
 
 bool TutorialApp::OnInitialize()
 {
-    if (!InitD3D())
-        return false;
+	if (!InitD3D())
+		return false;
 
-    if (!InitScene())
-        return false;
+	if (!InitScene())
+		return false;
 
-    if (!InitImGui())
-        return false;
+	if (!InitImGui())
+		return false;
 
-    return true;
+	return true;
 }
 
 void TutorialApp::OnUninitialize()
 {
-    UninitImGui();
-    UninitScene();
-    UninitD3D();
+	UninitImGui();
+	UninitScene();
+	UninitD3D();
 }
 
 void TutorialApp::OnUpdate()
-{	
-    m_Camera.GetViewMatrix(m_View);
+{
+	m_Camera.GetViewMatrix(m_View);
 
-    // Animate all point lights (even inactive ones, so they're ready when activated)
-    float t = GameTimer::m_Instance->TotalTime() * 0.1f;
-	
-    for (int i = 0; i < MAX_POINT_LIGHTS; ++i)
-    {
-        // Each light has different animation parameters based on its index
-        float offsetX = (float)i * 0.5f;
-        float offsetY = (float)i * 0.7f;
-        
-        float scale = 5.0f + (i % 5) * 2.0f; // Vary movement scale
-        
-        m_PointLights[i].position.x = scale * cosf(t * 0.5f + offsetX);
-        m_PointLights[i].position.y = scale * sinf(t * 0.3f + offsetY);
-        m_PointLights[i].position.z = 0.0f; // Z axis fixed at 0
-    }
+	// Animate all point lights (even inactive ones, so they're ready when activated)
+	float t = GameTimer::m_Instance->TotalTime() * 0.1f;
+
+	for (int i = 0; i < MAX_POINT_LIGHTS; ++i)
+	{
+		// Each light has different animation parameters based on its index
+		float offsetX = (float)i * 0.5f;
+		float offsetY = (float)i * 0.7f;
+
+		float scale = 5.0f + (i % 5) * 2.0f; // Vary movement scale
+
+		m_PointLights[i].position.x = scale * cosf(t * 0.5f + offsetX);
+		m_PointLights[i].position.y = scale * sinf(t * 0.3f + offsetY);
+		m_PointLights[i].position.z = 0.0f; // Z axis fixed at 0
+	}
 }
 
 void TutorialApp::OnRender()
 {
 
-    RenderPassGBuffer();
+	RenderPassGBuffer();
 
 	// Set back buffer as render target for ImGui rendering
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearColor);
-  
-    RenderPassLight();
-    RenderPassLightPosition();	
-    
-    RenderPassGUI();
-	
-    HR_T(m_pSwapChain->Present(0, 0));
+
+	RenderPassLight();
+	RenderPassLightPosition();
+
+	RenderPassGUI();
+
+	HR_T(m_pSwapChain->Present(0, 0));
 }
 
 
@@ -97,13 +98,13 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0].Get(), clearAlbedo);
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[1].Get(), clearNormal);
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2].Get(), clearPos);
-    m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
 	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
 
-	// ÌååÏù¥ÌîÑÎùºÏù∏ ÏÉÅÌÉú ÏÑ§Ï†ï
+	// ∆ƒ¿Ã«¡∂Û¿Œ ªÛ≈¬ º≥¡§
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
@@ -113,7 +114,7 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
-	// 5x5 Í∑∏Î¶¨ÎìúÎ°ú 25Í∞ú ÌÅêÎ∏å Î†åÎçîÎßÅ (XY ÌèâÎ©¥)
+	// 5x5 ±◊∏ÆµÂ∑Œ 25∞≥ ≈•∫Í ∑ª¥ı∏µ (XY ∆Ú∏È)
 	CBGeometry cbGeom;
 	cbGeom.View = m_View.Transpose();
 	cbGeom.Projection = m_Projection.Transpose();
@@ -121,7 +122,7 @@ void TutorialApp::RenderPassGBuffer()
 
 	const int gridSize = 5;
 	const float spacing = 5.0f;
-	const float offset = (gridSize - 1) * spacing * 0.5f; // Ï§ëÏïô Ï†ïÎ†¨
+	const float offset = (gridSize - 1) * spacing * 0.5f; // ¡ﬂæ” ¡§∑ƒ
 
 	for (int y = 0; y < gridSize; y++)
 	{
@@ -130,7 +131,7 @@ void TutorialApp::RenderPassGBuffer()
 			Vector3 position(
 				x * spacing - offset,
 				y * spacing - offset,
-				0.0f  // ZÏ∂ï Ï†úÍ±∞
+				0.0f  // Z√‡ ¡¶∞≈
 			);
 
 			Matrix world = Matrix::CreateTranslation(position);
@@ -151,7 +152,7 @@ void TutorialApp::RenderPassLight()
 	/////////////////////////////////////////////////////////////////////////
 	// 2)  Directional Light Pass (first)
 
-	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());	
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 
 	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -165,7 +166,7 @@ void TutorialApp::RenderPassLight()
 
 	// No blending for the first light into the cleared back buffer.
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
 
 	// Directional light in world space (no transformation needed)
@@ -190,14 +191,14 @@ void TutorialApp::RenderPassLight()
 
 	// Update screen size for pixel shader (only once)
 	Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
-	m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);	
+	m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);
 
 	// Set up pipeline state for light volumes
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get()); // Same layout (Position + Normal)
-    
+
 	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
@@ -279,8 +280,8 @@ void TutorialApp::RenderPassLightPosition()
 
 void TutorialApp::RenderPassGUI()
 {
-    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
-    
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+
 
 	//////////////////////////////////////////////////////////////////////////
 	 // ImGui Rendering
@@ -291,7 +292,7 @@ void TutorialApp::RenderPassGUI()
 	// ImGui Window - Settings
 	ImGui::Begin("Deferred Rendering Settings");
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	
+
 	ImGui::Separator();
 
 	ImGui::Text("Camera Info");
@@ -317,7 +318,7 @@ void TutorialApp::RenderPassGUI()
 	// ImGui Window - G-Buffer Debug View
 	ImGui::Begin("G-Buffer Debug View");
 
-	// Ï≤´ Î≤àÏß∏ Ï§Ñ: Color, Normal
+	// √π π¯¬∞ ¡Ÿ: Color, Normal
 	ImGui::BeginGroup();
 	ImGui::Text("Color (Albedo)");
 	ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
@@ -330,7 +331,7 @@ void TutorialApp::RenderPassGUI()
 	ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
 	ImGui::EndGroup();
 
-	// Îëê Î≤àÏß∏ Ï§Ñ: Position, Depth
+	// µŒ π¯¬∞ ¡Ÿ: Position, Depth
 	ImGui::BeginGroup();
 	ImGui::Text("Position");
 	ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
@@ -352,522 +353,522 @@ void TutorialApp::RenderPassGUI()
 
 bool TutorialApp::InitD3D()
 {
-    if (!CreateSwapChainAndBackBuffer())
-        return false;
+	if (!CreateSwapChainAndBackBuffer())
+		return false;
 
-    D3D11_VIEWPORT viewport = {};
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = static_cast<float>(m_ClientWidth);
-    viewport.Height = static_cast<float>(m_ClientHeight);
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    m_pDeviceContext->RSSetViewports(1, &viewport);
+	D3D11_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = static_cast<float>(m_ClientWidth);
+	viewport.Height = static_cast<float>(m_ClientHeight);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-    if (!CreateDepthBuffer())
-        return false;
+	if (!CreateDepthBuffer())
+		return false;
 
-    if (!CreateGBuffer())
-        return false;
+	if (!CreateGBuffer())
+		return false;
 
-    return true;
+	return true;
 }
 
 void TutorialApp::UninitD3D()
 {
- 
+
 }
 
 bool TutorialApp::InitScene()
 {
-    if (!CreateCube())
-        return false;
+	if (!CreateCube())
+		return false;
 
-    if (!CreateQuad())
-        return false;
+	if (!CreateQuad())
+		return false;
 
-    if (!CreateSphere())
-        return false;
+	if (!CreateSphere())
+		return false;
 
-    if (!CreateShaders())
-        return false;
+	if (!CreateShaders())
+		return false;
 
-    if (!CreateStates())
-        return false;
+	if (!CreateStates())
+		return false;
 
-    // Constant buffers
-    {
-        D3D11_BUFFER_DESC bd = {};
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	// Constant buffers
+	{
+		D3D11_BUFFER_DESC bd = {};
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
-        bd.ByteWidth = sizeof(CBGeometry);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBGeometry.GetAddressOf()));
+		bd.ByteWidth = sizeof(CBGeometry);
+		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBGeometry.GetAddressOf()));
 
-        bd.ByteWidth = sizeof(CBPointLight);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBPointLight.GetAddressOf()));
+		bd.ByteWidth = sizeof(CBPointLight);
+		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBPointLight.GetAddressOf()));
 
-        bd.ByteWidth = sizeof(CBDirectionalLight);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBDirectionalLight.GetAddressOf()));
+		bd.ByteWidth = sizeof(CBDirectionalLight);
+		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBDirectionalLight.GetAddressOf()));
 
-        bd.ByteWidth = sizeof(Vector4); // float2 screenSize + float2 padding
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBScreenSize.GetAddressOf()));
-    }
+		bd.ByteWidth = sizeof(Vector4); // float2 screenSize + float2 padding
+		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBScreenSize.GetAddressOf()));
+	}
 
-    // Scene matrices
-    m_World = Matrix::Identity;
+	// Scene matrices
+	m_World = Matrix::Identity;
 
-    // Put camera a bit back (camera itself is driven by GameApp input too)
-    m_Camera.Reset();
-    m_Camera.m_Position = Vector3(0.0f, 2.0f, -50.0f);
-    m_Camera.m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-    m_Camera.Update(0.0f);
-    m_Camera.GetViewMatrix(m_View);
+	// Put camera a bit back (camera itself is driven by GameApp input too)
+	m_Camera.Reset();
+	m_Camera.m_Position = Vector3(0.0f, 2.0f, -50.0f);
+	m_Camera.m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+	m_Camera.Update(0.0f);
+	m_Camera.GetViewMatrix(m_View);
 
-    	
+
 	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 1.0f, 10000.0f);
 
-    // Initialize point lights randomly
-    srand(42); // Fixed seed for reproducibility
-    for (int i = 0; i < MAX_POINT_LIGHTS; ++i)
-    {
-        float x = (rand() % 200 - 100) / 10.0f; // -10 to 10
-        float y = (rand() % 200 - 100) / 10.0f;
-        
-        m_PointLights[i].position = Vector3(x, y, 0.0f); // Z fixed at 0
-        m_PointLights[i].color = Vector3(
-            (rand() % 100) / 100.0f + 0.2f,
-            (rand() % 100) / 100.0f + 0.2f,
-            (rand() % 100) / 100.0f + 0.2f
-        );
-        m_PointLights[i].radius = 3.0f + (rand() % 30) / 10.0f; // 3.0 to 6.0
-    }
+	// Initialize point lights randomly
+	srand(42); // Fixed seed for reproducibility
+	for (int i = 0; i < MAX_POINT_LIGHTS; ++i)
+	{
+		float x = (rand() % 200 - 100) / 10.0f; // -10 to 10
+		float y = (rand() % 200 - 100) / 10.0f;
 
-    return true;
+		m_PointLights[i].position = Vector3(x, y, 0.0f); // Z fixed at 0
+		m_PointLights[i].color = Vector3(
+			(rand() % 100) / 100.0f + 0.2f,
+			(rand() % 100) / 100.0f + 0.2f,
+			(rand() % 100) / 100.0f + 0.2f
+		);
+		m_PointLights[i].radius = 3.0f + (rand() % 30) / 10.0f; // 3.0 to 6.0
+	}
+
+	return true;
 }
 
 void TutorialApp::UninitScene()
 {
-  
+
 }
 
 bool TutorialApp::CreateSwapChainAndBackBuffer()
 {
-    DXGI_SWAP_CHAIN_DESC swapDesc = {};
-    swapDesc.BufferCount = 2;
-    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapDesc.OutputWindow = m_hWnd;
-    swapDesc.Windowed = true;
-    swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapDesc.BufferDesc.Width = m_ClientWidth;
-    swapDesc.BufferDesc.Height = m_ClientHeight;
-    swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-    swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-    swapDesc.SampleDesc.Count = 1;
-    swapDesc.SampleDesc.Quality = 0;
+	DXGI_SWAP_CHAIN_DESC swapDesc = {};
+	swapDesc.BufferCount = 2;
+	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapDesc.OutputWindow = m_hWnd;
+	swapDesc.Windowed = true;
+	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapDesc.BufferDesc.Width = m_ClientWidth;
+	swapDesc.BufferDesc.Height = m_ClientHeight;
+	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+	swapDesc.SampleDesc.Count = 1;
+	swapDesc.SampleDesc.Quality = 0;
 
-    UINT creationFlags = 0;
+	UINT creationFlags = 0;
 #ifdef _DEBUG
-    creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    HR_T(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
-        nullptr, 0, D3D11_SDK_VERSION, &swapDesc, m_pSwapChain.GetAddressOf(), m_pDevice.GetAddressOf(), nullptr, m_pDeviceContext.GetAddressOf()));
+	HR_T(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags,
+		nullptr, 0, D3D11_SDK_VERSION, &swapDesc, m_pSwapChain.GetAddressOf(), m_pDevice.GetAddressOf(), nullptr, m_pDeviceContext.GetAddressOf()));
 
-    ComPtr<ID3D11Texture2D> backBuffer;
-    HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf()));
-    HR_T(m_pDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, m_pBackBufferRTV.GetAddressOf()));
+	ComPtr<ID3D11Texture2D> backBuffer;
+	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf()));
+	HR_T(m_pDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, m_pBackBufferRTV.GetAddressOf()));
 
-    return true;
+	return true;
 }
 
 bool TutorialApp::CreateDepthBuffer()
 {
-    D3D11_TEXTURE2D_DESC descDepth = {};
-    descDepth.Width = m_ClientWidth;
-    descDepth.Height = m_ClientHeight;
-    descDepth.MipLevels = 1;
-    descDepth.ArraySize = 1;
-    descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; // TypelessÎ°ú Î≥ÄÍ≤ΩÌïòÏó¨ SRV ÏÉùÏÑ± Í∞ÄÎä•ÌïòÍ≤å
-    descDepth.SampleDesc.Count = 1;
-    descDepth.SampleDesc.Quality = 0;
-    descDepth.Usage = D3D11_USAGE_DEFAULT;
-    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV ÌîåÎûòÍ∑∏ Ï∂îÍ∞Ä
+	D3D11_TEXTURE2D_DESC descDepth = {};
+	descDepth.Width = m_ClientWidth;
+	descDepth.Height = m_ClientHeight;
+	descDepth.MipLevels = 1;
+	descDepth.ArraySize = 1;
+	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; // Typeless∑Œ ∫Ø∞Ê«œø© SRV ª˝º∫ ∞°¥…«œ∞‘
+	descDepth.SampleDesc.Count = 1;
+	descDepth.SampleDesc.Quality = 0;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV «√∑°±◊ √ﬂ∞°
 
-    HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, m_pDepthTexture.GetAddressOf()));
+	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, m_pDepthTexture.GetAddressOf()));
 
-    // Depth Stencil View ÏÉùÏÑ±
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Texture2D.MipSlice = 0;
-    HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), &dsvDesc, m_pDepthDSV.GetAddressOf()));
+	// Depth Stencil View ª˝º∫
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Texture2D.MipSlice = 0;
+	HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), &dsvDesc, m_pDepthDSV.GetAddressOf()));
 
-    // Shader Resource View ÏÉùÏÑ± (DepthÎ•º ÌÖêÏä§Ï≤òÎ°ú ÏùΩÍ∏∞ ÏúÑÌï¥)
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    HR_T(m_pDevice->CreateShaderResourceView(m_pDepthTexture.Get(), &srvDesc, m_pDepthSRV.GetAddressOf()));
+	// Shader Resource View ª˝º∫ (Depth∏¶ ≈ŸΩ∫√≥∑Œ ¿–±‚ ¿ß«ÿ)
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	HR_T(m_pDevice->CreateShaderResourceView(m_pDepthTexture.Get(), &srvDesc, m_pDepthSRV.GetAddressOf()));
 
-    return true;
+	return true;
 }
 
 bool TutorialApp::CreateGBuffer()
 {
-    ReleaseGBuffer();
+	ReleaseGBuffer();
 
-    struct RTDesc
-    {
-        DXGI_FORMAT format;
-    };
+	struct RTDesc
+	{
+		DXGI_FORMAT format;
+	};
 
-    RTDesc formats[GBufferCount] = {
-        { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // BaseColor  - 4Î∞îÏù¥Ìä∏
-        { DXGI_FORMAT_R8G8B8A8_UNORM },     // Normal - 4Î∞îÏù¥Ìä∏ (Îã®ÏúÑÎ≤°ÌÑ∞Ïù¥ÎØÄÎ°ú 8ÎπÑÌä∏ Ï∂©Î∂Ñ)
-        { DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionWS - 8Î∞îÏù¥Ìä∏
-    };
+	RTDesc formats[GBufferCount] = {
+		{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // BaseColor  - 4πŸ¿Ã∆Æ
+		{ DXGI_FORMAT_R8G8B8A8_UNORM },     // Normal - 4πŸ¿Ã∆Æ (¥‹¿ß∫§≈Õ¿Ãπ«∑Œ 8∫Ò∆Æ √Ê∫–)
+		{ DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionWS - 8πŸ¿Ã∆Æ
+	};
 
-    for (int i = 0; i < GBufferCount; ++i)
-    {
-        D3D11_TEXTURE2D_DESC td = {};
-        td.Width = m_ClientWidth;
-        td.Height = m_ClientHeight;
-        td.MipLevels = 1;
-        td.ArraySize = 1;
-        td.Format = formats[i].format;
-        td.SampleDesc.Count = 1;
-        td.Usage = D3D11_USAGE_DEFAULT;
-        td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	for (int i = 0; i < GBufferCount; ++i)
+	{
+		D3D11_TEXTURE2D_DESC td = {};
+		td.Width = m_ClientWidth;
+		td.Height = m_ClientHeight;
+		td.MipLevels = 1;
+		td.ArraySize = 1;
+		td.Format = formats[i].format;
+		td.SampleDesc.Count = 1;
+		td.Usage = D3D11_USAGE_DEFAULT;
+		td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-        HR_T(m_pDevice->CreateTexture2D(&td, nullptr, m_pGBufferTextures[i].GetAddressOf()));
-        HR_T(m_pDevice->CreateRenderTargetView(m_pGBufferTextures[i].Get(), nullptr, m_pGBufferRTVs[i].GetAddressOf()));
-        HR_T(m_pDevice->CreateShaderResourceView(m_pGBufferTextures[i].Get(), nullptr, m_pGBufferSRVs[i].GetAddressOf()));
-    }
+		HR_T(m_pDevice->CreateTexture2D(&td, nullptr, m_pGBufferTextures[i].GetAddressOf()));
+		HR_T(m_pDevice->CreateRenderTargetView(m_pGBufferTextures[i].Get(), nullptr, m_pGBufferRTVs[i].GetAddressOf()));
+		HR_T(m_pDevice->CreateShaderResourceView(m_pGBufferTextures[i].Get(), nullptr, m_pGBufferSRVs[i].GetAddressOf()));
+	}
 
-    return true;
+	return true;
 }
 
 void TutorialApp::ReleaseGBuffer()
 {
-    for (int i = 0; i < GBufferCount; ++i)
-    {
-        m_pGBufferSRVs[i].Reset();
-        m_pGBufferRTVs[i].Reset();
-        m_pGBufferTextures[i].Reset();
-    }
+	for (int i = 0; i < GBufferCount; ++i)
+	{
+		m_pGBufferSRVs[i].Reset();
+		m_pGBufferRTVs[i].Reset();
+		m_pGBufferTextures[i].Reset();
+	}
 }
 
 bool TutorialApp::CreateCube()
 {
-    struct CubeVertex
-    {
-        Vector3 Pos;
-        Vector3 Normal;
-    };
+	struct CubeVertex
+	{
+		Vector3 Pos;
+		Vector3 Normal;
+	};
 
-    CubeVertex vertices[] =
-    {
-        { Vector3(-1.0f, 1.0f, -1.0f), Vector3(0.0f, 1.0f, 0.0f) },
-        { Vector3(1.0f, 1.0f, -1.0f),  Vector3(0.0f, 1.0f, 0.0f) },
-        { Vector3(1.0f, 1.0f, 1.0f),   Vector3(0.0f, 1.0f, 0.0f) },
-        { Vector3(-1.0f, 1.0f, 1.0f),  Vector3(0.0f, 1.0f, 0.0f) },
+	CubeVertex vertices[] =
+	{
+		{ Vector3(-1.0f, 1.0f, -1.0f), Vector3(0.0f, 1.0f, 0.0f) },
+		{ Vector3(1.0f, 1.0f, -1.0f),  Vector3(0.0f, 1.0f, 0.0f) },
+		{ Vector3(1.0f, 1.0f, 1.0f),   Vector3(0.0f, 1.0f, 0.0f) },
+		{ Vector3(-1.0f, 1.0f, 1.0f),  Vector3(0.0f, 1.0f, 0.0f) },
 
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f) },
-        { Vector3(1.0f, -1.0f, -1.0f),  Vector3(0.0f, -1.0f, 0.0f) },
-        { Vector3(1.0f, -1.0f, 1.0f),   Vector3(0.0f, -1.0f, 0.0f) },
-        { Vector3(-1.0f, -1.0f, 1.0f),  Vector3(0.0f, -1.0f, 0.0f) },
+		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f) },
+		{ Vector3(1.0f, -1.0f, -1.0f),  Vector3(0.0f, -1.0f, 0.0f) },
+		{ Vector3(1.0f, -1.0f, 1.0f),   Vector3(0.0f, -1.0f, 0.0f) },
+		{ Vector3(-1.0f, -1.0f, 1.0f),  Vector3(0.0f, -1.0f, 0.0f) },
 
-        { Vector3(-1.0f, -1.0f, 1.0f),  Vector3(-1.0f, 0.0f, 0.0f) },
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f) },
-        { Vector3(-1.0f, 1.0f, -1.0f),  Vector3(-1.0f, 0.0f, 0.0f) },
-        { Vector3(-1.0f, 1.0f, 1.0f),   Vector3(-1.0f, 0.0f, 0.0f) },
+		{ Vector3(-1.0f, -1.0f, 1.0f),  Vector3(-1.0f, 0.0f, 0.0f) },
+		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f) },
+		{ Vector3(-1.0f, 1.0f, -1.0f),  Vector3(-1.0f, 0.0f, 0.0f) },
+		{ Vector3(-1.0f, 1.0f, 1.0f),   Vector3(-1.0f, 0.0f, 0.0f) },
 
-        { Vector3(1.0f, -1.0f, 1.0f),   Vector3(1.0f, 0.0f, 0.0f) },
-        { Vector3(1.0f, -1.0f, -1.0f),  Vector3(1.0f, 0.0f, 0.0f) },
-        { Vector3(1.0f, 1.0f, -1.0f),   Vector3(1.0f, 0.0f, 0.0f) },
-        { Vector3(1.0f, 1.0f, 1.0f),    Vector3(1.0f, 0.0f, 0.0f) },
+		{ Vector3(1.0f, -1.0f, 1.0f),   Vector3(1.0f, 0.0f, 0.0f) },
+		{ Vector3(1.0f, -1.0f, -1.0f),  Vector3(1.0f, 0.0f, 0.0f) },
+		{ Vector3(1.0f, 1.0f, -1.0f),   Vector3(1.0f, 0.0f, 0.0f) },
+		{ Vector3(1.0f, 1.0f, 1.0f),    Vector3(1.0f, 0.0f, 0.0f) },
 
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f) },
-        { Vector3(1.0f, -1.0f, -1.0f),  Vector3(0.0f, 0.0f, -1.0f) },
-        { Vector3(1.0f, 1.0f, -1.0f),   Vector3(0.0f, 0.0f, -1.0f) },
-        { Vector3(-1.0f, 1.0f, -1.0f),  Vector3(0.0f, 0.0f, -1.0f) },
+		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f) },
+		{ Vector3(1.0f, -1.0f, -1.0f),  Vector3(0.0f, 0.0f, -1.0f) },
+		{ Vector3(1.0f, 1.0f, -1.0f),   Vector3(0.0f, 0.0f, -1.0f) },
+		{ Vector3(-1.0f, 1.0f, -1.0f),  Vector3(0.0f, 0.0f, -1.0f) },
 
-        { Vector3(-1.0f, -1.0f, 1.0f),  Vector3(0.0f, 0.0f, 1.0f) },
-        { Vector3(1.0f, -1.0f, 1.0f),   Vector3(0.0f, 0.0f, 1.0f) },
-        { Vector3(1.0f, 1.0f, 1.0f),    Vector3(0.0f, 0.0f, 1.0f) },
-        { Vector3(-1.0f, 1.0f, 1.0f),   Vector3(0.0f, 0.0f, 1.0f) },
-    };
+		{ Vector3(-1.0f, -1.0f, 1.0f),  Vector3(0.0f, 0.0f, 1.0f) },
+		{ Vector3(1.0f, -1.0f, 1.0f),   Vector3(0.0f, 0.0f, 1.0f) },
+		{ Vector3(1.0f, 1.0f, 1.0f),    Vector3(0.0f, 0.0f, 1.0f) },
+		{ Vector3(-1.0f, 1.0f, 1.0f),   Vector3(0.0f, 0.0f, 1.0f) },
+	};
 
-    D3D11_BUFFER_DESC vbDesc = {};
-    vbDesc.ByteWidth = sizeof(vertices);
-    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vbDesc.Usage = D3D11_USAGE_DEFAULT;
-    D3D11_SUBRESOURCE_DATA vbData = {};
-    vbData.pSysMem = vertices;
-    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pCubeVB.GetAddressOf()));
-    m_CubeVBStride = sizeof(CubeVertex);
-    m_CubeVBOffset = 0;
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.ByteWidth = sizeof(vertices);
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11_SUBRESOURCE_DATA vbData = {};
+	vbData.pSysMem = vertices;
+	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pCubeVB.GetAddressOf()));
+	m_CubeVBStride = sizeof(CubeVertex);
+	m_CubeVBOffset = 0;
 
-    WORD indices[] =
-    {
-        3,1,0, 2,1,3,
-        6,4,5, 7,4,6,
-        11,9,8, 10,9,11,
-        14,12,13, 15,12,14,
-        19,17,16, 18,17,19,
-        22,20,21, 23,20,22
-    };
+	WORD indices[] =
+	{
+		3,1,0, 2,1,3,
+		6,4,5, 7,4,6,
+		11,9,8, 10,9,11,
+		14,12,13, 15,12,14,
+		19,17,16, 18,17,19,
+		22,20,21, 23,20,22
+	};
 
-    m_CubeIndexCount = ARRAYSIZE(indices);
+	m_CubeIndexCount = ARRAYSIZE(indices);
 
-    D3D11_BUFFER_DESC ibDesc = {};
-    ibDesc.ByteWidth = sizeof(indices);
-    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    D3D11_SUBRESOURCE_DATA ibData = {};
-    ibData.pSysMem = indices;
-    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pCubeIB.GetAddressOf()));
+	D3D11_BUFFER_DESC ibDesc = {};
+	ibDesc.ByteWidth = sizeof(indices);
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11_SUBRESOURCE_DATA ibData = {};
+	ibData.pSysMem = indices;
+	HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pCubeIB.GetAddressOf()));
 
-    return true;
+	return true;
 }
 
 bool TutorialApp::CreateQuad()
 {
-    struct QuadVertex
-    {
-        Vector3 position;
-        Vector2 uv;
-    };
+	struct QuadVertex
+	{
+		Vector3 position;
+		Vector2 uv;
+	};
 
-    QuadVertex vertices[] =
-    {
-        { Vector3(-1.0f,  1.0f, 0.0f), Vector2(0.0f, 0.0f) },
-        { Vector3(1.0f,   1.0f, 0.0f), Vector2(1.0f, 0.0f) },
-        { Vector3(-1.0f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) },
-        { Vector3(1.0f,  -1.0f, 0.0f), Vector2(1.0f, 1.0f) },
-    };
+	QuadVertex vertices[] =
+	{
+		{ Vector3(-1.0f,  1.0f, 0.0f), Vector2(0.0f, 0.0f) },
+		{ Vector3(1.0f,   1.0f, 0.0f), Vector2(1.0f, 0.0f) },
+		{ Vector3(-1.0f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) },
+		{ Vector3(1.0f,  -1.0f, 0.0f), Vector2(1.0f, 1.0f) },
+	};
 
-    D3D11_BUFFER_DESC vbDesc = {};
-    vbDesc.ByteWidth = sizeof(vertices);
-    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vbDesc.Usage = D3D11_USAGE_DEFAULT;
-    D3D11_SUBRESOURCE_DATA vbData = {};
-    vbData.pSysMem = vertices;
-    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pQuadVB.GetAddressOf()));
-    m_QuadVBStride = sizeof(QuadVertex);
-    m_QuadVBOffset = 0;
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.ByteWidth = sizeof(vertices);
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11_SUBRESOURCE_DATA vbData = {};
+	vbData.pSysMem = vertices;
+	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pQuadVB.GetAddressOf()));
+	m_QuadVBStride = sizeof(QuadVertex);
+	m_QuadVBOffset = 0;
 
-    WORD indices[] = { 0, 1, 2, 2, 1, 3 };
-    m_QuadIndexCount = ARRAYSIZE(indices);
+	WORD indices[] = { 0, 1, 2, 2, 1, 3 };
+	m_QuadIndexCount = ARRAYSIZE(indices);
 
-    D3D11_BUFFER_DESC ibDesc = {};
-    ibDesc.ByteWidth = sizeof(indices);
-    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    D3D11_SUBRESOURCE_DATA ibData = {};
-    ibData.pSysMem = indices;
-    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pQuadIB.GetAddressOf()));
+	D3D11_BUFFER_DESC ibDesc = {};
+	ibDesc.ByteWidth = sizeof(indices);
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11_SUBRESOURCE_DATA ibData = {};
+	ibData.pSysMem = indices;
+	HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pQuadIB.GetAddressOf()));
 
-    return true;
+	return true;
 }
 
 bool TutorialApp::CreateSphere()
 {
-    struct SphereVertex
-    {
-        Vector3 position;
-        Vector3 normal;
-    };
+	struct SphereVertex
+	{
+		Vector3 position;
+		Vector3 normal;
+	};
 
-    const int slices = 32;
-    const int stacks = 16;
-    const float radius = 1.0f;
+	const int slices = 32;
+	const int stacks = 16;
+	const float radius = 1.0f;
 
-    std::vector<SphereVertex> vertices;
-    std::vector<WORD> indices;
+	std::vector<SphereVertex> vertices;
+	std::vector<WORD> indices;
 
-    // Generate vertices
-    for (int stack = 0; stack <= stacks; ++stack)
-    {
-        float phi = XM_PI * float(stack) / float(stacks);
-        float y = cosf(phi);
-        float sinPhi = sinf(phi);
+	// Generate vertices
+	for (int stack = 0; stack <= stacks; ++stack)
+	{
+		float phi = XM_PI * float(stack) / float(stacks);
+		float y = cosf(phi);
+		float sinPhi = sinf(phi);
 
-        for (int slice = 0; slice <= slices; ++slice)
-        {
-            float theta = XM_2PI * float(slice) / float(slices);
-            float x = sinPhi * cosf(theta);
-            float z = sinPhi * sinf(theta);
+		for (int slice = 0; slice <= slices; ++slice)
+		{
+			float theta = XM_2PI * float(slice) / float(slices);
+			float x = sinPhi * cosf(theta);
+			float z = sinPhi * sinf(theta);
 
-            Vector3 position(x * radius, y * radius, z * radius);
-            Vector3 normal(x, y, z);
-            normal.Normalize();
+			Vector3 position(x * radius, y * radius, z * radius);
+			Vector3 normal(x, y, z);
+			normal.Normalize();
 
-            vertices.push_back({ position, normal });
-        }
-    }
+			vertices.push_back({ position, normal });
+		}
+	}
 
-    // Generate indices
-    for (int stack = 0; stack < stacks; ++stack)
-    {
-        for (int slice = 0; slice < slices; ++slice)
-        {
-            int first = stack * (slices + 1) + slice;
-            int second = first + slices + 1;
+	// Generate indices
+	for (int stack = 0; stack < stacks; ++stack)
+	{
+		for (int slice = 0; slice < slices; ++slice)
+		{
+			int first = stack * (slices + 1) + slice;
+			int second = first + slices + 1;
 
-            indices.push_back(first);
-            indices.push_back(second);
-            indices.push_back(first + 1);
+			indices.push_back(first);
+			indices.push_back(second);
+			indices.push_back(first + 1);
 
-            indices.push_back(second);
-            indices.push_back(second + 1);
-            indices.push_back(first + 1);
-        }
-    }
+			indices.push_back(second);
+			indices.push_back(second + 1);
+			indices.push_back(first + 1);
+		}
+	}
 
-    // Create vertex buffer
-    D3D11_BUFFER_DESC vbDesc = {};
-    vbDesc.ByteWidth = (UINT)(sizeof(SphereVertex) * vertices.size());
-    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vbDesc.Usage = D3D11_USAGE_DEFAULT;
-    D3D11_SUBRESOURCE_DATA vbData = {};
-    vbData.pSysMem = vertices.data();
-    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pSphereVB.GetAddressOf()));
-    m_SphereVBStride = sizeof(SphereVertex);
-    m_SphereVBOffset = 0;
+	// Create vertex buffer
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.ByteWidth = (UINT)(sizeof(SphereVertex) * vertices.size());
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11_SUBRESOURCE_DATA vbData = {};
+	vbData.pSysMem = vertices.data();
+	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pSphereVB.GetAddressOf()));
+	m_SphereVBStride = sizeof(SphereVertex);
+	m_SphereVBOffset = 0;
 
-    // Create index buffer
-    m_SphereIndexCount = (int)indices.size();
-    D3D11_BUFFER_DESC ibDesc = {};
-    ibDesc.ByteWidth = (UINT)(sizeof(WORD) * indices.size());
-    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    D3D11_SUBRESOURCE_DATA ibData = {};
-    ibData.pSysMem = indices.data();
-    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pSphereIB.GetAddressOf()));
+	// Create index buffer
+	m_SphereIndexCount = (int)indices.size();
+	D3D11_BUFFER_DESC ibDesc = {};
+	ibDesc.ByteWidth = (UINT)(sizeof(WORD) * indices.size());
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11_SUBRESOURCE_DATA ibData = {};
+	ibData.pSysMem = indices.data();
+	HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pSphereIB.GetAddressOf()));
 
-    return true;
+	return true;
 }
 
 bool TutorialApp::CreateShaders()
 {
-    // Geometry pass
-    {
-        ComPtr<ID3DBlob> vsBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
+	// Geometry pass
+	{
+		ComPtr<ID3DBlob> vsBlob;
+		HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
 
-        D3D11_INPUT_ELEMENT_DESC layout[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        };
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
 
-        HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pCubeInputLayout.GetAddressOf()));
-        HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pGBufferVS.GetAddressOf()));
+		HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pCubeInputLayout.GetAddressOf()));
+		HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pGBufferVS.GetAddressOf()));
 
-        ComPtr<ID3DBlob> psBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
-        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pGBufferPS.GetAddressOf()));
-    }
+		ComPtr<ID3DBlob> psBlob;
+		HR_T(CompileShaderFromFile(L"../Shaders/15_GBufferPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
+		HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pGBufferPS.GetAddressOf()));
+	}
 
-    // Light pass
-    {
-        ComPtr<ID3DBlob> vsBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_QuadVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
+	// Light pass
+	{
+		ComPtr<ID3DBlob> vsBlob;
+		HR_T(CompileShaderFromFile(L"../Shaders/15_QuadVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
 
-        D3D11_INPUT_ELEMENT_DESC layout[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        };
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
 
-        HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pQuadInputLayout.GetAddressOf()));
-        HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pQuadVS.GetAddressOf()));
+		HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pQuadInputLayout.GetAddressOf()));
+		HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pQuadVS.GetAddressOf()));
 
-        ComPtr<ID3DBlob> psBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_PointLightPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
-        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pPointLightPS.GetAddressOf()));
+		ComPtr<ID3DBlob> psBlob;
+		HR_T(CompileShaderFromFile(L"../Shaders/15_PointLightPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
+		HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pPointLightPS.GetAddressOf()));
 
-        ComPtr<ID3DBlob> psDirBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_DirectionLightPS.hlsl", "main", "ps_4_0", psDirBlob.GetAddressOf()));
-        HR_T(m_pDevice->CreatePixelShader(psDirBlob->GetBufferPointer(), psDirBlob->GetBufferSize(), nullptr, m_pDirectionLightPS.GetAddressOf()));
+		ComPtr<ID3DBlob> psDirBlob;
+		HR_T(CompileShaderFromFile(L"../Shaders/15_DirectionLightPS.hlsl", "main", "ps_4_0", psDirBlob.GetAddressOf()));
+		HR_T(m_pDevice->CreatePixelShader(psDirBlob->GetBufferPointer(), psDirBlob->GetBufferSize(), nullptr, m_pDirectionLightPS.GetAddressOf()));
 
-        ComPtr<ID3DBlob> psWireBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_SolidPS.hlsl", "main", "ps_4_0", psWireBlob.GetAddressOf()));
-        HR_T(m_pDevice->CreatePixelShader(psWireBlob->GetBufferPointer(), psWireBlob->GetBufferSize(), nullptr, m_pSolidPS.GetAddressOf()));
-    }
+		ComPtr<ID3DBlob> psWireBlob;
+		HR_T(CompileShaderFromFile(L"../Shaders/15_SolidPS.hlsl", "main", "ps_4_0", psWireBlob.GetAddressOf()));
+		HR_T(m_pDevice->CreatePixelShader(psWireBlob->GetBufferPointer(), psWireBlob->GetBufferSize(), nullptr, m_pSolidPS.GetAddressOf()));
+	}
 
-    return true;
+	return true;
 }
 
 bool TutorialApp::CreateStates()
 {
-    D3D11_SAMPLER_DESC sampDesc = {};
-    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    sampDesc.MinLOD = 0;
-    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-    HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerLinear.GetAddressOf()));
+	D3D11_SAMPLER_DESC sampDesc = {};
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerLinear.GetAddressOf()));
 
-    // Additive blend state for light accumulation
-    D3D11_BLEND_DESC blendDesc = {};
-    blendDesc.RenderTarget[0].BlendEnable = TRUE;
-    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    HR_T(m_pDevice->CreateBlendState(&blendDesc, m_pBlendStateAdditive.GetAddressOf()));
+	// Additive blend state for light accumulation
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	HR_T(m_pDevice->CreateBlendState(&blendDesc, m_pBlendStateAdditive.GetAddressOf()));
 
-   
-    D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 	// Depth Stencil State for GBuffer (depth test ON, depth write ON)
 	dsDesc = {};
-	dsDesc.DepthEnable = TRUE;                          // Depth ÌÖåÏä§Ìä∏ ÌôúÏÑ±Ìôî
-	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Depth Ïì∞Í∏∞ ÌôúÏÑ±Ìôî
-	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;           // Í∞ÄÍπåÏö¥ Í≤ÉÏù¥ ÌÜµÍ≥º
-	dsDesc.StencilEnable = FALSE;                       // Stencil ÎπÑÌôúÏÑ±Ìôî
+	dsDesc.DepthEnable = TRUE;                          // Depth ≈◊Ω∫∆Æ »∞º∫»≠
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Depth æ≤±‚ »∞º∫»≠
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;           // ∞°±ÓøÓ ∞Õ¿Ã ≈Î∞˙
+	dsDesc.StencilEnable = FALSE;                       // Stencil ∫Ò»∞º∫»≠
 
 	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
 
-    // Depth Stencil State for light volumes (depth test Off, depth write OFF)
-	// ‚ÄúÏù¥ ÎùºÏù¥Ìä∏Í∞Ä ÏòÅÌñ•ÏùÑ Ï§Ñ ÏàòÎèÑ ÏûàÎäî ÌôîÎ©¥ ÏòÅÏó≠‚ÄùÏùÑ ÎßåÎì§Í≥†,
-    //	Ïã§Ï†úÎ°ú ÏòÅÌñ•ÏùÑ Ï£ºÎäîÏßÄÎäî Pixel ShaderÏóêÏÑú Í±∞Î¶¨Î°ú ÌåêÎã®ÌïúÎã§.
-    dsDesc = {};
-    dsDesc.DepthEnable = FALSE;
-    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
-    dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-    dsDesc.StencilEnable = FALSE;
-    HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateLightVolume.GetAddressOf()));
-    return true;
+	// Depth Stencil State for light volumes (depth test Off, depth write OFF)
+	// °∞¿Ã ∂Û¿Ã∆Æ∞° øµ«‚¿ª ¡Ÿ ºˆµµ ¿÷¥¬ »≠∏È øµø™°±¿ª ∏∏µÈ∞Ì,
+	//	Ω«¡¶∑Œ øµ«‚¿ª ¡÷¥¬¡ˆ¥¬ Pixel Shaderø°º≠ ∞≈∏Æ∑Œ ∆«¥‹«—¥Ÿ.
+	dsDesc = {};
+	dsDesc.DepthEnable = FALSE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
+	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.StencilEnable = FALSE;
+	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateLightVolume.GetAddressOf()));
+	return true;
 }
 
 bool TutorialApp::InitImGui()
 {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
 
-    ImGui::StyleColorsDark();
+	ImGui::StyleColorsDark();
 
-    ImGui_ImplWin32_Init(m_hWnd);
-    ImGui_ImplDX11_Init(m_pDevice.Get(), m_pDeviceContext.Get());
+	ImGui_ImplWin32_Init(m_hWnd);
+	ImGui_ImplDX11_Init(m_pDevice.Get(), m_pDeviceContext.Get());
 
-    return true;
+	return true;
 }
 
 void TutorialApp::UninitImGui()
 {
-    ImGui_ImplDX11_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -877,5 +878,5 @@ LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
 		return true;
 
-    return __super::WndProc(hWnd, message, wParam, lParam);
+	return __super::WndProc(hWnd, message, wParam, lParam);
 }
