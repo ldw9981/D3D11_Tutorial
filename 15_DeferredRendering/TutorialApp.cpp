@@ -104,7 +104,6 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
 
-	// ���������� ���� ����
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
@@ -114,7 +113,7 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
-	// 5x5 �׸���� 25�� ť�� ������ (XY ���)
+
 	CBGeometry cbGeom;
 	cbGeom.View = m_View.Transpose();
 	cbGeom.Projection = m_Projection.Transpose();
@@ -122,7 +121,7 @@ void TutorialApp::RenderPassGBuffer()
 
 	const int gridSize = 5;
 	const float spacing = 5.0f;
-	const float offset = (gridSize - 1) * spacing * 0.5f; // �߾� ����
+	const float offset = (gridSize - 1) * spacing * 0.5f; 
 
 	for (int y = 0; y < gridSize; y++)
 	{
@@ -131,7 +130,7 @@ void TutorialApp::RenderPassGBuffer()
 			Vector3 position(
 				x * spacing - offset,
 				y * spacing - offset,
-				0.0f  // Z�� ����
+				0.0f
 			);
 
 			Matrix world = Matrix::CreateTranslation(position);
@@ -318,7 +317,6 @@ void TutorialApp::RenderPassGUI()
 	// ImGui Window - G-Buffer Debug View
 	ImGui::Begin("G-Buffer Debug View");
 
-	// ù ��° ��: Color, Normal
 	ImGui::BeginGroup();
 	ImGui::Text("Color (Albedo)");
 	ImGui::Image((ImTextureID)m_pGBufferSRVs[0].Get(), ImVec2(128, 128));
@@ -330,8 +328,7 @@ void TutorialApp::RenderPassGUI()
 	ImGui::Text("Normal");
 	ImGui::Image((ImTextureID)m_pGBufferSRVs[1].Get(), ImVec2(128, 128));
 	ImGui::EndGroup();
-
-	// �� ��° ��: Position, Depth
+	
 	ImGui::BeginGroup();
 	ImGui::Text("Position");
 	ImGui::Image((ImTextureID)m_pGBufferSRVs[2].Get(), ImVec2(128, 128));
@@ -490,22 +487,22 @@ bool TutorialApp::CreateDepthBuffer()
 	descDepth.Height = m_ClientHeight;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; // Typeless�� �����Ͽ� SRV ���� �����ϰ�
+	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; 
 	descDepth.SampleDesc.Count = 1;
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
-	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE; // SRV �÷��� �߰�
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
 	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, m_pDepthTexture.GetAddressOf()));
 
-	// Depth Stencil View ����
+	// Depth Stencil View
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
 	HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), &dsvDesc, m_pDepthDSV.GetAddressOf()));
 
-	// Shader Resource View ���� (Depth�� �ٽ�ó�� �б� ����)
+	// Shader Resource View
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -526,9 +523,9 @@ bool TutorialApp::CreateGBuffer()
 	};
 
 	RTDesc formats[GBufferCount] = {
-		{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // BaseColor  - 4����Ʈ
-		{ DXGI_FORMAT_R8G8B8A8_UNORM },     // Normal - 4����Ʈ (���������̹Ƿ� 8��Ʈ ���)
-		{ DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionWS - 8����Ʈ
+		{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },   // BaseColor
+		{ DXGI_FORMAT_R8G8B8A8_UNORM },     // Normal
+		{ DXGI_FORMAT_R16G16B16A16_FLOAT }, // PositionWS 
 	};
 
 	for (int i = 0; i < GBufferCount; ++i)
@@ -786,7 +783,7 @@ bool TutorialApp::CreateShaders()
 		};
 
 		HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_pQuadInputLayout.GetAddressOf()));
-	
+
 		// Directional Light Vertex Shader
 		ComPtr<ID3DBlob> vsDirLightBlob;
 		HR_T(CompileShaderFromFile(L"../Shaders/15_DirectionLightVS.hlsl", "main", "vs_4_0", vsDirLightBlob.GetAddressOf()));
@@ -841,16 +838,14 @@ bool TutorialApp::CreateStates()
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 	// Depth Stencil State for GBuffer (depth test ON, depth write ON)
 	dsDesc = {};
-	dsDesc.DepthEnable = TRUE;                          // Depth �׽�Ʈ Ȱ��ȭ
-	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Depth ���� Ȱ��ȭ
-	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;           // ����� ���� ���
-	dsDesc.StencilEnable = FALSE;                       // Stencil ��Ȱ��ȭ
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	dsDesc.StencilEnable = FALSE;
 
 	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
 
-	// Depth Stencil State for light volumes (depth test Off, depth write OFF)
-	// ���� ����Ʈ�� ������ �� ���� �ִ� ȭ�� �������� �����,
-	//	������ ������ �ִ����� Pixel Shader���� �Ÿ��� �Ǵ��Ѵ�.
+	// Depth Stencil State for light volumes (depth test Off, depth write OFF)	
 	dsDesc = {};
 	dsDesc.DepthEnable = FALSE;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
