@@ -46,6 +46,9 @@
     <FxCompile Include="..\Shaders\15_DirectionLightPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="..\Shaders\15_LightVolumePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\15_Shared.hlsli">

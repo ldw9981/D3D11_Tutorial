@@ -217,6 +217,20 @@ void TutorialApp::RenderDeferred()
             }
 		}
 	}
+
+	// Draw test sphere at x = 50
+	{
+		Matrix worldSphere = Matrix::CreateScale(1.0f) * Matrix::CreateTranslation(Vector3(30.0f, 0.0f, 0.0f));
+		cbGeom.World = worldSphere.Transpose();
+		cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f); 
+
+		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
+		
+		m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
+		m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+		
+		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
+	}
     
 	/////////////////////////////////////////////////////////////////////////
 	// 2)  Directional Light Pass (first)
@@ -252,7 +266,7 @@ void TutorialApp::RenderDeferred()
     m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
 
     //////////////////////////////////////////////////////////////////////////
-    // 3) Point Light Pass (second, additive)
+    // 3) Point Light Pass (Light Volume - sphere, additive)
     m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 
     // Transform light to view-space
@@ -264,9 +278,33 @@ void TutorialApp::RenderDeferred()
     cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
     m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
 
-    m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
+    // Update screen size for pixel shader
+    Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
+    m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);
+
+    // Render light volume (sphere scaled by light radius)
+    Matrix worldSphere = Matrix::CreateScale(m_LightRadius) * Matrix::CreateTranslation(m_LightPosWorld);
+    
+    CBGeometry cbLightVolume;
+    cbLightVolume.World = worldSphere.Transpose();
+    cbLightVolume.View = m_View.Transpose();
+    cbLightVolume.Projection = m_Projection.Transpose();
+    cbLightVolume.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
+
+    m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
+    m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
+    m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get()); // Same layout (Position + Normal)
+
+    m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
+    m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+    
+    m_pDeviceContext->PSSetShader(m_pLightVolumePS.Get(), nullptr, 0);
     m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
-	m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
+    m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBScreenSize.GetAddressOf());
+
+	m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 
     // Disable blending
     m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
@@ -378,6 +416,9 @@ bool TutorialApp::InitScene()
     if (!CreateQuad())
         return false;
 
+    if (!CreateSphere())
+        return false;
+
     if (!CreateShaders())
         return false;
 
@@ -398,6 +439,9 @@ bool TutorialApp::InitScene()
 
         bd.ByteWidth = sizeof(CBDirectionalLight);
         HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBDirectionalLight.GetAddressOf()));
+
+        bd.ByteWidth = sizeof(Vector4); // float2 screenSize + float2 padding
+        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBScreenSize.GetAddressOf()));
     }
 
     // Scene matrices
@@ -644,6 +688,84 @@ bool TutorialApp::CreateQuad()
     return true;
 }
 
+bool TutorialApp::CreateSphere()
+{
+    struct SphereVertex
+    {
+        Vector3 position;
+        Vector3 normal;
+    };
+
+    const int slices = 32;
+    const int stacks = 16;
+    const float radius = 1.0f;
+
+    std::vector<SphereVertex> vertices;
+    std::vector<WORD> indices;
+
+    // Generate vertices
+    for (int stack = 0; stack <= stacks; ++stack)
+    {
+        float phi = XM_PI * float(stack) / float(stacks);
+        float y = cosf(phi);
+        float sinPhi = sinf(phi);
+
+        for (int slice = 0; slice <= slices; ++slice)
+        {
+            float theta = XM_2PI * float(slice) / float(slices);
+            float x = sinPhi * cosf(theta);
+            float z = sinPhi * sinf(theta);
+
+            Vector3 position(x * radius, y * radius, z * radius);
+            Vector3 normal(x, y, z);
+            normal.Normalize();
+
+            vertices.push_back({ position, normal });
+        }
+    }
+
+    // Generate indices
+    for (int stack = 0; stack < stacks; ++stack)
+    {
+        for (int slice = 0; slice < slices; ++slice)
+        {
+            int first = stack * (slices + 1) + slice;
+            int second = first + slices + 1;
+
+            indices.push_back(first);
+            indices.push_back(second);
+            indices.push_back(first + 1);
+
+            indices.push_back(second);
+            indices.push_back(second + 1);
+            indices.push_back(first + 1);
+        }
+    }
+
+    // Create vertex buffer
+    D3D11_BUFFER_DESC vbDesc = {};
+    vbDesc.ByteWidth = (UINT)(sizeof(SphereVertex) * vertices.size());
+    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vbDesc.Usage = D3D11_USAGE_DEFAULT;
+    D3D11_SUBRESOURCE_DATA vbData = {};
+    vbData.pSysMem = vertices.data();
+    HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pSphereVB.GetAddressOf()));
+    m_SphereVBStride = sizeof(SphereVertex);
+    m_SphereVBOffset = 0;
+
+    // Create index buffer
+    m_SphereIndexCount = (int)indices.size();
+    D3D11_BUFFER_DESC ibDesc = {};
+    ibDesc.ByteWidth = (UINT)(sizeof(WORD) * indices.size());
+    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    ibDesc.Usage = D3D11_USAGE_DEFAULT;
+    D3D11_SUBRESOURCE_DATA ibData = {};
+    ibData.pSysMem = indices.data();
+    HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, m_pSphereIB.GetAddressOf()));
+
+    return true;
+}
+
 bool TutorialApp::CreateShaders()
 {
     // Geometry pass
@@ -686,6 +808,10 @@ bool TutorialApp::CreateShaders()
         ComPtr<ID3DBlob> psDirBlob;
         HR_T(CompileShaderFromFile(L"../Shaders/15_DirectionLightPS.hlsl", "main", "ps_4_0", psDirBlob.GetAddressOf()));
         HR_T(m_pDevice->CreatePixelShader(psDirBlob->GetBufferPointer(), psDirBlob->GetBufferSize(), nullptr, m_pDirectionLightPS.GetAddressOf()));
+
+        ComPtr<ID3DBlob> psVolBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_LightVolumePS.hlsl", "main", "ps_4_0", psVolBlob.GetAddressOf()));
+        HR_T(m_pDevice->CreatePixelShader(psVolBlob->GetBufferPointer(), psVolBlob->GetBufferSize(), nullptr, m_pLightVolumePS.GetAddressOf()));
     }
 
     return true;

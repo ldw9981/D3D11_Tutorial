@@ -54,12 +54,20 @@ public:
     ComPtr<ID3D11VertexShader> m_pQuadVS = nullptr;
     ComPtr<ID3D11PixelShader> m_pPointLightPS = nullptr;
     ComPtr<ID3D11PixelShader> m_pDirectionLightPS = nullptr;
+    ComPtr<ID3D11PixelShader> m_pLightVolumePS = nullptr;
     ComPtr<ID3D11InputLayout> m_pQuadInputLayout = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadVB = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadIB = nullptr;
     UINT m_QuadVBStride = 0;
     UINT m_QuadVBOffset = 0;
     int m_QuadIndexCount = 0;
+
+    // Sphere for light volume
+    ComPtr<ID3D11Buffer> m_pSphereVB = nullptr;
+    ComPtr<ID3D11Buffer> m_pSphereIB = nullptr;
+    UINT m_SphereVBStride = 0;
+    UINT m_SphereVBOffset = 0;
+    int m_SphereIndexCount = 0;
 
     ComPtr<ID3D11SamplerState> m_pSamplerLinear = nullptr;
 
@@ -75,6 +83,7 @@ public:
     ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;
     ComPtr<ID3D11Buffer> m_pCBLight = nullptr;
     ComPtr<ID3D11Buffer> m_pCBDirectionalLight = nullptr;
+    ComPtr<ID3D11Buffer> m_pCBScreenSize = nullptr;
 
     // Scene data
     Matrix m_World = Matrix::Identity;
@@ -88,7 +97,7 @@ public:
     float m_LightRadius = 6.0f;
 
     // Directional Light
-    Vector3 m_DirLightDirection = Vector3(0.0f, -1.0f, 1.0f);
+    Vector3 m_DirLightDirection = Vector3(0.0f, -1.0f, 0.0f);
     Vector3 m_DirLightColor = Vector3(0.1f, 0.1f, 0.1f);
     float m_DirLightIntensity = 1.0f;
   
@@ -118,6 +127,7 @@ private:
 
     bool CreateCube();
     bool CreateQuad();
+    bool CreateSphere();
     bool CreateShaders();
     bool CreateStates();
 
