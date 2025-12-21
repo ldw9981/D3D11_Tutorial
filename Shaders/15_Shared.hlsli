@@ -6,11 +6,10 @@ cbuffer CBGeometry : register(b0)
     float4 gAlbedo;
 }
 
-cbuffer CBLight : register(b0)
+cbuffer CBPointLight : register(b0)
 {
     float4 gLightPosVS_Radius;      // xyz posVS, w radius
     float4 gLightColor;    // rgb color
-    float4 gAmbient;                // rgb ambient
 }
 
 Texture2D gGBufferBaseColor : register(t0);

@@ -74,11 +74,6 @@ public:
     // Blend State
     ComPtr<ID3D11BlendState> m_pBlendStateAdditive = nullptr;
 
-    // Depth-Stencil States
-    ComPtr<ID3D11DepthStencilState> m_pDSS_GeometryPass = nullptr;   // 오브젝트 마킹 (Bit 0)
-    ComPtr<ID3D11DepthStencilState> m_pDSS_LightVolume = nullptr;    // 라이트 볼륨 마킹 (Bit 1)
-    ComPtr<ID3D11DepthStencilState> m_pDSS_LightPass = nullptr;      // 최종 조명 계산 (Bit 0 & 1)
-
     // Constant buffers
     ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;
     ComPtr<ID3D11Buffer> m_pCBLight = nullptr;

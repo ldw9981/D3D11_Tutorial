@@ -19,7 +19,6 @@ namespace
     {
         Vector4 LightPosVS_Radius; // xyz = positionVS, w = radius
         Vector4 LightColor; // rgb = light color
-        Vector4 Ambient; // xyz ambient, w unused
     };
     struct CBDirectionalLight
     {
@@ -274,8 +273,7 @@ void TutorialApp::RenderDeferred()
 
     CBPointLight cbLight;
     cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
-    cbLight.LightColor = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, 0.0f);
-    cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
+    cbLight.LightColor = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, 0.0f);   
     m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
 
     // Update screen size for pixel shader
