@@ -54,7 +54,6 @@ public:
     ComPtr<ID3D11VertexShader> m_pQuadVS = nullptr;
     ComPtr<ID3D11PixelShader> m_pPointLightPS = nullptr;
     ComPtr<ID3D11PixelShader> m_pDirectionLightPS = nullptr;
-    ComPtr<ID3D11PixelShader> m_pLightVolumePS = nullptr;
     ComPtr<ID3D11PixelShader> m_pSolidPS = nullptr;
     ComPtr<ID3D11InputLayout> m_pQuadInputLayout = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadVB = nullptr;
@@ -115,7 +114,11 @@ public:
     void OnUpdate() override;
     void OnRender() override;
 
-    void DrawImGUI();
+    void RenderPassGUI();
+    void RenderPassGBuffer();
+	void RenderPassLight();
+    void RenderPassLightPosition();
+
     virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:

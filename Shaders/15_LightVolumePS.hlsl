@@ -25,7 +25,10 @@ float4 main(VS_OUTPUT_GBUFFER input) : SV_Target
 
     float3 L = lightPosWS - posWS;
     float dist = length(L);
-    float3 Ldir = (dist > 1e-5f) ? (L / dist) : float3(0, 0, 1);
+    if (dist > radius)
+        discard;
+      
+    float3 Ldir = L / max(dist, 1e-5f);
 
     float atten = saturate(1.0f - dist / radius);
     atten *= atten;
@@ -34,18 +37,6 @@ float4 main(VS_OUTPUT_GBUFFER input) : SV_Target
     float3 lightColor = gLightColor.rgb;
 
     float3 colorLinear = baseColor * lightColor * ndotl * atten;
-    
-    // Debug mode: Show light radius boundary
-    /*       
-    {
-        // Highlight pixels near the radius boundary (95% ~ 105%)
-        float normalizedDist = dist / radius;
-        if (normalizedDist >= 0.99f && normalizedDist <= 1.0f)
-        {
-            // Red highlight at boundary
-            colorLinear = lightColor;
-        }
-    }
-    */
-    return float4(LinearToSRGB(colorLinear), 1.0f);
+   
+    return float4(colorLinear, 0.0f);
 }

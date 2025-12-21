@@ -70,6 +70,24 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
+
+    RenderPassGBuffer();
+
+	// Set back buffer as render target for ImGui rendering
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearColor);
+  
+    RenderPassLight();
+    RenderPassLightPosition();	
+    
+    RenderPassGUI();
+	
+    HR_T(m_pSwapChain->Present(0, 0));
+}
+
+
+void TutorialApp::RenderPassGBuffer()
+{
 	//////////////////////////////////////////////////////////////////////////
 	// 1) Geometry pass -> GBuffer MRTs
 	float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -79,11 +97,11 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[0].Get(), clearAlbedo);
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[1].Get(), clearNormal);
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2].Get(), clearPos);
-	m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+    m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
 	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
-
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
 
 	// 파이프라인 상태 설정
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -123,11 +141,17 @@ void TutorialApp::OnRender()
 		}
 	}
 
+	// Unbind G-Buffer RTVs before using them as SRVs in Light Pass
+	ID3D11RenderTargetView* nullRTVs[GBufferCount] = { nullptr, nullptr, nullptr };
+	m_pDeviceContext->OMSetRenderTargets(GBufferCount, nullRTVs, nullptr);
+}
+
+void TutorialApp::RenderPassLight()
+{
 	/////////////////////////////////////////////////////////////////////////
 	// 2)  Directional Light Pass (first)
-	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
-	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
-	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
+
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());	
 
 	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -141,7 +165,7 @@ void TutorialApp::OnRender()
 
 	// No blending for the first light into the cleared back buffer.
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+    m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
 
 	// Directional light in world space (no transformation needed)
@@ -166,18 +190,20 @@ void TutorialApp::OnRender()
 
 	// Update screen size for pixel shader (only once)
 	Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
-	m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);
+	m_pDeviceContext->UpdateSubresource(m_pCBScreenSize.Get(), 0, nullptr, &screenSize, 0, 0);	
 
 	// Set up pipeline state for light volumes
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get()); // Same layout (Position + Normal)
-
+    
 	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
 
-	m_pDeviceContext->PSSetShader(m_pLightVolumePS.Get(), nullptr, 0);
+	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
+	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
+	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBPointLight.GetAddressOf());
 	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBScreenSize.GetAddressOf());
 
@@ -209,13 +235,18 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 	}
+
+
 	// Disable blending
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
-	// Unbind SRVs
+	// Unbind any shader resources that might conflict with G-Buffer RTVs
 	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
+}
 
+void TutorialApp::RenderPassLightPosition()
+{
 	/////////////////////////////////////////////////////////////////////////
 	// 4) Draw small spheres at active light positions
 	{
@@ -244,12 +275,13 @@ void TutorialApp::OnRender()
 		}
 		m_pDeviceContext->RSSetState(nullptr);
 	}
-    DrawImGUI();
-    HR_T(m_pSwapChain->Present(0, 0));
 }
 
-void TutorialApp::DrawImGUI()
+void TutorialApp::RenderPassGUI()
 {
+    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+    
+
 	//////////////////////////////////////////////////////////////////////////
 	 // ImGui Rendering
 	ImGui_ImplDX11_NewFrame();
@@ -259,7 +291,7 @@ void TutorialApp::DrawImGUI()
 	// ImGui Window - Settings
 	ImGui::Begin("Deferred Rendering Settings");
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	ImGui::Checkbox("Deferred Rendering", (bool*)&m_UseDeferredRendering);
+	
 	ImGui::Separator();
 
 	ImGui::Text("Camera Info");
@@ -316,6 +348,7 @@ void TutorialApp::DrawImGUI()
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
+
 
 bool TutorialApp::InitD3D()
 {
@@ -762,10 +795,6 @@ bool TutorialApp::CreateShaders()
         HR_T(CompileShaderFromFile(L"../Shaders/15_DirectionLightPS.hlsl", "main", "ps_4_0", psDirBlob.GetAddressOf()));
         HR_T(m_pDevice->CreatePixelShader(psDirBlob->GetBufferPointer(), psDirBlob->GetBufferSize(), nullptr, m_pDirectionLightPS.GetAddressOf()));
 
-        ComPtr<ID3DBlob> psVolBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_LightVolumePS.hlsl", "main", "ps_4_0", psVolBlob.GetAddressOf()));
-        HR_T(m_pDevice->CreatePixelShader(psVolBlob->GetBufferPointer(), psVolBlob->GetBufferSize(), nullptr, m_pLightVolumePS.GetAddressOf()));
-
         ComPtr<ID3DBlob> psWireBlob;
         HR_T(CompileShaderFromFile(L"../Shaders/15_SolidPS.hlsl", "main", "ps_4_0", psWireBlob.GetAddressOf()));
         HR_T(m_pDevice->CreatePixelShader(psWireBlob->GetBufferPointer(), psWireBlob->GetBufferSize(), nullptr, m_pSolidPS.GetAddressOf()));
@@ -798,21 +827,24 @@ bool TutorialApp::CreateStates()
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     HR_T(m_pDevice->CreateBlendState(&blendDesc, m_pBlendStateAdditive.GetAddressOf()));
 
-    // Depth Stencil State for light volumes (depth test ON, depth write OFF)
+   
     D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-    dsDesc.DepthEnable = TRUE;
+	// Depth Stencil State for GBuffer (depth test ON, depth write ON)
+	dsDesc = {};
+	dsDesc.DepthEnable = TRUE;                          // Depth 테스트 활성화
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Depth 쓰기 활성화
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;           // 가까운 것이 통과
+	dsDesc.StencilEnable = FALSE;                       // Stencil 비활성화
+
+	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
+
+    // Depth Stencil State for light volumes (depth test ON, depth write OFF)
+    dsDesc = {};
+    dsDesc.DepthEnable = FALSE;
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
-    dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
     dsDesc.StencilEnable = FALSE;
     HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateLightVolume.GetAddressOf()));
-     
-    // Depth Stencil State for GBuffer (depth test ON, depth write ON)
-    dsDesc = {};
-	dsDesc.DepthEnable = TRUE;
-	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; 
-	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	dsDesc.StencilEnable = FALSE;
-    HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
     return true;
 }
 

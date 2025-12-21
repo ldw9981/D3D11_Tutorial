@@ -1,5 +1,4 @@
 
-// �ε����� �򰥸����־ �Ѱ��� ��Ƶ�
 cbuffer CBGeometry : register(b0)
 {
     matrix World;
@@ -23,12 +22,6 @@ cbuffer CBScreenSize : register(b3)
 {
     float2 gScreenSize;
     float2 padding2;
-}
-
-cbuffer CBCameraPos : register(b4)
-{
-    float3 gCameraPosWS;
-    float padding3;
 }
 
 
