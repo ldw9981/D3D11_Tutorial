@@ -17,12 +17,12 @@ namespace
 
     struct CBPointLight
     {
-        Vector4 LightPosVS_Radius; // xyz = positionVS, w = radius
+        Vector4 LightPosWS_Radius; // xyz = positionWS, w = radius
         Vector4 LightColor; // rgb = light color       
     };
     struct CBDirectionalLight
     {
-        Vector4 DirectionVS; // xyz = direction in view space, w unused
+        Vector4 DirectionWS; // xyz = direction in world space, w unused
         Vector4 Color_Intensity; // rgb = color, w = intensity
     };}
 
@@ -239,12 +239,12 @@ void TutorialApp::RenderDeferred()
     float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
-    // Transform directional light direction to view space
-    Vector3 dirLightDirVS = Vector3::TransformNormal(m_DirLightDirection, m_View);
-    dirLightDirVS.Normalize();
+    // Directional light in world space (no transformation needed)
+    Vector3 dirLightDirWS = m_DirLightDirection;
+    dirLightDirWS.Normalize();
 
     CBDirectionalLight cbDirLight;
-    cbDirLight.DirectionVS = Vector4(dirLightDirVS.x, dirLightDirVS.y, dirLightDirVS.z, m_DirLightIntensity);
+    cbDirLight.DirectionWS = Vector4(dirLightDirWS.x, dirLightDirWS.y, dirLightDirWS.z, m_DirLightIntensity);
     cbDirLight.Color_Intensity = Vector4(m_DirLightColor.x, m_DirLightColor.y, m_DirLightColor.z, 1.0f);
     m_pDeviceContext->UpdateSubresource(m_pCBDirectionalLight.Get(), 0, nullptr, &cbDirLight, 0, 0);
 
@@ -281,11 +281,11 @@ void TutorialApp::RenderDeferred()
         // Apply global radius scale
         float actualRadius = light.radius * m_GlobalLightRadiusScale;
 
-        // Transform light to view-space
-        Vector3 lightPosVS = Vector3::Transform(light.position, m_View);
+        // Light position in world space (no transformation needed)
+        Vector3 lightPosWS = light.position;
 
         CBPointLight cbLight;
-        cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, actualRadius);
+        cbLight.LightPosWS_Radius = Vector4(lightPosWS.x, lightPosWS.y, lightPosWS.z, actualRadius);
         cbLight.LightColor = Vector4(light.color.x, light.color.y, light.color.z, 0.0f);
    
         m_pDeviceContext->UpdateSubresource(m_pCBPointLight.Get(), 0, nullptr, &cbLight, 0, 0);
@@ -301,7 +301,6 @@ void TutorialApp::RenderDeferred()
         m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
         m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
     }
-
     // Disable blending
     m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
@@ -311,14 +310,10 @@ void TutorialApp::RenderDeferred()
 
 	/////////////////////////////////////////////////////////////////////////
 	// 4) Draw small spheres at active light positions
-	/////////////////////////////////////////////////////////////////////////
-	
-	{
-		// Set rendering states for wireframe spheres
-		
+    {
+		// Set rendering states for spheres		
 		m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
 		m_pDeviceContext->PSSetShader(m_pSolidPS.Get(), nullptr, 0);
-
 		m_pDeviceContext->IASetVertexBuffers(0, 1, m_pSphereVB.GetAddressOf(), &m_SphereVBStride, &m_SphereVBOffset);
 		m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 
@@ -339,11 +334,10 @@ void TutorialApp::RenderDeferred()
 			m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
 			m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 		}
-
-		// Restore default rasterizer state
 		m_pDeviceContext->RSSetState(nullptr);
 	}
 
+    //////////////////////////////////////////////////////////////////////////
 	// ImGui Rendering
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();

@@ -15,11 +15,11 @@ GBufferOut main(VS_OUTPUT_GBUFFER input)
     o.Albedo = BaseColor;
 
     // Encode normal from [-1,1] to [0,1]
-    float3 n = normalize(input.normalVS);
+    float3 n = normalize(input.normalWS);
     o.Normal = float4(EncodeNormal(n), 1.0f);
 
     // View-space position
-    o.Position = float4(input.positionVS, 1.0f);
+    o.Position = float4(input.positionWS, 1.0f);
 
     return o;
 }

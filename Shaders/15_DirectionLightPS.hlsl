@@ -8,15 +8,15 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
     
     float3 baseColor = gGBufferBaseColor.Sample(gSamplerLinear, uv).rgb;
     float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, uv).rgb;
-    float3 posVS = gGBufferPosition.Sample(gSamplerLinear, uv).xyz;
+    float3 posWS = gGBufferPosition.Sample(gSamplerLinear, uv).xyz;
 
     float3 n = DecodeNormal(normalEnc);
 
-    float3 dirLightDirVS = normalize(gDirLightDirectionVS_Int.xyz);
-    float intensity = gDirLightDirectionVS_Int.w;
+    float3 dirLightDirWS = normalize(gDirLightDirectionWS_Int.xyz);
+    float intensity = gDirLightDirectionWS_Int.w;
 
     // Directional light points from surface toward light
-    float ndotl = saturate(dot(n, -dirLightDirVS));
+    float ndotl = saturate(dot(n, -dirLightDirWS));
     
     float3 lightColor = gDirLightColor.rgb;
 

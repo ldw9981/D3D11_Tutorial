@@ -8,11 +8,10 @@ VS_OUTPUT_GBUFFER main(VS_INPUT_CUBE input)
     float4 posV = mul(posW, View);
     output.positionCS = mul(posV, Projection);
 
-    // View-space normal and position (for light pass)
+    // World-space normal and position (for light pass)
     float3 nW = normalize(mul(input.normal, (float3x3)World));
-    float3 nV = normalize(mul(nW, (float3x3)View));
-    output.normalVS = nV;
-    output.positionVS = posV.xyz;
+    output.normalWS = nW;
+    output.positionWS = posW.xyz;
 
     return output;
 }

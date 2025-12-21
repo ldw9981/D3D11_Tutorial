@@ -1,5 +1,5 @@
 
-// ÀÎµ¦½º°¡ Çò°¥¸±¼öÀÖ¾î¼­ ÇÑ°÷¿¡ ¸ð¾ÆµÒ
+// ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ò°¥¸ï¿½ï¿½ï¿½ï¿½Ö¾î¼­ ï¿½Ñ°ï¿½ï¿½ï¿½ ï¿½ï¿½Æµï¿½
 cbuffer CBGeometry : register(b0)
 {
     matrix World;
@@ -9,13 +9,13 @@ cbuffer CBGeometry : register(b0)
 }
 cbuffer CBDirectionalLight : register(b1)
 {
-    float4 gDirLightDirectionVS_Int; // xyz direction in view space, w intensity
+    float4 gDirLightDirectionWS_Int; // xyz direction in world space, w intensity
     float4 gDirLightColor; // rgb color ,  w intensity
 }
 
 cbuffer CBPointLight : register(b2)
 {
-    float4 gLightPosVS_Radius; // xyz posVS, w radius
+    float4 gLightPosWS_Radius; // xyz posWS, w radius
     float4 gLightColor; // rgb color
 }
 
@@ -23,6 +23,12 @@ cbuffer CBScreenSize : register(b3)
 {
     float2 gScreenSize;
     float2 padding2;
+}
+
+cbuffer CBCameraPos : register(b4)
+{
+    float3 gCameraPosWS;
+    float padding3;
 }
 
 
@@ -41,8 +47,8 @@ struct VS_INPUT_CUBE
 struct VS_OUTPUT_GBUFFER
 {
     float4 positionCS : SV_Position;
-    float3 normalVS   : TEXCOORD0;
-    float3 positionVS : TEXCOORD1;
+    float3 normalWS   : TEXCOORD0;
+    float3 positionWS : TEXCOORD1;
 };
 
 struct VS_INPUT_QUAD

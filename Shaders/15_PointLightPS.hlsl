@@ -8,14 +8,14 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
     
     float3 baseColor = gGBufferBaseColor.Sample(gSamplerLinear, uv).rgb;
     float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, uv).rgb;
-    float3 posVS = gGBufferPosition.Sample(gSamplerLinear, uv).xyz;
+    float3 posWS = gGBufferPosition.Sample(gSamplerLinear, uv).xyz;
 
     float3 n = DecodeNormal(normalEnc);
 
-    float3 lightPosVS = gLightPosVS_Radius.xyz;
-    float radius = gLightPosVS_Radius.w;
+    float3 lightPosWS = gLightPosWS_Radius.xyz;
+    float radius = gLightPosWS_Radius.w;
 
-    float3 L = lightPosVS - posVS;
+    float3 L = lightPosWS - posWS;
     float dist = length(L);
     float3 Ldir = (dist > 1e-5f) ? (L / dist) : float3(0, 0, 1);
 

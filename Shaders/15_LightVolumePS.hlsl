@@ -10,7 +10,7 @@ float4 main(VS_OUTPUT_GBUFFER input) : SV_Target
     // Sample G-Buffer
     float3 baseColor = gGBufferBaseColor.Sample(gSamplerLinear, screenUV).rgb;
     float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, screenUV).rgb;
-    float3 posVS = gGBufferPosition.Sample(gSamplerLinear, screenUV).xyz;
+    float3 posWS = gGBufferPosition.Sample(gSamplerLinear, screenUV).xyz;
 
     // Check if there's valid geometry at this pixel
     // G-Buffer normal is cleared to (0,0,0), so if length is near zero, no geometry
@@ -20,10 +20,10 @@ float4 main(VS_OUTPUT_GBUFFER input) : SV_Target
 
     float3 n = DecodeNormal(normalEnc);
 
-    float3 lightPosVS = gLightPosVS_Radius.xyz;
-    float radius = gLightPosVS_Radius.w;
+    float3 lightPosWS = gLightPosWS_Radius.xyz;
+    float radius = gLightPosWS_Radius.w;
 
-    float3 L = lightPosVS - posVS;
+    float3 L = lightPosWS - posWS;
     float dist = length(L);
     float3 Ldir = (dist > 1e-5f) ? (L / dist) : float3(0, 0, 1);
 
