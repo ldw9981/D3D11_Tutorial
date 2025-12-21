@@ -80,6 +80,7 @@ public:
 	ComPtr<ID3D11DepthStencilState> m_pDSStateGBuffer;
 
 	// Constant buffers
+	ComPtr<ID3D11Buffer> m_pCBFrame = nullptr;
 	ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;
 	ComPtr<ID3D11Buffer> m_pCBPointLight = nullptr;
 	ComPtr<ID3D11Buffer> m_pCBDirectionalLight = nullptr;

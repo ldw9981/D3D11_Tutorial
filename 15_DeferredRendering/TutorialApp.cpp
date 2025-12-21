@@ -7,11 +7,15 @@
 
 namespace
 {
+	struct  CBFrame
+	{
+		Matrix View;
+		Matrix Projection;
+	};
+
 	struct CBGeometry
 	{
 		Matrix World;
-		Matrix View;
-		Matrix Projection;
 		Vector4 BaseColor;
 	};
 
@@ -71,6 +75,13 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
+	CBFrame cbFrame;
+	cbFrame.View = m_View.Transpose();
+	cbFrame.Projection = m_Projection.Transpose();
+	m_pDeviceContext->UpdateSubresource(m_pCBFrame.Get(), 0, nullptr, &cbFrame, 0, 0);
+	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
+	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
+
 
 	RenderPassGBuffer();
 
@@ -109,14 +120,12 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->IASetIndexBuffer(m_pCubeIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get());
 	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+	m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pGBufferPS.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+	m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 
 
 	CBGeometry cbGeom;
-	cbGeom.View = m_View.Transpose();
-	cbGeom.Projection = m_Projection.Transpose();
 	cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	const int gridSize = 5;
@@ -135,7 +144,6 @@ void TutorialApp::RenderPassGBuffer()
 
 			Matrix world = Matrix::CreateTranslation(position);
 			cbGeom.World = world.Transpose();
-
 			m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
 			m_pDeviceContext->DrawIndexed(m_CubeIndexCount, 0, 0);
 		}
@@ -178,7 +186,7 @@ void TutorialApp::RenderPassLight()
 	m_pDeviceContext->UpdateSubresource(m_pCBDirectionalLight.Get(), 0, nullptr, &cbDirLight, 0, 0);
 
 	m_pDeviceContext->PSSetShader(m_pDirectionLightPS.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(1, 1, m_pCBDirectionalLight.GetAddressOf());
+	m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBDirectionalLight.GetAddressOf());
 	m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
 
 	//////////////////////////////////////////////////////////////////////////
@@ -199,15 +207,17 @@ void TutorialApp::RenderPassLight()
 	m_pDeviceContext->IASetInputLayout(m_pCubeInputLayout.Get()); // Same layout (Position + Normal)
 
 	m_pDeviceContext->VSSetShader(m_pPointLightVS.Get(), nullptr, 0);
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBGeometry.GetAddressOf());
+	m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(2, 1, m_pCBPointLight.GetAddressOf());
-	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBScreenSize.GetAddressOf());
+	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBPointLight.GetAddressOf());
+	m_pDeviceContext->PSSetConstantBuffers(4, 1, m_pCBScreenSize.GetAddressOf());
 
 	// Render active point lights
+	CBPointLight cbLight;
+	CBGeometry cbLightVolume;
 	for (int i = 0; i < m_ActiveLightCount; ++i)
 	{
 		const auto& light = m_PointLights[i];
@@ -216,21 +226,15 @@ void TutorialApp::RenderPassLight()
 		float actualRadius = light.radius * m_GlobalLightRadiusScale;
 
 		// Light position in world space (no transformation needed)
-		Vector3 lightPosWS = light.position;
-
-		CBPointLight cbLight;
+		Vector3 lightPosWS = light.position;		
 		cbLight.LightPosWS_Radius = Vector4(lightPosWS.x, lightPosWS.y, lightPosWS.z, actualRadius);
 		cbLight.LightColor = Vector4(light.color.x, light.color.y, light.color.z, 0.0f);
 
 		m_pDeviceContext->UpdateSubresource(m_pCBPointLight.Get(), 0, nullptr, &cbLight, 0, 0);
 
 		// Render light volume (sphere scaled by light radius)
-		Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);
-
-		CBGeometry cbLightVolume;
-		cbLightVolume.World = worldSphere.Transpose();
-		cbLightVolume.View = m_View.Transpose();
-		cbLightVolume.Projection = m_Projection.Transpose();
+		Matrix worldSphere = Matrix::CreateScale(actualRadius) * Matrix::CreateTranslation(light.position);		
+		cbLightVolume.World = worldSphere.Transpose();	
 		cbLightVolume.BaseColor = cbLight.LightColor;
 		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbLightVolume, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
@@ -257,6 +261,7 @@ void TutorialApp::RenderPassLightPosition()
 		m_pDeviceContext->IASetIndexBuffer(m_pSphereIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 
 		// Draw small sphere at each active light position
+		CBGeometry cbSphere;
 		for (int i = 0; i < m_ActiveLightCount; ++i)
 		{
 			const auto& light = m_PointLights[i];
@@ -264,10 +269,8 @@ void TutorialApp::RenderPassLightPosition()
 			// 0.1 scale for small indicator spheres
 			Matrix worldSphere = Matrix::CreateScale(0.1f) * Matrix::CreateTranslation(light.position);
 
-			CBGeometry cbSphere;
-			cbSphere.World = worldSphere.Transpose();
-			cbSphere.View = m_View.Transpose();
-			cbSphere.Projection = m_Projection.Transpose();
+			
+			cbSphere.World = worldSphere.Transpose();		
 			cbSphere.BaseColor = Vector4(light.color.x, light.color.y, light.color.z, 1.0f); // Use light color
 
 			m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
@@ -399,6 +402,9 @@ bool TutorialApp::InitScene()
 		bd.Usage = D3D11_USAGE_DEFAULT;
 		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
+		bd.ByteWidth = sizeof(CBFrame); 
+		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBFrame.GetAddressOf()));
+
 		bd.ByteWidth = sizeof(CBGeometry);
 		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBGeometry.GetAddressOf()));
 
@@ -411,6 +417,7 @@ bool TutorialApp::InitScene()
 		bd.ByteWidth = sizeof(Vector4); // float2 screenSize + float2 padding
 		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBScreenSize.GetAddressOf()));
 	}
+	
 
 	// Scene matrices
 	m_World = Matrix::Identity;

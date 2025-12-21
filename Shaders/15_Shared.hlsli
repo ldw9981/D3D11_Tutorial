@@ -1,24 +1,27 @@
-
-cbuffer CBGeometry : register(b0)
+cbuffer CBFrame : register(b0)
 {
-    matrix World;
     matrix View;
     matrix Projection;
+}
+
+cbuffer CBGeometry : register(b1)
+{
+    matrix World; 
     float4 BaseColor;
 }
-cbuffer CBDirectionalLight : register(b1)
+cbuffer CBDirectionalLight : register(b2)
 {
     float4 gDirLightDirectionWS_Int; // xyz direction in world space, w intensity
     float4 gDirLightColor; // rgb color ,  w intensity
 }
 
-cbuffer CBPointLight : register(b2)
+cbuffer CBPointLight : register(b3)
 {
     float4 gLightPosWS_Radius; // xyz posWS, w radius
     float4 gLightColor; // rgb color
 }
 
-cbuffer CBScreenSize : register(b3)
+cbuffer CBScreenSize : register(b4)
 {
     float2 gScreenSize;
     float2 padding2;
