@@ -16,6 +16,13 @@ float4 main(VS_OUTPUT_GBUFFER input) : SV_Target
     float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, screenUV).rgb;
     float3 posVS = gGBufferPosition.Sample(gSamplerLinear, screenUV).xyz;
 
+    // Check if there's valid geometry at this pixel
+    // G-Buffer normal is cleared to (0,0,0), so if length is near zero, no geometry
+    // 최선일까? 노말값이 없을때 오브젝트 픽셀이 없는걸로 판단하는게
+    float normalLength = length(normalEnc);
+    if (normalLength < 0.01f)
+        discard;
+
     float3 n = DecodeNormal(normalEnc);
 
     float3 lightPosVS = gLightPosVS_Radius.xyz;
