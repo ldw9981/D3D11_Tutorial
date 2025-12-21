@@ -14,13 +14,6 @@ using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using namespace Microsoft::WRL;
 
-enum GBUFFER_TEXTURES
-{
-	GBUFFER_TEXTURE_COLOR = 0,
-	GBUFFER_TEXTURE_NORMAL = 1,
-	GBUFFER_TEXTURE_POSITIONVS = 2,
-};
-
 class TutorialApp : public GameApp
 {
 public:
@@ -35,7 +28,7 @@ public:
 	ComPtr<ID3D11ShaderResourceView> m_pDepthSRV = nullptr;
 
 	// G-Buffer (Color, Normal, PositionVS)
-	static constexpr int GBufferCount = 3;
+	static const int GBufferCount = 3;
 	ComPtr<ID3D11Texture2D> m_pGBufferTextures[GBufferCount] = {};
 	ComPtr<ID3D11RenderTargetView> m_pGBufferRTVs[GBufferCount] = {};
 	ComPtr<ID3D11ShaderResourceView> m_pGBufferSRVs[GBufferCount] = {};
