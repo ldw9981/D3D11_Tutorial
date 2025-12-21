@@ -52,7 +52,8 @@ public:
 
     // Light pass (fullscreen quad)
     ComPtr<ID3D11VertexShader> m_pQuadVS = nullptr;
-    ComPtr<ID3D11PixelShader> m_pLightPS = nullptr;
+    ComPtr<ID3D11PixelShader> m_pPointLightPS = nullptr;
+    ComPtr<ID3D11PixelShader> m_pDirectionLightPS = nullptr;
     ComPtr<ID3D11InputLayout> m_pQuadInputLayout = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadVB = nullptr;
     ComPtr<ID3D11Buffer> m_pQuadIB = nullptr;
@@ -62,6 +63,9 @@ public:
 
     ComPtr<ID3D11SamplerState> m_pSamplerLinear = nullptr;
 
+    // Blend State
+    ComPtr<ID3D11BlendState> m_pBlendStateAdditive = nullptr;
+
     // Depth-Stencil States
     ComPtr<ID3D11DepthStencilState> m_pDSS_GeometryPass = nullptr;   // 오브젝트 마킹 (Bit 0)
     ComPtr<ID3D11DepthStencilState> m_pDSS_LightVolume = nullptr;    // 라이트 볼륨 마킹 (Bit 1)
@@ -70,6 +74,7 @@ public:
     // Constant buffers
     ComPtr<ID3D11Buffer> m_pCBGeometry = nullptr;
     ComPtr<ID3D11Buffer> m_pCBLight = nullptr;
+    ComPtr<ID3D11Buffer> m_pCBDirectionalLight = nullptr;
 
     // Scene data
     Matrix m_World = Matrix::Identity;
@@ -81,6 +86,11 @@ public:
 	Vector3 m_LightVariance = Vector3(0.0f, 0.0f, 0.0f);
 
     float m_LightRadius = 6.0f;
+
+    // Directional Light
+    Vector3 m_DirLightDirection = Vector3(0.0f, -1.0f, 1.0f);
+    Vector3 m_DirLightColor = Vector3(0.1f, 0.1f, 0.1f);
+    float m_DirLightIntensity = 1.0f;
   
 	bool m_UseDeferredRendering = true;
 

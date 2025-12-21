@@ -24,5 +24,5 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
     float3 lightColor = gLightColor.rgb;
 
     float3 colorLinear = baseColor * lightColor * ndotl * atten;
-    return float4(LinearToSRGB(colorLinear), 1.0f);
+    return float4(colorLinear, 1.0f);
 }

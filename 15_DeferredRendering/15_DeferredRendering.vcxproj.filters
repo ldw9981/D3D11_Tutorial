@@ -40,7 +40,10 @@
     <FxCompile Include="..\Shaders\15_QuadVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\Shaders\15_LightPassPS.hlsl">
+    <FxCompile Include="..\Shaders\15_PointLightPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\15_DirectionLightPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

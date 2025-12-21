@@ -15,13 +15,17 @@ namespace
         Vector4 BaseColor;
     };
 
-    struct CBLight
+    struct CBPointLight
     {
         Vector4 LightPosVS_Radius; // xyz = positionVS, w = radius
         Vector4 LightColor; // rgb = light color
         Vector4 Ambient; // xyz ambient, w unused
     };
-}
+    struct CBDirectionalLight
+    {
+        Vector4 DirectionVS; // xyz = direction in view space, w unused
+        Vector4 Color_Intensity; // rgb = color, w = intensity
+    };}
 
 bool TutorialApp::OnInitialize()
 {
@@ -159,6 +163,7 @@ void TutorialApp::RenderFoward()
 
 void TutorialApp::RenderDeferred()
 {
+    //////////////////////////////////////////////////////////////////////////
 	// 1) Geometry pass -> GBuffer MRTs
 	float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -213,35 +218,58 @@ void TutorialApp::RenderDeferred()
 		}
 	}
     
-	// 2) Light pass -> back buffer
+	/////////////////////////////////////////////////////////////////////////
+	// 2)  Directional Light Pass (first)
 	float clearBB[4] = { 0.2f, 0.0f, 0.2f, 1.0f }; // 디버그: 보라색으로 변경
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
 	m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), clearBB);
 
-	// Transform light to view-space
-	Vector3 lightPosVS = Vector3::Transform(m_LightPosWorld, m_View);
-
-	CBLight cbLight;
-	cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
-	cbLight.LightColor = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, 0.0f);
-	cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
-	m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
-
 	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
-
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pQuadVB.GetAddressOf(), &m_QuadVBStride, &m_QuadVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pQuadIB.Get(), DXGI_FORMAT_R16_UINT, 0);
 	m_pDeviceContext->IASetInputLayout(m_pQuadInputLayout.Get());
 
 	m_pDeviceContext->VSSetShader(m_pQuadVS.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetShader(m_pLightPS.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
-
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
+        
+    // No blending for the first light into the cleared back buffer.
+    float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
+    // Transform directional light direction to view space
+    Vector3 dirLightDirVS = Vector3::TransformNormal(m_DirLightDirection, m_View);
+    dirLightDirVS.Normalize();
+
+    CBDirectionalLight cbDirLight;
+    cbDirLight.DirectionVS = Vector4(dirLightDirVS.x, dirLightDirVS.y, dirLightDirVS.z, m_DirLightIntensity);
+    cbDirLight.Color_Intensity = Vector4(m_DirLightColor.x, m_DirLightColor.y, m_DirLightColor.z, 1.0f);
+    m_pDeviceContext->UpdateSubresource(m_pCBDirectionalLight.Get(), 0, nullptr, &cbDirLight, 0, 0);
+
+    m_pDeviceContext->PSSetShader(m_pDirectionLightPS.Get(), nullptr, 0);
+    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBDirectionalLight.GetAddressOf());
+    m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
+
+    //////////////////////////////////////////////////////////////////////////
+    // 3) Point Light Pass (second, additive)
+    m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+
+    // Transform light to view-space
+    Vector3 lightPosVS = Vector3::Transform(m_LightPosWorld, m_View);
+
+    CBPointLight cbLight;
+    cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
+    cbLight.LightColor = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, 0.0f);
+    cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
+    m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
+
+    m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
+    m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBLight.GetAddressOf());
 	m_pDeviceContext->DrawIndexed(m_QuadIndexCount, 0, 0);
+
+    // Disable blending
+    m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
 	// Unbind SRVs
 	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
@@ -268,6 +296,12 @@ void TutorialApp::RenderDeferred()
     ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);   
 	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
 	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);	
+	ImGui::Separator();
+
+	ImGui::Text("Directional Light Settings");
+	ImGui::SliderFloat3("Direction", (float*)&m_DirLightDirection, -1.0f, 1.0f);
+	ImGui::ColorEdit3("Dir Light Color", (float*)&m_DirLightColor);
+	ImGui::SliderFloat("Dir Light Intensity", &m_DirLightIntensity, 0.0f, 2.0f);
 	ImGui::Separator();
 	
 	ImGui::End();
@@ -359,8 +393,11 @@ bool TutorialApp::InitScene()
         bd.ByteWidth = sizeof(CBGeometry);
         HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBGeometry.GetAddressOf()));
 
-        bd.ByteWidth = sizeof(CBLight);
+        bd.ByteWidth = sizeof(CBPointLight);
         HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBLight.GetAddressOf()));
+
+        bd.ByteWidth = sizeof(CBDirectionalLight);
+        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCBDirectionalLight.GetAddressOf()));
     }
 
     // Scene matrices
@@ -643,8 +680,12 @@ bool TutorialApp::CreateShaders()
         HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pQuadVS.GetAddressOf()));
 
         ComPtr<ID3DBlob> psBlob;
-        HR_T(CompileShaderFromFile(L"../Shaders/15_LightPassPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
-        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pLightPS.GetAddressOf()));
+        HR_T(CompileShaderFromFile(L"../Shaders/15_PointLightPS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
+        HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pPointLightPS.GetAddressOf()));
+
+        ComPtr<ID3DBlob> psDirBlob;
+        HR_T(CompileShaderFromFile(L"../Shaders/15_DirectionLightPS.hlsl", "main", "ps_4_0", psDirBlob.GetAddressOf()));
+        HR_T(m_pDevice->CreatePixelShader(psDirBlob->GetBufferPointer(), psDirBlob->GetBufferSize(), nullptr, m_pDirectionLightPS.GetAddressOf()));
     }
 
     return true;
@@ -661,6 +702,18 @@ bool TutorialApp::CreateStates()
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerLinear.GetAddressOf()));
+
+    // Additive blend state for light accumulation
+    D3D11_BLEND_DESC blendDesc = {};
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    HR_T(m_pDevice->CreateBlendState(&blendDesc, m_pBlendStateAdditive.GetAddressOf()));
 
     return true;
 }
