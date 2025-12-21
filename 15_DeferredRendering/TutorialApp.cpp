@@ -122,8 +122,8 @@ void TutorialApp::RenderPassGBuffer()
 	m_pDeviceContext->ClearRenderTargetView(m_pGBufferRTVs[2].Get(), clearPos);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	ID3D11RenderTargetView* rtvs[GBufferCount] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
-	m_pDeviceContext->OMSetRenderTargets(GBufferCount, rtvs, m_pDepthDSV.Get());
+	ID3D11RenderTargetView* rtvs[3] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
+	m_pDeviceContext->OMSetRenderTargets(3, rtvs, m_pDepthDSV.Get());
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
 
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -169,7 +169,9 @@ void TutorialApp::RenderPassDirectionLight()
 {
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 
-	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
+	ID3D11ShaderResourceView* srvs[4] = 
+		{ m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get(), m_pDepthSRV.Get() };
+
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pQuadVB.GetAddressOf(), &m_QuadVBStride, &m_QuadVBOffset);
 	m_pDeviceContext->IASetIndexBuffer(m_pQuadIB.Get(), DXGI_FORMAT_R16_UINT, 0);
@@ -201,8 +203,8 @@ void TutorialApp::RenderPassDirectionLight()
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
 	// Unbind any shader resources that might conflict with G-Buffer RTVs
-	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
-	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
+	ID3D11ShaderResourceView* nullSRVs[4] = { nullptr, nullptr, nullptr , nullptr };
+	m_pDeviceContext->PSSetShaderResources(0, 4, nullSRVs);
 }
 
 // Point Light Pass (Light Volume - sphere, additive)	
@@ -212,7 +214,7 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
-	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // depth test Off, depth write OFF	
 
 	// Update screen size for pixel shader (only once)
 	Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
@@ -227,7 +229,9 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->VSSetShader(m_pPointLightVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 
-	ID3D11ShaderResourceView* srvs[GBufferCount] = { m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get() };
+	ID3D11ShaderResourceView* srvs[4] =
+		{ m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get(), m_pDepthSRV.Get() };
+	
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
@@ -263,8 +267,8 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
 	// Unbind any shader resources that might conflict with G-Buffer RTVs
-	ID3D11ShaderResourceView* nullSRVs[GBufferCount] = { nullptr, nullptr, nullptr };
-	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, nullSRVs);
+	ID3D11ShaderResourceView* nullSRVs[4] = { nullptr, nullptr, nullptr , nullptr};
+	m_pDeviceContext->PSSetShaderResources(0, 4, nullSRVs);
 }
 
 //  Draw small spheres at active light positions
@@ -272,7 +276,7 @@ void TutorialApp::RenderPassLightPosition()
 {	
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
 
 	// Set rendering states for spheres		
@@ -297,8 +301,6 @@ void TutorialApp::RenderPassLightPosition()
 		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 	}
-	m_pDeviceContext->RSSetState(nullptr);
-
 }
 
 void TutorialApp::RenderPassGUI()
