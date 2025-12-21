@@ -7,7 +7,7 @@ cbuffer CBFrame : register(b0)
 cbuffer CBGeometry : register(b1)
 {
     matrix World; 
-    float4 BaseColor;
+    float4 GeometryColor;
 }
 cbuffer CBDirectionalLight : register(b2)
 {
@@ -52,6 +52,11 @@ struct VS_OUTPUT_LIGHTVOLUME
     float4 positionCS : SV_Position;
     float3 normalWS : TEXCOORD0;
     float3 positionWS : TEXCOORD1;
+};
+
+struct VS_OUTPUT_SOLID
+{
+    float4 position : SV_Position;
 };
 
 struct VS_INPUT_QUAD

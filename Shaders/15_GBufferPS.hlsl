@@ -2,7 +2,7 @@
 
 struct GBufferOut
 {
-    float4 Albedo   : SV_Target0;
+    float4 BaseColor: SV_Target0;
     float4 Normal   : SV_Target1;
     float4 Position : SV_Target2;
 };
@@ -11,8 +11,8 @@ GBufferOut main(VS_OUTPUT_GBUFFER input)
 {
     GBufferOut o;
 
-    // Albedo in linear space
-    o.Albedo = BaseColor;
+    // BaseColor in linear space
+    o.BaseColor = GeometryColor;
 
     // Encode normal from [-1,1] to [0,1]
     float3 n = normalize(input.normalWS);
