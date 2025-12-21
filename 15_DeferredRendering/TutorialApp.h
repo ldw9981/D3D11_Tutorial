@@ -78,13 +78,15 @@ public:
 
     Vector3 m_LightPosWorld = Vector3(2.0f, 2.0f, -2.0f);
     Vector3 m_LightColor = Vector3(1.0f, 1.0f, 1.0f);
+	Vector3 m_LightVariance = Vector3(0.0f, 0.0f, 0.0f);
+
     float m_LightRadius = 6.0f;
-    float m_Exposure = 1.0f;
+  
 	bool m_UseDeferredRendering = true;
 
     bool OnInitialize() override;
     void OnUninitialize();
-    void OnUpdate();
+    void OnUpdate() override;
     void OnRender() override;
 
     void RenderFoward();

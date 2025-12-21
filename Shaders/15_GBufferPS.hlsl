@@ -16,7 +16,7 @@ GBufferOut main(VS_OUTPUT_GBUFFER input)
 
     // Encode normal from [-1,1] to [0,1]
     float3 n = normalize(input.normalVS);
-    o.Normal = float4(n * 0.5f + 0.5f, 1.0f);
+    o.Normal = float4(EncodeNormal(n), 1.0f);
 
     // View-space position
     o.Position = float4(input.positionVS, 1.0f);

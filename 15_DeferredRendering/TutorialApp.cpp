@@ -12,13 +12,13 @@ namespace
         Matrix World;
         Matrix View;
         Matrix Projection;
-        Vector4 Albedo;
+        Vector4 BaseColor;
     };
 
     struct CBLight
     {
         Vector4 LightPosVS_Radius; // xyz = positionVS, w = radius
-        Vector4 LightColor_Exposure; // rgb = light color, w = exposure
+        Vector4 LightColor; // rgb = light color
         Vector4 Ambient; // xyz ambient, w unused
     };
 }
@@ -45,14 +45,15 @@ void TutorialApp::OnUninitialize()
 }
 
 void TutorialApp::OnUpdate()
-{
+{	
     m_Camera.GetViewMatrix(m_View);
 
     // Simple light animation
-    static float t = 0.0f;
-    t += m_Timer.DeltaTime();
-    m_LightPosWorld.x = 2.0f * cosf(t);
-    m_LightPosWorld.z = -2.0f + 2.0f * sinf(t);
+    float t = GameTimer::m_Instance->TotalTime();
+	
+    m_LightPosWorld.x = 10.0f * cosf(t + m_LightVariance.x);
+    m_LightPosWorld.y = 10.0f * sinf(t + m_LightVariance.y);
+    m_LightPosWorld.z = 10.0f * cosf(t + m_LightVariance.z);	
 }
 
 void TutorialApp::OnRender()
@@ -66,7 +67,7 @@ void TutorialApp::OnRender()
 void TutorialApp::RenderFoward()
 {
 	// 1) Geometry pass -> GBuffer MRTs
-	float clearAlbedo[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float clearBaseColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float clearNormal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	float clearPos[4] = { 0, 0, 0, 1 };
 
@@ -81,7 +82,7 @@ void TutorialApp::RenderFoward()
 	cbGeom.World = m_World.Transpose();
 	cbGeom.View = m_View.Transpose();
 	cbGeom.Projection = m_Projection.Transpose();
-	cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
+	cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbGeom, 0, 0);
 
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -113,10 +114,9 @@ void TutorialApp::RenderFoward()
 	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
 	ImGui::Separator();
 
-	ImGui::Text("Light Settings");
+	ImGui::Text("Light Settings");	ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);	ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);
 	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
-	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);
-	ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
+	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);	
 	ImGui::Separator();
 	
 	ImGui::End();
@@ -186,7 +186,7 @@ void TutorialApp::RenderDeferred()
 	CBGeometry cbGeom;
 	cbGeom.View = m_View.Transpose();
 	cbGeom.Projection = m_Projection.Transpose();
-	cbGeom.Albedo = Vector4(0.8f, 0.2f, 0.2f, 1.0f);
+    cbGeom.BaseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	const int gridSize = 5;
 	const float spacing = 5.0f;
@@ -223,7 +223,7 @@ void TutorialApp::RenderDeferred()
 
 	CBLight cbLight;
 	cbLight.LightPosVS_Radius = Vector4(lightPosVS.x, lightPosVS.y, lightPosVS.z, m_LightRadius);
-	cbLight.LightColor_Exposure = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, m_Exposure);
+	cbLight.LightColor = Vector4(m_LightColor.x, m_LightColor.y, m_LightColor.z, 0.0f);
 	cbLight.Ambient = Vector4(0.06f, 0.06f, 0.06f, 0.0f);
 	m_pDeviceContext->UpdateSubresource(m_pCBLight.Get(), 0, nullptr, &cbLight, 0, 0);
 
@@ -264,10 +264,10 @@ void TutorialApp::RenderDeferred()
 	ImGui::Text("Forward: (%.2f, %.2f, %.2f)", forward.x, forward.y, forward.z);
 	ImGui::Separator();
 
-	ImGui::Text("Light Settings");
+	ImGui::Text("Light Settings");	
+    ImGui::Text("Light Position: (%.2f, %.2f, %.2f)", m_LightPosWorld.x, m_LightPosWorld.y, m_LightPosWorld.z);   
 	ImGui::ColorEdit3("Light Color", (float*)&m_LightColor);
-	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);
-	ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
+	ImGui::SliderFloat("Light Radius", &m_LightRadius, 1.0f, 20.0f);	
 	ImGui::Separator();
 	
 	ImGui::End();

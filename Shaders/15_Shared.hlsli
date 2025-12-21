@@ -9,11 +9,11 @@ cbuffer CBGeometry : register(b0)
 cbuffer CBLight : register(b0)
 {
     float4 gLightPosVS_Radius;      // xyz posVS, w radius
-    float4 gLightColor_Exposure;    // rgb color, w exposure
+    float4 gLightColor;    // rgb color
     float4 gAmbient;                // rgb ambient
 }
 
-Texture2D gGBufferAlbedo   : register(t0);
+Texture2D gGBufferBaseColor : register(t0);
 Texture2D gGBufferNormal   : register(t1);
 Texture2D gGBufferPosition : register(t2);
 Texture2D gDepthBuffer : register(t3);
@@ -48,6 +48,12 @@ float3 DecodeNormal(float3 enc)
 {
     // enc is in [0,1], decode to [-1,1]
     return normalize(enc * 2.0f - 1.0f);
+}
+
+float3 EncodeNormal(float3 n)
+{
+    // n is in [-1,1], encode to [0,1]
+    return n * 0.5f + 0.5f;
 }
 
 float3 LinearToSRGB(float3 linearColor)
