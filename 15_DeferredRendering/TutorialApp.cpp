@@ -838,7 +838,9 @@ bool TutorialApp::CreateStates()
 
 	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
 
-    // Depth Stencil State for light volumes (depth test ON, depth write OFF)
+    // Depth Stencil State for light volumes (depth test Off, depth write OFF)
+	// “이 라이트가 영향을 줄 수도 있는 화면 영역”을 만들고,
+    //	실제로 영향을 주는지는 Pixel Shader에서 거리로 판단한다.
     dsDesc = {};
     dsDesc.DepthEnable = FALSE;
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
