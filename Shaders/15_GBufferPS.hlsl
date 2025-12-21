@@ -18,7 +18,7 @@ GBufferOut main(VS_OUTPUT_GBUFFER input)
     float3 n = normalize(input.normalWS);
     o.Normal = float4(EncodeNormal(n), 1.0f);
 
-    // View-space position
+    // World-space position
     o.Position = float4(input.positionWS, 1.0f);
 
     return o;
