@@ -1,7 +1,7 @@
 #include "15_Shared.hlsli"
 
 
-float4 main(VS_OUTPUT_GBUFFER input) : SV_Target
+float4 main(VS_OUTPUT_LIGHTVOLUME input) : SV_Target
 {
     // Calculate screen UV from pixel position
     float2 screenUV = input.positionCS.xy / gScreenSize;
