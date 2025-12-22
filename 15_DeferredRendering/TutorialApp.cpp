@@ -195,7 +195,8 @@ void TutorialApp::RenderPassDirectionLight()
 
 	m_pDeviceContext->VSSetShader(m_pDirectionLightVS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
-	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());	
+	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
+	m_pDeviceContext->PSSetSamplers(1, 1, m_pSamplerPoint.GetAddressOf());	
 
 	// Directional light in world space (no transformation needed)
 	Vector3 dirLightDirWS = m_DirLightDirection;
@@ -246,6 +247,7 @@ void TutorialApp::RenderPassPointLights()
 	
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
+	m_pDeviceContext->PSSetSamplers(1, 1, m_pSamplerPoint.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBPointLight.GetAddressOf());
 	m_pDeviceContext->PSSetConstantBuffers(4, 1, m_pCBScreenSize.GetAddressOf());
@@ -913,6 +915,19 @@ bool TutorialApp::CreateStates()
 	sampDesc.MinLOD = 0;
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerLinear.GetAddressOf()));
+	
+	sampDesc = {};
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.MipLODBias = 0.0f;
+	sampDesc.MaxAnisotropy = 1;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0.0f;
+	sampDesc.MinLOD = 0.0f;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerPoint.GetAddressOf()));
 
 	// Additive blend state for light accumulation
 	D3D11_BLEND_DESC blendDesc = {};
@@ -941,7 +956,7 @@ bool TutorialApp::CreateStates()
 	dsDesc = {};
 	dsDesc.DepthEnable = FALSE;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
-	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	dsDesc.StencilEnable = FALSE;
 	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateLightVolume.GetAddressOf()));
 

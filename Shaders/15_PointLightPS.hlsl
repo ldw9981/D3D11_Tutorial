@@ -7,10 +7,10 @@ float4 main(VS_OUTPUT_LIGHTVOLUME input) : SV_Target
     float2 screenUV = input.positionCS.xy / gScreenSize;
     
     // Sample G-Buffer
-    float3 baseColor = gGBufferBaseColor.Sample(gSamplerLinear, screenUV).rgb;
-    float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, screenUV).rgb;
-    float3 posWS = gGBufferPosition.Sample(gSamplerLinear, screenUV).xyz;
-    float depth = gDepthBuffer.Sample(gSamplerLinear, screenUV).r;
+    float3 baseColor = gGBufferBaseColor.Sample(gSamplerPoint, screenUV).rgb;
+    float3 normalEnc = gGBufferNormal.Sample(gSamplerPoint, screenUV).rgb;
+    float3 posWS = gGBufferPosition.Sample(gSamplerPoint, screenUV).xyz;
+    float depth = gDepthBuffer.Sample(gSamplerPoint, screenUV).r;
 
     // depth visualization
     //return float4(1-depth, 0.0f, 0.0f, 0.0f);

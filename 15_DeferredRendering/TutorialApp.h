@@ -67,6 +67,7 @@ public:
 	int m_SphereIndexCount = 0;
 
 	ComPtr<ID3D11SamplerState> m_pSamplerLinear = nullptr;
+	ComPtr<ID3D11SamplerState> m_pSamplerPoint = nullptr;
 
 	// Blend State
 	ComPtr<ID3D11BlendState> m_pBlendStateAdditive = nullptr;
