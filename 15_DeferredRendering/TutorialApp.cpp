@@ -11,6 +11,7 @@ namespace
 	{
 		Matrix View;
 		Matrix Projection;
+		Matrix InverseViewProjection;
 	};
 
 	struct CBGeometry
@@ -55,6 +56,7 @@ void TutorialApp::OnUninitialize()
 void TutorialApp::OnUpdate()
 {
 	m_Camera.GetViewMatrix(m_View);
+	m_InverseViewProjection = (m_View * m_Projection).Invert();
 
 	// Animate all point lights (even inactive ones, so they're ready when activated)
 	float t = GameTimer::m_Instance->TotalTime() * 0.1f;
@@ -78,6 +80,7 @@ void TutorialApp::OnRender()
 	CBFrame cbFrame;
 	cbFrame.View = m_View.Transpose();
 	cbFrame.Projection = m_Projection.Transpose();
+	cbFrame.InverseViewProjection = m_InverseViewProjection.Transpose();
 	m_pDeviceContext->UpdateSubresource(m_pCBFrame.Get(), 0, nullptr, &cbFrame, 0, 0);
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
@@ -211,7 +214,7 @@ void TutorialApp::RenderPassDirectionLight()
 void TutorialApp::RenderPassPointLights()
 {	
 	// Keep same render target and depth stencil as directional light pass
-	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // depth test Off, depth write OFF	
@@ -229,10 +232,11 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->VSSetShader(m_pPointLightVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 
-	ID3D11ShaderResourceView* srvs[4] =
+	const UINT sizeSRV = 4;
+	ID3D11ShaderResourceView* srvs[sizeSRV] =
 		{ m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get(), m_pDepthSRV.Get() };
 	
-	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
+	m_pDeviceContext->PSSetShaderResources(0, sizeSRV, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBPointLight.GetAddressOf());
@@ -267,8 +271,9 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
 	// Unbind any shader resources that might conflict with G-Buffer RTVs
+	const UINT sizeNullSRV = 4;
 	ID3D11ShaderResourceView* nullSRVs[4] = { nullptr, nullptr, nullptr , nullptr};
-	m_pDeviceContext->PSSetShaderResources(0, 4, nullSRVs);
+	m_pDeviceContext->PSSetShaderResources(0, sizeNullSRV, nullSRVs);
 }
 
 //  Draw small spheres at active light positions
@@ -521,7 +526,7 @@ bool TutorialApp::CreateDepthBuffer()
 	descDepth.Height = m_ClientHeight;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; 
+	descDepth.Format = DXGI_FORMAT_R32_TYPELESS;
 	descDepth.SampleDesc.Count = 1;
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
@@ -531,17 +536,16 @@ bool TutorialApp::CreateDepthBuffer()
 
 	// Depth Stencil View
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
 	HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), &dsvDesc, m_pDepthDSV.GetAddressOf()));
 
 	// Shader Resource View
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	srvDesc.Texture2D.MostDetailedMip = 0;
 	HR_T(m_pDevice->CreateShaderResourceView(m_pDepthTexture.Get(), &srvDesc, m_pDepthSRV.GetAddressOf()));
 
 	return true;

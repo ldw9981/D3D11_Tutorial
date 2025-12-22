@@ -2,6 +2,7 @@ cbuffer CBFrame : register(b0)
 {
     matrix View;
     matrix Projection;
+    matrix InverseViewProjection;
 }
 
 cbuffer CBGeometry : register(b1)
@@ -86,4 +87,15 @@ float3 EncodeNormal(float3 n)
 float3 LinearToSRGB(float3 linearColor)
 {
     return pow(saturate(linearColor), 1.0f / 2.2f);
+}
+
+float3 ReconstructPositionWS(float2 uv, float depth)
+{
+    float4 ndc;
+    ndc.xy = uv * 2.0f - 1.0f;
+    ndc.z = depth; 
+    ndc.w = 1.0f;
+
+    float4 world = mul(ndc, InverseViewProjection);
+    return world.xyz / world.w;
 }

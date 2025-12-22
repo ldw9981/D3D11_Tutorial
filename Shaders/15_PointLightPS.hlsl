@@ -10,7 +10,13 @@ float4 main(VS_OUTPUT_LIGHTVOLUME input) : SV_Target
     float3 baseColor = gGBufferBaseColor.Sample(gSamplerLinear, screenUV).rgb;
     float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, screenUV).rgb;
     float3 posWS = gGBufferPosition.Sample(gSamplerLinear, screenUV).xyz;
+    float depth = gDepthBuffer.Sample(gSamplerLinear, screenUV).r;
 
+    // depth visualization
+    //return float4(1-depth, 0.0f, 0.0f, 0.0f);
+    float3 posWSFromDepth = ReconstructPositionWS(screenUV, depth);
+    //posWS = posWSFromDepth;
+    
     // Check if there's valid geometry at this pixel
     // G-Buffer normal is cleared to (0,0,0), so if length is near zero, no geometry
     float normalLength = length(normalEnc);

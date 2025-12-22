@@ -83,6 +83,7 @@ public:
 	Matrix m_World = Matrix::Identity;
 	Matrix m_View = Matrix::Identity;
 	Matrix m_Projection = Matrix::Identity;
+	Matrix m_InverseViewProjection = Matrix::Identity;
 
 	// Point Lights
 	static const int MAX_POINT_LIGHTS = 100;
