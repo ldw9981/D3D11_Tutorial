@@ -72,8 +72,9 @@ public:
 	ComPtr<ID3D11BlendState> m_pBlendStateAdditive = nullptr;
 
 	// Depth Stencil State (for light volumes)
+	ComPtr<ID3D11DepthStencilState> m_pDepthTestOffWriteOff = nullptr;
 	ComPtr<ID3D11DepthStencilState> m_pDSStateLightVolume = nullptr;
-	ComPtr<ID3D11DepthStencilState> m_pDSStateGBuffer;
+	ComPtr<ID3D11DepthStencilState> m_pDepthTestOnWriteOn;
 
 	// Constant buffers
 	ComPtr<ID3D11Buffer> m_pCBFrame = nullptr;
@@ -97,7 +98,7 @@ public:
 		float radius;
 	};
 	PointLightData m_PointLights[MAX_POINT_LIGHTS];
-	int m_ActiveLightCount = 50;  // Number of lights to actually render (adjustable)
+	int m_ActiveLightCount = 1;  // Number of lights to actually render (adjustable)
 	float m_GlobalLightRadiusScale = 1.0f;
 
 
