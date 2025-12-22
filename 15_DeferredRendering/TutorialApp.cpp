@@ -1,6 +1,8 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
+#include "../Common/DebugDraw.h"
 #include <d3dcompiler.h>
+
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -11,7 +13,6 @@ namespace
 	{
 		Matrix View;
 		Matrix Projection;
-		Matrix InverseViewProjection;
 	};
 
 	struct CBGeometry
@@ -43,11 +44,15 @@ bool TutorialApp::OnInitialize()
 	if (!InitImGui())
 		return false;
 
+	// Initialize DebugDraw
+	DebugDraw::Initialize(m_pDevice, m_pDeviceContext);
+
 	return true;
 }
 
 void TutorialApp::OnUninitialize()
 {
+	DebugDraw::Uninitialize();
 	UninitImGui();
 	UninitScene();
 	UninitD3D();
@@ -56,7 +61,6 @@ void TutorialApp::OnUninitialize()
 void TutorialApp::OnUpdate()
 {
 	m_Camera.GetViewMatrix(m_View);
-	m_InverseViewProjection = (m_View * m_Projection).Invert();
 
 	// Animate all point lights (even inactive ones, so they're ready when activated)
 	float t = GameTimer::m_Instance->TotalTime() * 0.1f;
@@ -80,7 +84,6 @@ void TutorialApp::OnRender()
 	CBFrame cbFrame;
 	cbFrame.View = m_View.Transpose();
 	cbFrame.Projection = m_Projection.Transpose();
-	cbFrame.InverseViewProjection = m_InverseViewProjection.Transpose();
 	m_pDeviceContext->UpdateSubresource(m_pCBFrame.Get(), 0, nullptr, &cbFrame, 0, 0);
 	m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
 	m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCBFrame.GetAddressOf());
@@ -104,6 +107,12 @@ void TutorialApp::OnRender()
 		
 		// Render Point Lights Position as Solid Spheres
 		RenderPassLightPosition();
+
+		// Render Debug Volume for Point Lights
+		if (m_ShowPointLightDebugVolume)
+		{
+			RenderPassDebugVolume();
+		}
 	}
 
 	RenderPassGUI();
@@ -214,7 +223,7 @@ void TutorialApp::RenderPassDirectionLight()
 void TutorialApp::RenderPassPointLights()
 {	
 	// Keep same render target and depth stencil as directional light pass
-	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // depth test Off, depth write OFF	
@@ -232,11 +241,10 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->VSSetShader(m_pPointLightVS.Get(), nullptr, 0);
 	m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pCBGeometry.GetAddressOf());
 
-	const UINT sizeSRV = 4;
-	ID3D11ShaderResourceView* srvs[sizeSRV] =
+	ID3D11ShaderResourceView* srvs[4] =
 		{ m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get(), m_pDepthSRV.Get() };
 	
-	m_pDeviceContext->PSSetShaderResources(0, sizeSRV, srvs);
+	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBPointLight.GetAddressOf());
@@ -271,9 +279,8 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
 	// Unbind any shader resources that might conflict with G-Buffer RTVs
-	const UINT sizeNullSRV = 4;
 	ID3D11ShaderResourceView* nullSRVs[4] = { nullptr, nullptr, nullptr , nullptr};
-	m_pDeviceContext->PSSetShaderResources(0, sizeNullSRV, nullSRVs);
+	m_pDeviceContext->PSSetShaderResources(0, 4, nullSRVs);
 }
 
 //  Draw small spheres at active light positions
@@ -308,6 +315,50 @@ void TutorialApp::RenderPassLightPosition()
 	}
 }
 
+//  Draw debug wireframe spheres for light volumes
+void TutorialApp::RenderPassDebugVolume()
+{
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	
+	// Enable alpha blending for semi-transparent spheres
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
+
+	// Setup BasicEffect
+	DebugDraw::g_BatchEffect->SetWorld(Matrix::Identity);
+	DebugDraw::g_BatchEffect->SetView(m_View);
+	DebugDraw::g_BatchEffect->SetProjection(m_Projection);
+	DebugDraw::g_BatchEffect->Apply(m_pDeviceContext.Get());
+	
+	m_pDeviceContext->IASetInputLayout(DebugDraw::g_pBatchInputLayout.Get());
+
+	// Draw debug volume sphere at each active light position using DebugDraw
+	DebugDraw::g_Batch->Begin();
+	
+	for (int i = 0; i < m_ActiveLightCount; ++i)
+	{
+		const auto& light = m_PointLights[i];
+
+		// Apply global radius scale - same as light volume
+		float actualRadius = light.radius * m_GlobalLightRadiusScale;
+
+		// Create BoundingSphere
+		BoundingSphere sphere(light.position, actualRadius);
+
+		// Use light color
+		XMVECTOR color = XMVectorSet(light.color.x, light.color.y, light.color.z, 1.0f);
+
+		// Draw sphere using DebugDraw
+		DebugDraw::Draw(DebugDraw::g_Batch.get(), sphere, color);
+	}
+	
+	DebugDraw::g_Batch->End();
+	
+	// Disable blending
+	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+}
+
 void TutorialApp::RenderPassGUI()
 {
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
@@ -340,6 +391,8 @@ void TutorialApp::RenderPassGUI()
 
 	ImGui::Text("Point Light Settings");
 	ImGui::Checkbox("Enable Point Light", &m_EnablePointLightPass);
+	ImGui::SameLine();
+	ImGui::Checkbox("Show Debug Volume", &m_ShowPointLightDebugVolume);
 	ImGui::SliderInt("Active Light Count", &m_ActiveLightCount, 1, MAX_POINT_LIGHTS);
 	ImGui::SliderFloat("Global Light Radius Scale", &m_GlobalLightRadiusScale, 0.1f, 3.0f);
 	ImGui::ColorEdit3("First Light Color", (float*)&m_PointLights[0].color);
@@ -526,7 +579,7 @@ bool TutorialApp::CreateDepthBuffer()
 	descDepth.Height = m_ClientHeight;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_R32_TYPELESS;
+	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS; 
 	descDepth.SampleDesc.Count = 1;
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
@@ -536,16 +589,17 @@ bool TutorialApp::CreateDepthBuffer()
 
 	// Depth Stencil View
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
 	HR_T(m_pDevice->CreateDepthStencilView(m_pDepthTexture.Get(), &dsvDesc, m_pDepthDSV.GetAddressOf()));
 
 	// Shader Resource View
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
 	HR_T(m_pDevice->CreateShaderResourceView(m_pDepthTexture.Get(), &srvDesc, m_pDepthSRV.GetAddressOf()));
 
 	return true;

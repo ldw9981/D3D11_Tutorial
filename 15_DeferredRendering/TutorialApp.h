@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "../Common/GameApp.h"
 
+
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
@@ -10,9 +11,11 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
+
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using namespace Microsoft::WRL;
+
 
 class TutorialApp : public GameApp
 {
@@ -106,6 +109,8 @@ public:
 	bool m_UseDeferredRendering = true;
 	bool m_EnableDirectionLightPass = true;
 	bool m_EnablePointLightPass = true;
+	bool m_ShowPointLightDebugVolume = false;
+
 
 	bool OnInitialize() override;
 	void OnUninitialize();
@@ -117,6 +122,7 @@ public:
 	void RenderPassDirectionLight();
 	void RenderPassPointLights();
 	void RenderPassLightPosition();
+	void RenderPassDebugVolume();
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override;
 

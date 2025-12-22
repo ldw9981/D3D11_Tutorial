@@ -15,7 +15,9 @@ float4 main(VS_OUTPUT_LIGHTVOLUME input) : SV_Target
     // depth visualization
     //return float4(1-depth, 0.0f, 0.0f, 0.0f);
     float3 posWSFromDepth = ReconstructPositionWS(screenUV, depth);
-    //posWS = posWSFromDepth;
+    float3 defPosDiff = posWSFromDepth - posWS;
+    //if (length(defPosDiff) > 0.1f)
+    //    return float4(defPosDiff, 0.0f);
     
     // Check if there's valid geometry at this pixel
     // G-Buffer normal is cleared to (0,0,0), so if length is near zero, no geometry

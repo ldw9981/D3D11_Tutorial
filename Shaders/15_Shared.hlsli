@@ -96,6 +96,6 @@ float3 ReconstructPositionWS(float2 uv, float depth)
     ndc.z = depth; 
     ndc.w = 1.0f;
 
-    float4 world = mul(ndc, InverseViewProjection);
+    float4 world = mul(InverseViewProjection, ndc);
     return world.xyz / world.w;
 }
