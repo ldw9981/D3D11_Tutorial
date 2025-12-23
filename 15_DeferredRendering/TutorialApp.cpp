@@ -1,6 +1,8 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
+#include "../Common/DebugDraw.h"
 #include <d3dcompiler.h>
+
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -42,11 +44,15 @@ bool TutorialApp::OnInitialize()
 	if (!InitImGui())
 		return false;
 
+	// Initialize DebugDraw
+	DebugDraw::Initialize(m_pDevice, m_pDeviceContext);
+
 	return true;
 }
 
 void TutorialApp::OnUninitialize()
 {
+	DebugDraw::Uninitialize();
 	UninitImGui();
 	UninitScene();
 	UninitD3D();
@@ -101,6 +107,12 @@ void TutorialApp::OnRender()
 		
 		// Render Point Lights Position as Solid Spheres
 		RenderPassLightPosition();
+
+		// Render Debug Volume for Point Lights
+		if (m_ShowPointLightDebugVolume)
+		{
+			RenderPassDebugVolume();
+		}
 	}
 
 	RenderPassGUI();
@@ -124,7 +136,7 @@ void TutorialApp::RenderPassGBuffer()
 
 	ID3D11RenderTargetView* rtvs[3] = { m_pGBufferRTVs[0].Get(), m_pGBufferRTVs[1].Get(), m_pGBufferRTVs[2].Get() };
 	m_pDeviceContext->OMSetRenderTargets(3, rtvs, m_pDepthDSV.Get());
-	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
+	m_pDeviceContext->OMSetDepthStencilState(m_pDepthTestOnWriteOn.Get(), 0); // Depth test ON, write ON
 
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pCubeVB.GetAddressOf(), &m_CubeVBStride, &m_CubeVBOffset);
@@ -167,7 +179,11 @@ void TutorialApp::RenderPassGBuffer()
 
 void TutorialApp::RenderPassDirectionLight()
 {
+	// No blending for the first light into the cleared back buffer.
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	m_pDeviceContext->OMSetDepthStencilState(m_pDepthTestOffWriteOff.Get(), 0); // Depth test OFF, write OFF
 
 	ID3D11ShaderResourceView* srvs[4] = 
 		{ m_pGBufferSRVs[0].Get(), m_pGBufferSRVs[1].Get(), m_pGBufferSRVs[2].Get(), m_pDepthSRV.Get() };
@@ -180,11 +196,7 @@ void TutorialApp::RenderPassDirectionLight()
 	m_pDeviceContext->VSSetShader(m_pDirectionLightVS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
-
-	// No blending for the first light into the cleared back buffer.
-	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
-	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // Depth test ON, write OFF
+	m_pDeviceContext->PSSetSamplers(1, 1, m_pSamplerPoint.GetAddressOf());	
 
 	// Directional light in world space (no transformation needed)
 	Vector3 dirLightDirWS = m_DirLightDirection;
@@ -214,7 +226,8 @@ void TutorialApp::RenderPassPointLights()
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
-	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // depth test Off, depth write OFF	
+	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateLightVolume.Get(), 0); // depth test ON, depth write OFF	
+	m_pDeviceContext->RSSetState(nullptr); // Cull back faces
 
 	// Update screen size for pixel shader (only once)
 	Vector4 screenSize((float)m_ClientWidth, (float)m_ClientHeight, 0.0f, 0.0f);
@@ -234,6 +247,7 @@ void TutorialApp::RenderPassPointLights()
 	
 	m_pDeviceContext->PSSetShaderResources(0, GBufferCount, srvs);
 	m_pDeviceContext->PSSetSamplers(0, 1, m_pSamplerLinear.GetAddressOf());
+	m_pDeviceContext->PSSetSamplers(1, 1, m_pSamplerPoint.GetAddressOf());
 	m_pDeviceContext->PSSetShader(m_pPointLightPS.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(3, 1, m_pCBPointLight.GetAddressOf());
 	m_pDeviceContext->PSSetConstantBuffers(4, 1, m_pCBScreenSize.GetAddressOf());
@@ -277,7 +291,7 @@ void TutorialApp::RenderPassLightPosition()
 	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
 	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
-	m_pDeviceContext->OMSetDepthStencilState(m_pDSStateGBuffer.Get(), 0); // Depth test ON, write ON
+	m_pDeviceContext->OMSetDepthStencilState(m_pDepthTestOnWriteOn.Get(), 0); // Depth test ON, write ON
 
 	// Set rendering states for spheres		
 	m_pDeviceContext->VSSetShader(m_pGBufferVS.Get(), nullptr, 0);
@@ -301,6 +315,50 @@ void TutorialApp::RenderPassLightPosition()
 		m_pDeviceContext->UpdateSubresource(m_pCBGeometry.Get(), 0, nullptr, &cbSphere, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_SphereIndexCount, 0, 0);
 	}
+}
+
+//  Draw debug wireframe spheres for light volumes
+void TutorialApp::RenderPassDebugVolume()
+{
+	m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthDSV.Get());
+	
+	// Enable alpha blending for semi-transparent spheres
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	m_pDeviceContext->OMSetBlendState(m_pBlendStateAdditive.Get(), blendFactor, 0xffffffff);
+	m_pDeviceContext->OMSetDepthStencilState(m_pDepthTestOnWriteOn.Get(), 0); // Depth test ON, write ON
+
+	// Setup BasicEffect
+	DebugDraw::g_BatchEffect->SetWorld(Matrix::Identity);
+	DebugDraw::g_BatchEffect->SetView(m_View);
+	DebugDraw::g_BatchEffect->SetProjection(m_Projection);
+	DebugDraw::g_BatchEffect->Apply(m_pDeviceContext.Get());
+	
+	m_pDeviceContext->IASetInputLayout(DebugDraw::g_pBatchInputLayout.Get());
+
+	// Draw debug volume sphere at each active light position using DebugDraw
+	DebugDraw::g_Batch->Begin();
+	
+	for (int i = 0; i < m_ActiveLightCount; ++i)
+	{
+		const auto& light = m_PointLights[i];
+
+		// Apply global radius scale - same as light volume
+		float actualRadius = light.radius * m_GlobalLightRadiusScale;
+
+		// Create BoundingSphere
+		BoundingSphere sphere(light.position, actualRadius);
+
+		// Use light color
+		XMVECTOR color = XMVectorSet(light.color.x, light.color.y, light.color.z, 1.0f);
+
+		// Draw sphere using DebugDraw
+		DebugDraw::Draw(DebugDraw::g_Batch.get(), sphere, color);
+	}
+	
+	DebugDraw::g_Batch->End();
+	
+	// Disable blending
+	m_pDeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 }
 
 void TutorialApp::RenderPassGUI()
@@ -335,6 +393,8 @@ void TutorialApp::RenderPassGUI()
 
 	ImGui::Text("Point Light Settings");
 	ImGui::Checkbox("Enable Point Light", &m_EnablePointLightPass);
+	ImGui::SameLine();
+	ImGui::Checkbox("Show Debug Volume", &m_ShowPointLightDebugVolume);
 	ImGui::SliderInt("Active Light Count", &m_ActiveLightCount, 1, MAX_POINT_LIGHTS);
 	ImGui::SliderFloat("Global Light Radius Scale", &m_GlobalLightRadiusScale, 0.1f, 3.0f);
 	ImGui::ColorEdit3("First Light Color", (float*)&m_PointLights[0].color);
@@ -855,6 +915,19 @@ bool TutorialApp::CreateStates()
 	sampDesc.MinLOD = 0;
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerLinear.GetAddressOf()));
+	
+	sampDesc = {};
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.MipLODBias = 0.0f;
+	sampDesc.MaxAnisotropy = 1;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0.0f;
+	sampDesc.MinLOD = 0.0f;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pSamplerPoint.GetAddressOf()));
 
 	// Additive blend state for light accumulation
 	D3D11_BLEND_DESC blendDesc = {};
@@ -877,15 +950,21 @@ bool TutorialApp::CreateStates()
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	dsDesc.StencilEnable = FALSE;
 
-	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateGBuffer.GetAddressOf()));
+	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDepthTestOnWriteOn.GetAddressOf()));
 
 	// Depth Stencil State for light volumes (depth test Off, depth write OFF)	
 	dsDesc = {};
 	dsDesc.DepthEnable = FALSE;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Disable depth write
-	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	dsDesc.StencilEnable = FALSE;
 	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDSStateLightVolume.GetAddressOf()));
+
+	dsDesc = {};
+	dsDesc.DepthEnable = FALSE;							 // Depth test OFF
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Write OFF
+	dsDesc.StencilEnable = FALSE;
+	HR_T(m_pDevice->CreateDepthStencilState(&dsDesc, m_pDepthTestOffWriteOff.GetAddressOf()));
 	return true;
 }
 

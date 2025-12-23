@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "../Common/GameApp.h"
 
+
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
@@ -10,9 +11,11 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
+
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using namespace Microsoft::WRL;
+
 
 class TutorialApp : public GameApp
 {
@@ -64,13 +67,15 @@ public:
 	int m_SphereIndexCount = 0;
 
 	ComPtr<ID3D11SamplerState> m_pSamplerLinear = nullptr;
+	ComPtr<ID3D11SamplerState> m_pSamplerPoint = nullptr;
 
 	// Blend State
 	ComPtr<ID3D11BlendState> m_pBlendStateAdditive = nullptr;
 
 	// Depth Stencil State (for light volumes)
+	ComPtr<ID3D11DepthStencilState> m_pDepthTestOffWriteOff = nullptr;
 	ComPtr<ID3D11DepthStencilState> m_pDSStateLightVolume = nullptr;
-	ComPtr<ID3D11DepthStencilState> m_pDSStateGBuffer;
+	ComPtr<ID3D11DepthStencilState> m_pDepthTestOnWriteOn;
 
 	// Constant buffers
 	ComPtr<ID3D11Buffer> m_pCBFrame = nullptr;
@@ -83,6 +88,7 @@ public:
 	Matrix m_World = Matrix::Identity;
 	Matrix m_View = Matrix::Identity;
 	Matrix m_Projection = Matrix::Identity;
+	Matrix m_InverseViewProjection = Matrix::Identity;
 
 	// Point Lights
 	static const int MAX_POINT_LIGHTS = 100;
@@ -93,7 +99,7 @@ public:
 		float radius;
 	};
 	PointLightData m_PointLights[MAX_POINT_LIGHTS];
-	int m_ActiveLightCount = 50;  // Number of lights to actually render (adjustable)
+	int m_ActiveLightCount = 1;  // Number of lights to actually render (adjustable)
 	float m_GlobalLightRadiusScale = 1.0f;
 
 
@@ -105,6 +111,8 @@ public:
 	bool m_UseDeferredRendering = true;
 	bool m_EnableDirectionLightPass = true;
 	bool m_EnablePointLightPass = true;
+	bool m_ShowPointLightDebugVolume = false;
+
 
 	bool OnInitialize() override;
 	void OnUninitialize();
@@ -116,6 +124,7 @@ public:
 	void RenderPassDirectionLight();
 	void RenderPassPointLights();
 	void RenderPassLightPosition();
+	void RenderPassDebugVolume();
 
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override;
 

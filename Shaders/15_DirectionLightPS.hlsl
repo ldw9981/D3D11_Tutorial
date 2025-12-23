@@ -6,9 +6,9 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
 {
     float2 uv = input.uv;  
     
-    float3 baseColor = gGBufferBaseColor.Sample(gSamplerLinear, uv).rgb;
-    float3 normalEnc = gGBufferNormal.Sample(gSamplerLinear, uv).rgb;
-    float3 posWS = gGBufferPosition.Sample(gSamplerLinear, uv).xyz;
+    float3 baseColor = gGBufferBaseColor.Sample(gSamplerPoint, uv).rgb;
+    float3 normalEnc = gGBufferNormal.Sample(gSamplerPoint, uv).rgb;
+    float3 posWS = gGBufferPosition.Sample(gSamplerPoint, uv).xyz;
 
     float3 n = DecodeNormal(normalEnc);
 
