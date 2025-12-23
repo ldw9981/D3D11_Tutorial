@@ -183,7 +183,7 @@ void TutorialApp::OnRender()
 		// Don't clear - we want to apply FXAA to the rendered scene
 		
 		// Update FXAA constant buffer
-		float fxaaParams[4] = { m_FXAAReduceMul, m_FXAAReduceMin, m_FXAASpanMax, 0.0f };
+		float fxaaParams[4] = { m_FXAAQualitySubpix, m_FXAAQualityEdgeThreshold, m_FXAAQualityEdgeThresholdMin, 0.0f };
 		m_pDeviceContext->UpdateSubresource(m_pFXAAConstantBuffer.Get(), 0, nullptr, fxaaParams, 0, 0);
 		
 		// Setup FXAA rendering
@@ -657,30 +657,25 @@ void TutorialApp::RenderImGUI()
 	
 	if (m_AAMode == AA_FXAA)
 	{
-		ImGui::Text("FXAA Quality Parameters");
+		ImGui::Text("FXAA Quality Parameters (NVIDIA 3.11)");
 		
-		float reduceMulSlider = 1.0f / m_FXAAReduceMul; // Convert to 1/x range (8 to 32)
-		if (ImGui::SliderFloat("Blur Strength", &reduceMulSlider, 8.0f, 32.0f, "1/%.0f"))
-		{
-			m_FXAAReduceMul = 1.0f / reduceMulSlider;
-		}
-		ImGui::Text("  (Higher = Sharper, Lower = More Blur)");
+		// Subpixel Quality
+		ImGui::SliderFloat("Subpixel Quality", &m_FXAAQualitySubpix, 0.0f, 1.0f, "%.2f");
+		ImGui::Text("  (Higher = Better text & small details)");
 		
-		float reduceMinSlider = 1.0f / m_FXAAReduceMin; // Convert to 1/x range (128 to 512)
-		if (ImGui::SliderFloat("Edge Threshold", &reduceMinSlider, 128.0f, 512.0f, "1/%.0f"))
-		{
-			m_FXAAReduceMin = 1.0f / reduceMinSlider;
-		}
-		ImGui::Text("  (Higher = More Sensitive Edge Detection)");
+		// Edge Threshold
+		ImGui::SliderFloat("Edge Threshold", &m_FXAAQualityEdgeThreshold, 0.063f, 0.333f, "%.3f");
+		ImGui::Text("  (Lower = More edges detected)");
 		
-		ImGui::SliderFloat("Search Span", &m_FXAASpanMax, 4.0f, 16.0f, "%.1f");
-		ImGui::Text("  (Higher = Wider Search Range)");
+		// Edge Threshold Min
+		ImGui::SliderFloat("Edge Threshold Min", &m_FXAAQualityEdgeThresholdMin, 0.0312f, 0.0833f, "%.4f");
+		ImGui::Text("  (Lower = More sensitive)");
 		
 		if (ImGui::Button("Reset to Default"))
 		{
-			m_FXAAReduceMul = 1.0f / 16.0f;
-			m_FXAAReduceMin = 1.0f / 256.0f;
-			m_FXAASpanMax = 8.0f;
+			m_FXAAQualitySubpix = 0.75f;
+			m_FXAAQualityEdgeThreshold = 0.166f;
+			m_FXAAQualityEdgeThresholdMin = 0.0833f;
 		}
 	}
 	

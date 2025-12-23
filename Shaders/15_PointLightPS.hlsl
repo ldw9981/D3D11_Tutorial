@@ -27,7 +27,7 @@ float4 main(VS_OUTPUT_LIGHTVOLUME input) : SV_Target
 
     float3 n = DecodeNormal(normalEnc);
 
-    float3 lightPosWS = gLightPosWS_Radius.xyz;sss
+    float3 lightPosWS = gLightPosWS_Radius.xyz;
     float radius = gLightPosWS_Radius.w;
 
     float3 L = lightPosWS - posWS;

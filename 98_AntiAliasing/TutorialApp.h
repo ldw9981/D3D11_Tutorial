@@ -62,10 +62,10 @@ public:
 	int m_AAMode = AA_NONE; // 0=None, 1=MSAA, 2=FXAA
 	int m_MSAASampleCount = 4; // 1, 2, 4, 8
 	
-	// FXAA Quality Parameters
-	float m_FXAAReduceMul = 1.0f / 16.0f;  // Blur strength (1/8 to 1/32)
-	float m_FXAAReduceMin = 1.0f / 256.0f; // Edge detection threshold (1/128 to 1/512)
-	float m_FXAASpanMax = 8.0f;            // Max span for search (4.0 to 16.0)
+	// FXAA Quality Parameters (NVIDIA FXAA 3.11 Standard)
+	float m_FXAAQualitySubpix = 0.75f;           // 0.0 to 1.0 (default: 0.75)
+	float m_FXAAQualityEdgeThreshold = 0.166f;    // 0.063 to 0.333 (default: 0.166)
+	float m_FXAAQualityEdgeThresholdMin = 0.0833f; // 0.0312 to 0.0833 (default: 0.0833)
 
 	// 그리기에 파이프라인에 적용하는 정보
 	UINT m_VertexBufferStride = 0;

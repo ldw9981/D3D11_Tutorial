@@ -37,6 +37,12 @@
     <FxCompile Include="..\Shaders\98_BasicVertexShader.hlsl">
       <Filter>Shader Files</Filter>
     </FxCompile>
+    <FxCompile Include="..\Shaders\98_FullscreenVS.hlsl">
+      <Filter>Shader Files</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\98_FXAA_PS.hlsl">
+      <Filter>Shader Files</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\98_Shared.hlsli">
