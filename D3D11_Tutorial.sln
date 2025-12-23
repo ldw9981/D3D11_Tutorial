@@ -39,6 +39,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "14_HDR_RenderTarget", "14_H
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "15_DeferredRendering", "15_DeferredRendering\15_DeferredRendering.vcxproj", "{3A3E09BD-3A47-4F83-9B92-53BE3D53F5B8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "98_AntiAliasing", "98_AntiAliasing\98_AntiAliasing.vcxproj", "{98989898-9898-9898-9898-989898989898}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "99_RenderStateTest", "99_RenderStateTest\99_RenderStateTest.vcxproj", "{99999999-9999-9999-9999-999999999999}"
 EndProject
 Global
@@ -193,6 +195,14 @@ Global
 		{3A3E09BD-3A47-4F83-9B92-53BE3D53F5B8}.Release|x64.Build.0 = Release|x64
 		{3A3E09BD-3A47-4F83-9B92-53BE3D53F5B8}.Release|x86.ActiveCfg = Release|Win32
 		{3A3E09BD-3A47-4F83-9B92-53BE3D53F5B8}.Release|x86.Build.0 = Release|Win32
+		{98989898-9898-9898-9898-989898989898}.Debug|x64.ActiveCfg = Debug|x64
+		{98989898-9898-9898-9898-989898989898}.Debug|x64.Build.0 = Debug|x64
+		{98989898-9898-9898-9898-989898989898}.Debug|x86.ActiveCfg = Debug|Win32
+		{98989898-9898-9898-9898-989898989898}.Debug|x86.Build.0 = Debug|Win32
+		{98989898-9898-9898-9898-989898989898}.Release|x64.ActiveCfg = Release|x64
+		{98989898-9898-9898-9898-989898989898}.Release|x64.Build.0 = Release|x64
+		{98989898-9898-9898-9898-989898989898}.Release|x86.ActiveCfg = Release|Win32
+		{98989898-9898-9898-9898-989898989898}.Release|x86.Build.0 = Release|Win32
 		{99999999-9999-9999-9999-999999999999}.Debug|x64.ActiveCfg = Debug|x64
 		{99999999-9999-9999-9999-999999999999}.Debug|x64.Build.0 = Debug|x64
 		{99999999-9999-9999-9999-999999999999}.Debug|x86.ActiveCfg = Debug|Win32

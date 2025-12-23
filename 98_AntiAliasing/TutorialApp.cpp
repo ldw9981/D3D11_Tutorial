@@ -50,7 +50,10 @@ bool TutorialApp::OnInitialize()
 	if (!InitScene())
 		return false;
 
-	if (!InitRenderStates())
+	if (!InitMSAA())
+		return false;
+
+	if (!InitFXAA())
 		return false;
 
 	if (!InitImGUI())
@@ -62,7 +65,8 @@ bool TutorialApp::OnInitialize()
 void TutorialApp::OnUninitialize()
 {
 	UninitImGUI();
-	UninitRenderStates();
+	UninitFXAA();
+	UninitMSAA();
 	UninitScene();
 	UninitD3D();
 }
@@ -92,17 +96,32 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {	
+	// Select render target based on AA mode
+	ID3D11RenderTargetView* rtv = nullptr;
+	ID3D11DepthStencilView* dsv = nullptr;
+	
+	if (m_AAMode == AA_MSAA)
+	{
+		rtv = m_pMSAARenderTargetView.Get();
+		dsv = m_pMSAADepthStencilView.Get();
+	}
+	else if (m_AAMode == AA_FXAA)
+	{
+		rtv = m_pSceneRenderTargetView.Get();
+		dsv = m_pDepthStencilView.Get();
+	}
+	else // AA_NONE
+	{
+		rtv = m_pRenderTargetView.Get();
+		dsv = m_pDepthStencilView.Get();
+	}
+	
 	// 렌더링 설정
-	ID3D11RenderTargetView* rtvs[] = { m_pRenderTargetView.Get() };
-	m_pDeviceContext->OMSetRenderTargets(1, rtvs, m_pDepthStencilView.Get());
+	ID3D11RenderTargetView* rtvs[] = { rtv };
+	m_pDeviceContext->OMSetRenderTargets(1, rtvs, dsv);
 
-	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), (float*)&m_vClearColor);
-	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-	// Set Render States
-	m_pDeviceContext->RSSetState(m_pRasterizerState.Get());
-	m_pDeviceContext->OMSetDepthStencilState(m_pDepthStencilState.Get(), 1);
-	m_pDeviceContext->OMSetBlendState(m_pBlendState.Get(), nullptr, 0xffffffff);
+	m_pDeviceContext->ClearRenderTargetView(rtv, (float*)&m_vClearColor);
+	m_pDeviceContext->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	// Render the cube
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -120,34 +139,73 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(2, 1, cbs2);
 
-	// Draw cubes in the order specified by m_DrawOrder
+	// Draw cubes
 	CBChangesEveryFrame cb;
 	cb.mView = XMMatrixTranspose(m_View);
 	cb.vLightDir = m_vLightDir;
 	cb.vLightColor = m_vLightColor;
 
-	for (int i = 0; i < 3; i++)
+	// Cube 1 (Red)
+	cb.mWorld = XMMatrixTranspose(m_World1);
+	cb.vMeshColor = m_vMeshColor1;
+	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+	
+	// Cube 2 (Green)
+	cb.mWorld = XMMatrixTranspose(m_World2);
+	cb.vMeshColor = m_vMeshColor2;
+	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+	
+	// Cube 3 (Blue)
+	cb.mWorld = XMMatrixTranspose(m_World3);
+	cb.vMeshColor = m_vMeshColor3;
+	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
+	m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+
+	// Post-processing based on AA mode
+	if (m_AAMode == AA_MSAA && m_pMSAATexture)
 	{
-		int cubeIndex = m_DrawOrder[i];
+		// Resolve MSAA to backbuffer
+		ComPtr<ID3D11Texture2D> backBuffer;
+		m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf());
+		m_pDeviceContext->ResolveSubresource(backBuffer.Get(), 0, m_pMSAATexture.Get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
 		
-		switch(cubeIndex)
-		{
-		case 0: // Cube 1
-			cb.mWorld = XMMatrixTranspose(m_World1);
-			cb.vMeshColor = m_vMeshColor1;
-			break;
-		case 1: // Cube 2
-			cb.mWorld = XMMatrixTranspose(m_World2);
-			cb.vMeshColor = m_vMeshColor2;
-			break;
-		case 2: // Cube 3
-			cb.mWorld = XMMatrixTranspose(m_World3);
-			cb.vMeshColor = m_vMeshColor3;
-			break;
-		}
+		// Switch to backbuffer for ImGUI
+		ID3D11RenderTargetView* backBufferRTV[] = { m_pRenderTargetView.Get() };
+		m_pDeviceContext->OMSetRenderTargets(1, backBufferRTV, nullptr);
+	}
+	else if (m_AAMode == AA_FXAA && m_pSceneTexture)
+	{
+		// Apply FXAA pass to backbuffer
+		ID3D11RenderTargetView* backBufferRTV[] = { m_pRenderTargetView.Get() };
+		m_pDeviceContext->OMSetRenderTargets(1, backBufferRTV, nullptr);
+		// Don't clear - we want to apply FXAA to the rendered scene
 		
-		m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
-		m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+		// Setup FXAA rendering
+		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_pDeviceContext->IASetInputLayout(nullptr);
+		m_pDeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+		m_pDeviceContext->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		m_pDeviceContext->VSSetShader(m_pFullscreenVS.Get(), nullptr, 0);
+		m_pDeviceContext->PSSetShader(m_pFXAAPS.Get(), nullptr, 0);
+		
+		ID3D11ShaderResourceView* srvs[] = { m_pSceneShaderResourceView.Get() };
+		m_pDeviceContext->PSSetShaderResources(0, 1, srvs);
+		ID3D11SamplerState* samplers[] = { m_pLinearSampler.Get() };
+		m_pDeviceContext->PSSetSamplers(0, 1, samplers);
+		
+		// Disable depth test for fullscreen quad
+		m_pDeviceContext->OMSetDepthStencilState(nullptr, 0);
+		m_pDeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+		m_pDeviceContext->RSSetState(nullptr);
+		
+		// Draw fullscreen triangle
+		m_pDeviceContext->Draw(3, 0);
+		
+		// Clear shader resources
+		ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+		m_pDeviceContext->PSSetShaderResources(0, 1, nullSRV);
 	}
 
 	// Render ImGUI
@@ -318,7 +376,7 @@ bool TutorialApp::InitScene()
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	ComPtr<ID3DBlob> vertexShaderBuffer;
-	HR_T(CompileShaderFromFile(L"../shaders/99_BasicVertexShader.hlsl", "main", "vs_4_0", vertexShaderBuffer.GetAddressOf()));
+	HR_T(CompileShaderFromFile(L"../shaders/98_BasicVertexShader.hlsl", "main", "vs_4_0", vertexShaderBuffer.GetAddressOf()));
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), m_pInputLayout.GetAddressOf()));
 
@@ -328,7 +386,7 @@ bool TutorialApp::InitScene()
 
 	// 픽셀 셰이더 생성
 	ComPtr<ID3D10Blob> pixelShaderBuffer;
-	HR_T(CompileShaderFromFile(L"../shaders/99_BasicPixelShader.hlsl", "main", "ps_4_0", (ID3DBlob**)pixelShaderBuffer.GetAddressOf()));
+	HR_T(CompileShaderFromFile(L"../shaders/98_BasicPixelShader.hlsl", "main", "ps_4_0", (ID3DBlob**)pixelShaderBuffer.GetAddressOf()));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, m_pPixelShader.GetAddressOf()));
 
@@ -362,7 +420,7 @@ bool TutorialApp::InitScene()
 	m_Camera.SetSpeed(10.0f);
 	m_Camera.GetViewMatrix(m_View);
 	
-	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.1f, 1000.0f);
+	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 1.0f, 1000.0f);
 	
 	// Constant Buffer 초기화
 	CBChangeOnResize cbChangesOnResize;
@@ -377,108 +435,135 @@ void TutorialApp::UninitScene()
 	// ComPtr이 자동으로 메모리 해제를 처리하므로 명시적 해제 불필요
 }
 
-bool TutorialApp::InitRenderStates()
+bool TutorialApp::InitMSAA()
 {
-	UpdateRasterizerState();
-	UpdateDepthStencilState();
-	UpdateBlendState();
+	if (m_AAMode != AA_MSAA)
+		return true;
+
+	HRESULT hr = S_OK;
+
+	// Create MSAA render target texture
+	D3D11_TEXTURE2D_DESC texDesc = {};
+	texDesc.Width = m_ClientWidth;
+	texDesc.Height = m_ClientHeight;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.SampleDesc.Count = m_MSAASampleCount;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+	HR_T(m_pDevice->CreateTexture2D(&texDesc, nullptr, m_pMSAATexture.GetAddressOf()));
+
+	// Create MSAA render target view
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = texDesc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+
+	HR_T(m_pDevice->CreateRenderTargetView(m_pMSAATexture.Get(), &rtvDesc, m_pMSAARenderTargetView.GetAddressOf()));
+
+	// Create MSAA depth stencil texture
+	D3D11_TEXTURE2D_DESC depthDesc = {};
+	depthDesc.Width = m_ClientWidth;
+	depthDesc.Height = m_ClientHeight;
+	depthDesc.MipLevels = 1;
+	depthDesc.ArraySize = 1;
+	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthDesc.SampleDesc.Count = m_MSAASampleCount;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthDesc.CPUAccessFlags = 0;
+	depthDesc.MiscFlags = 0;
+
+	HR_T(m_pDevice->CreateTexture2D(&depthDesc, nullptr, m_pMSAADepthStencil.GetAddressOf()));
+
+	// Create MSAA depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = depthDesc.Format;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+	HR_T(m_pDevice->CreateDepthStencilView(m_pMSAADepthStencil.Get(), &dsvDesc, m_pMSAADepthStencilView.GetAddressOf()));
+
 	return true;
 }
 
-void TutorialApp::UninitRenderStates()
+void TutorialApp::UninitMSAA()
 {
 	// ComPtr이 자동으로 메모리 해제를 처리하므로 명시적 해제 불필요
 }
 
-void TutorialApp::UpdateRasterizerState()
+bool TutorialApp::InitFXAA()
 {
-	D3D11_RASTERIZER_DESC desc = {};
-	desc.FillMode = (m_FillMode == 0) ? D3D11_FILL_SOLID : D3D11_FILL_WIREFRAME;
-	desc.CullMode = (m_CullMode == 0) ? D3D11_CULL_NONE : (m_CullMode == 1) ? D3D11_CULL_BACK : D3D11_CULL_FRONT;
-	desc.FrontCounterClockwise = m_FrontCounterClockwise;
-	desc.DepthClipEnable = m_DepthClipEnable;
-	desc.ScissorEnable = m_ScissorEnable;
-	desc.MultisampleEnable = false;
-	desc.AntialiasedLineEnable = false;
-	
-	m_pRasterizerState.Reset();
-	m_pDevice->CreateRasterizerState(&desc, m_pRasterizerState.GetAddressOf());
+	if (m_AAMode != AA_FXAA)
+		return true;
+
+	HRESULT hr = S_OK;
+
+	// Create scene render target texture (with SRV for FXAA input)
+	D3D11_TEXTURE2D_DESC texDesc = {};
+	texDesc.Width = m_ClientWidth;
+	texDesc.Height = m_ClientHeight;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+	HR_T(m_pDevice->CreateTexture2D(&texDesc, nullptr, m_pSceneTexture.GetAddressOf()));
+
+	// Create render target view
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = texDesc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+
+	HR_T(m_pDevice->CreateRenderTargetView(m_pSceneTexture.Get(), &rtvDesc, m_pSceneRenderTargetView.GetAddressOf()));
+
+	// Create shader resource view
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = texDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	HR_T(m_pDevice->CreateShaderResourceView(m_pSceneTexture.Get(), &srvDesc, m_pSceneShaderResourceView.GetAddressOf()));
+
+	// Create linear sampler
+	D3D11_SAMPLER_DESC sampDesc = {};
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	HR_T(m_pDevice->CreateSamplerState(&sampDesc, m_pLinearSampler.GetAddressOf()));
+
+	// Compile fullscreen vertex shader
+	ComPtr<ID3DBlob> vsBlob;
+	HR_T(CompileShaderFromFile(L"../Shaders/98_FullscreenVS.hlsl", "main", "vs_4_0", vsBlob.GetAddressOf()));
+	HR_T(m_pDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_pFullscreenVS.GetAddressOf()));
+
+	// Compile FXAA pixel shader
+	ComPtr<ID3DBlob> psBlob;
+	HR_T(CompileShaderFromFile(L"../Shaders/98_FXAA_PS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
+	HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pFXAAPS.GetAddressOf()));
+
+	return true;
 }
 
-void TutorialApp::UpdateDepthStencilState()
+void TutorialApp::UninitFXAA()
 {
-	D3D11_DEPTH_STENCIL_DESC desc = {};
-	desc.DepthEnable = m_DepthEnable;
-	desc.DepthWriteMask = (m_DepthWriteMask == 0) ? D3D11_DEPTH_WRITE_MASK_ZERO : D3D11_DEPTH_WRITE_MASK_ALL;
-	
-	// DepthFunc mapping
-	D3D11_COMPARISON_FUNC funcs[] = {
-		D3D11_COMPARISON_NEVER,
-		D3D11_COMPARISON_LESS,
-		D3D11_COMPARISON_EQUAL,
-		D3D11_COMPARISON_LESS_EQUAL,
-		D3D11_COMPARISON_GREATER,
-		D3D11_COMPARISON_NOT_EQUAL,
-		D3D11_COMPARISON_GREATER_EQUAL,
-		D3D11_COMPARISON_ALWAYS
-	};
-	desc.DepthFunc = funcs[m_DepthFunc];
-	desc.StencilEnable = m_StencilEnable;
-	desc.StencilReadMask = 0xFF;
-	desc.StencilWriteMask = 0xFF;
-	
-	// Stencil operations for front faces
-	desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-	
-	// Stencil operations for back faces
-	desc.BackFace = desc.FrontFace;
-	
-	m_pDepthStencilState.Reset();
-	m_pDevice->CreateDepthStencilState(&desc, m_pDepthStencilState.GetAddressOf());
-}
-
-void TutorialApp::UpdateBlendState()
-{
-	D3D11_BLEND_DESC desc = {};
-	desc.AlphaToCoverageEnable = m_AlphaToCoverageEnable;
-	desc.IndependentBlendEnable = false;
-	
-	D3D11_BLEND blendTypes[] = {
-		D3D11_BLEND_ZERO,
-		D3D11_BLEND_ONE,
-		D3D11_BLEND_SRC_COLOR,
-		D3D11_BLEND_INV_SRC_COLOR,
-		D3D11_BLEND_SRC_ALPHA,
-		D3D11_BLEND_INV_SRC_ALPHA,
-		D3D11_BLEND_DEST_ALPHA,
-		D3D11_BLEND_INV_DEST_ALPHA,
-		D3D11_BLEND_DEST_COLOR,
-		D3D11_BLEND_INV_DEST_COLOR
-	};
-	
-	D3D11_BLEND_OP blendOps[] = {
-		D3D11_BLEND_OP_ADD,
-		D3D11_BLEND_OP_ADD,
-		D3D11_BLEND_OP_SUBTRACT,
-		D3D11_BLEND_OP_REV_SUBTRACT,
-		D3D11_BLEND_OP_MIN,
-		D3D11_BLEND_OP_MAX
-	};
-	
-	desc.RenderTarget[0].BlendEnable = m_BlendEnable;
-	desc.RenderTarget[0].SrcBlend = blendTypes[m_SrcBlend];
-	desc.RenderTarget[0].DestBlend = blendTypes[m_DestBlend];
-	desc.RenderTarget[0].BlendOp = blendOps[m_BlendOp];
-	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	
-	m_pBlendState.Reset();
-	m_pDevice->CreateBlendState(&desc, m_pBlendState.GetAddressOf());
+	// ComPtr이 자동으로 메모리 해제를 처리하므로 명시적 해제 불필요
 }
 
 bool TutorialApp::InitImGUI()
@@ -538,108 +623,31 @@ void TutorialApp::RenderImGUI()
 	ImGui::ColorEdit4("Cube 3 Color", (float*)&m_vMeshColor3, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 	
 	ImGui::Separator();
-	ImGui::Text("Draw Order Control");
-	ImGui::Text("(Change drawing order to test depth/blend)");
+	ImGui::Text("Anti-Aliasing Settings");
+	bool aaChanged = false;
+	const char* aaModes[] = { "No Anti-Aliasing", "MSAA", "FXAA" };
+	if (ImGui::Combo("AA Mode", &m_AAMode, aaModes, 3))
+		aaChanged = true;
 	
-	const char* cubeNames[] = { "Cube (Red)", "Cube (Green)", "Cube (Blue)" };
-	for (int i = 0; i < 3; i++)
+	if (m_AAMode == AA_MSAA)
 	{
-		ImGui::Text("  %d. %s", i + 1, cubeNames[m_DrawOrder[i]]);
-		ImGui::SameLine(200);
-		
-		if (i > 0)
+		const char* sampleCounts[] = { "1x", "2x", "4x", "8x" };
+		int sampleIndex = (m_MSAASampleCount == 1) ? 0 : (m_MSAASampleCount == 2) ? 1 : (m_MSAASampleCount == 4) ? 2 : 3;
+		if (ImGui::Combo("Sample Count", &sampleIndex, sampleCounts, 4))
 		{
-			ImGui::PushID(i * 10);
-			if (ImGui::ArrowButton("##up", ImGuiDir_Up))
-			{
-				std::swap(m_DrawOrder[i], m_DrawOrder[i - 1]);
-			}
-			ImGui::PopID();
-			ImGui::SameLine();
-		}
-		else
-		{
-			ImGui::Dummy(ImVec2(24, 0));
-			ImGui::SameLine();
-		}
-		
-		if (i < 2)
-		{
-			ImGui::PushID(i * 10 + 1);
-			if (ImGui::ArrowButton("##down", ImGuiDir_Down))
-			{
-				std::swap(m_DrawOrder[i], m_DrawOrder[i + 1]);
-			}
-			ImGui::PopID();
+			int counts[] = { 1, 2, 4, 8 };
+			m_MSAASampleCount = counts[sampleIndex];
+			aaChanged = true;
 		}
 	}
 	
-	if (ImGui::Button("Reset Draw Order"))
+	if (aaChanged)
 	{
-		m_DrawOrder[0] = 0;
-		m_DrawOrder[1] = 1;
-		m_DrawOrder[2] = 2;
+		UninitFXAA();
+		UninitMSAA();
+		InitMSAA();
+		InitFXAA();
 	}
-	
-	ImGui::Text("---------------------------------");
-	ImGui::Text("Rasterizer State");
-	ImGui::Text("---------------------------------");
-	
-	const char* fillModes[] = { "Solid", "Wireframe" };
-	if (ImGui::Combo("Fill Mode", &m_FillMode, fillModes, 2))
-		UpdateRasterizerState();
-	
-	const char* cullModes[] = { "None", "Back", "Front" };
-	if (ImGui::Combo("Cull Mode", &m_CullMode, cullModes, 3))
-		UpdateRasterizerState();
-	
-	if (ImGui::Checkbox("Front Counter Clockwise", &m_FrontCounterClockwise))
-		UpdateRasterizerState();
-	
-	if (ImGui::Checkbox("Depth Clip Enable", &m_DepthClipEnable))
-		UpdateRasterizerState();
-	
-	if (ImGui::Checkbox("Scissor Enable", &m_ScissorEnable))
-		UpdateRasterizerState();
-	
-	ImGui::Text("---------------------------------");
-	ImGui::Text("Depth Stencil State");
-	ImGui::Text("---------------------------------");
-	
-	if (ImGui::Checkbox("Depth Enable", &m_DepthEnable))
-		UpdateDepthStencilState();
-	
-	const char* depthWriteMasks[] = { "Zero", "All" };
-	if (ImGui::Combo("Depth Write Mask", &m_DepthWriteMask, depthWriteMasks, 2))
-		UpdateDepthStencilState();
-	
-	const char* depthFuncs[] = { "Never", "Less", "Equal", "LessEqual", "Greater", "NotEqual", "GreaterEqual", "Always" };
-	if (ImGui::Combo("Depth Func", &m_DepthFunc, depthFuncs, 8))
-		UpdateDepthStencilState();
-	
-	if (ImGui::Checkbox("Stencil Enable", &m_StencilEnable))
-		UpdateDepthStencilState();
-	
-	ImGui::Text("---------------------------------");
-	ImGui::Text("Blend State");
-	ImGui::Text("---------------------------------");
-	
-	if (ImGui::Checkbox("Blend Enable", &m_BlendEnable))
-		UpdateBlendState();
-	
-	const char* blendTypes[] = { "Zero", "One", "SrcColor", "InvSrcColor", "SrcAlpha", "InvSrcAlpha", "DestAlpha", "InvDestAlpha", "DestColor", "InvDestColor" };
-	if (ImGui::Combo("Src Blend", &m_SrcBlend, blendTypes, 10))
-		UpdateBlendState();
-	
-	if (ImGui::Combo("Dest Blend", &m_DestBlend, blendTypes, 10))
-		UpdateBlendState();
-	
-	const char* blendOps[] = { "", "Add", "Subtract", "RevSubtract", "Min", "Max" };
-	if (ImGui::Combo("Blend Op", &m_BlendOp, blendOps, 6))
-		UpdateBlendState();
-	
-	if (ImGui::Checkbox("Alpha To Coverage", &m_AlphaToCoverageEnable))
-		UpdateBlendState();
 	
 	ImGui::End();
 

@@ -42,6 +42,7 @@ public:
 		const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker);
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);		
 	void SetClientSize(UINT width, UINT height) { m_ClientWidth = width; m_ClientHeight = height; }
+	void SetWindowTitle(const WCHAR* title);
 public:	
 	virtual bool OnInitialize() { return true; }; // 상속 받은 클래스에서 구현
 	virtual void OnRender() {};

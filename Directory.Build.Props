@@ -8,7 +8,7 @@
     <TripletDynamic>x64-windows</TripletDynamic>
   </PropertyGroup>
 
-  <!-- ==== 공통: 포함 디렉터리 ==== -->
+  <!-- ==== 공통: 포함 디렉터리 및 전처리기 정의 ==== -->
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>
@@ -16,6 +16,10 @@
         $(VcpkgRoot)\installed\$(TripletDynamic)\include;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+        PROJECT_NAME="$(ProjectName)";
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 

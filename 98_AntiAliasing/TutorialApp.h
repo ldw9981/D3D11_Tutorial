@@ -23,6 +23,30 @@ public:
 	ComPtr<ID3D11RenderTargetView> m_pRenderTargetView;
 	ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;
 
+	// Anti-Aliasing Mode
+	enum AAMode
+	{
+		AA_NONE = 0,
+		AA_MSAA = 1,
+		AA_FXAA = 2
+	};
+
+	// MSAA Resources
+	ComPtr<ID3D11Texture2D> m_pMSAATexture;
+	ComPtr<ID3D11RenderTargetView> m_pMSAARenderTargetView;
+	ComPtr<ID3D11Texture2D> m_pMSAADepthStencil;
+	ComPtr<ID3D11DepthStencilView> m_pMSAADepthStencilView;
+
+	// FXAA Resources
+	ComPtr<ID3D11Texture2D> m_pSceneTexture;
+	ComPtr<ID3D11RenderTargetView> m_pSceneRenderTargetView;
+	ComPtr<ID3D11ShaderResourceView> m_pSceneShaderResourceView;
+	ComPtr<ID3D11Buffer> m_pFullscreenQuadVB;
+	ComPtr<ID3D11VertexShader> m_pFullscreenVS;
+	ComPtr<ID3D11PixelShader> m_pFXAAPS;
+	ComPtr<ID3D11InputLayout> m_pFullscreenInputLayout;
+	ComPtr<ID3D11SamplerState> m_pLinearSampler;
+
 	// 그리기에 파이프라인에 적용하는 리소스 객체와 인터페이스
 	ComPtr<ID3D11Buffer> m_pVertexBuffer;
 	ComPtr<ID3D11Buffer> m_pIndexBuffer;
@@ -33,30 +57,9 @@ public:
 	ComPtr<ID3D11Buffer> m_pCBChangeOnResize;
 	ComPtr<ID3D11Buffer> m_pCBChangesEveryFrame;
 
-	// Render States
-	ComPtr<ID3D11RasterizerState> m_pRasterizerState;
-	ComPtr<ID3D11DepthStencilState> m_pDepthStencilState;
-	ComPtr<ID3D11BlendState> m_pBlendState;
-
-	// Rasterizer State Options
-	int m_FillMode = 0; // 0=Solid, 1=Wireframe
-	int m_CullMode = 1; // 0=None, 1=Back, 2=Front
-	bool m_FrontCounterClockwise = false;
-	bool m_DepthClipEnable = true;
-	bool m_ScissorEnable = false;
-
-	// Depth Stencil State Options
-	bool m_DepthEnable = true;
-	int m_DepthWriteMask = 1; // 0=Zero, 1=All
-	int m_DepthFunc = 1; // 0=Never, 1=Less, 2=Equal, 3=LessEqual, 4=Greater, 5=NotEqual, 6=GreaterEqual, 7=Always
-	bool m_StencilEnable = false;
-
-	// Blend State Options
-	bool m_BlendEnable = false;
-	int m_SrcBlend = 5; // 5=SrcAlpha
-	int m_DestBlend = 6; // 6=InvSrcAlpha
-	int m_BlendOp = 1; // 1=Add, 2=Subtract, 3=RevSubtract, 4=Min, 5=Max
-	bool m_AlphaToCoverageEnable = false;
+	// Anti-Aliasing Options
+	int m_AAMode = AA_NONE; // 0=None, 1=MSAA, 2=FXAA
+	int m_MSAASampleCount = 4; // 1, 2, 4, 8
 
 	// 그리기에 파이프라인에 적용하는 정보
 	UINT m_VertexBufferStride = 0;
@@ -67,17 +70,14 @@ public:
 	Matrix m_World3;
 	Matrix m_View;
 	Matrix m_Projection;
-	Vector4 m_vMeshColor1 = {1.0f, 0.0f, 0.0f, 0.5f}; // Red
-	Vector4 m_vMeshColor2 = {0.0f, 1.0f, 0.0f, 0.5f}; // Green
-	Vector4 m_vMeshColor3 = {0.0f, 0.0f, 1.0f, 0.5f}; // Blue
+	Vector4 m_vMeshColor1 = {1.0f, 0.0f, 0.0f, 1.0f}; // Red
+	Vector4 m_vMeshColor2 = {0.0f, 1.0f, 0.0f, 1.0f}; // Green
+	Vector4 m_vMeshColor3 = {0.0f, 0.0f, 1.0f, 1.0f}; // Blue
 	Vector4 m_vClearColor = {0.0f, 0.0f, 0.0f, 1.0f}; // Background clear color
 	Vector3 m_vLightDir = {0.0f, 0.0f, 1.0f};
 	Vector3 m_vLightColor = {1.0f, 1.0f, 1.0f};
 	
 	bool m_bRotateAnimation = false;
-	int m_DrawOrder[3] = {2, 1, 0}; // 0=Cube1, 1=Cube2, 2=Cube3
-	
-	bool m_bWireframe = false;
 
 	bool OnInitialize() override;
 	void OnUninitialize() override;
@@ -89,12 +89,12 @@ public:
 
 	bool InitScene();
 	void UninitScene();
-	
-	bool InitRenderStates();
-	void UninitRenderStates();
-	void UpdateRasterizerState();
-	void UpdateDepthStencilState();
-	void UpdateBlendState();
+
+	bool InitMSAA();
+	void UninitMSAA();
+
+	bool InitFXAA();
+	void UninitFXAA();
 
 	bool InitImGUI();
 	void UninitImGUI();

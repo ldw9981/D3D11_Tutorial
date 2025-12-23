@@ -105,8 +105,7 @@ bool GameApp::Initialize()
 	UpdateWindow(m_hWnd);
 
 	m_currentTime = m_previousTime = (float)GetTickCount64() / 1000.0f;
-	m_Input.Initialize(m_hWnd,this);
-	
+	m_Input.Initialize(m_hWnd,this);	
 
 	if(!OnInitialize())
 		return false;
@@ -228,4 +227,13 @@ LRESULT CALLBACK GameApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
+}
+
+void GameApp::SetWindowTitle(const WCHAR* title)
+{
+	if (title && m_hWnd)
+	{
+		wcscpy_s(m_szTitle, title);
+		SetWindowText(m_hWnd, title);
+	}
 }
