@@ -23,6 +23,12 @@ public:
 	ComPtr<ID3D11RenderTargetView> m_pRenderTargetView;
 	ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;
 
+	// MSAA Resources
+	ComPtr<ID3D11Texture2D> m_pMSAATexture;
+	ComPtr<ID3D11RenderTargetView> m_pMSAARenderTargetView;
+	ComPtr<ID3D11Texture2D> m_pMSAADepthStencil;
+	ComPtr<ID3D11DepthStencilView> m_pMSAADepthStencilView;
+
 	// 그리기에 파이프라인에 적용하는 리소스 객체와 인터페이스
 	ComPtr<ID3D11Buffer> m_pVertexBuffer;
 	ComPtr<ID3D11Buffer> m_pIndexBuffer;
@@ -57,6 +63,10 @@ public:
 	int m_DestBlend = 6; // 6=InvSrcAlpha
 	int m_BlendOp = 1; // 1=Add, 2=Subtract, 3=RevSubtract, 4=Min, 5=Max
 	bool m_AlphaToCoverageEnable = false;
+
+	// MSAA Options
+	bool m_MSAAEnable = true;
+	int m_MSAASampleCount = 4; // 1, 2, 4, 8
 
 	// 그리기에 파이프라인에 적용하는 정보
 	UINT m_VertexBufferStride = 0;
@@ -95,6 +105,9 @@ public:
 	void UpdateRasterizerState();
 	void UpdateDepthStencilState();
 	void UpdateBlendState();
+
+	bool InitMSAA();
+	void UninitMSAA();
 
 	bool InitImGUI();
 	void UninitImGUI();

@@ -50,6 +50,9 @@ bool TutorialApp::OnInitialize()
 	if (!InitRenderStates())
 		return false;
 
+	if (!InitMSAA())
+		return false;
+
 	if (!InitImGUI())
 		return false;
 
@@ -59,6 +62,7 @@ bool TutorialApp::OnInitialize()
 void TutorialApp::OnUninitialize()
 {
 	UninitImGUI();
+	UninitMSAA();
 	UninitRenderStates();
 	UninitScene();
 	UninitD3D();
@@ -89,12 +93,16 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {	
+	// Use MSAA render target if enabled, otherwise use backbuffer
+	ID3D11RenderTargetView* rtv = m_MSAAEnable ? m_pMSAARenderTargetView.Get() : m_pRenderTargetView.Get();
+	ID3D11DepthStencilView* dsv = m_MSAAEnable ? m_pMSAADepthStencilView.Get() : m_pDepthStencilView.Get();
+	
 	// 렌더링 설정
-	ID3D11RenderTargetView* rtvs[] = { m_pRenderTargetView.Get() };
-	m_pDeviceContext->OMSetRenderTargets(1, rtvs, m_pDepthStencilView.Get());
+	ID3D11RenderTargetView* rtvs[] = { rtv };
+	m_pDeviceContext->OMSetRenderTargets(1, rtvs, dsv);
 
-	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), (float*)&m_vClearColor);
-	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	m_pDeviceContext->ClearRenderTargetView(rtv, (float*)&m_vClearColor);
+	m_pDeviceContext->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	// Set Render States
 	m_pDeviceContext->RSSetState(m_pRasterizerState.Get());
@@ -145,6 +153,18 @@ void TutorialApp::OnRender()
 		
 		m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
 		m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+	}
+
+	// Resolve MSAA render target to backbuffer
+	if (m_MSAAEnable && m_pMSAATexture)
+	{
+		ComPtr<ID3D11Texture2D> backBuffer;
+		m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf());
+		m_pDeviceContext->ResolveSubresource(backBuffer.Get(), 0, m_pMSAATexture.Get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+		
+		// Switch render target to backbuffer for ImGUI
+		ID3D11RenderTargetView* backBufferRTV[] = { m_pRenderTargetView.Get() };
+		m_pDeviceContext->OMSetRenderTargets(1, backBufferRTV, nullptr);
 	}
 
 	// Render ImGUI
@@ -477,6 +497,67 @@ void TutorialApp::UpdateBlendState()
 	m_pDevice->CreateBlendState(&desc, m_pBlendState.GetAddressOf());
 }
 
+bool TutorialApp::InitMSAA()
+{
+	if (!m_MSAAEnable)
+		return true;
+
+	HRESULT hr = S_OK;
+
+	// Create MSAA render target texture
+	D3D11_TEXTURE2D_DESC texDesc = {};
+	texDesc.Width = m_ClientWidth;
+	texDesc.Height = m_ClientHeight;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.SampleDesc.Count = m_MSAASampleCount;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+	HR_T(m_pDevice->CreateTexture2D(&texDesc, nullptr, m_pMSAATexture.GetAddressOf()));
+
+	// Create MSAA render target view
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = texDesc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+
+	HR_T(m_pDevice->CreateRenderTargetView(m_pMSAATexture.Get(), &rtvDesc, m_pMSAARenderTargetView.GetAddressOf()));
+
+	// Create MSAA depth stencil texture
+	D3D11_TEXTURE2D_DESC depthDesc = {};
+	depthDesc.Width = m_ClientWidth;
+	depthDesc.Height = m_ClientHeight;
+	depthDesc.MipLevels = 1;
+	depthDesc.ArraySize = 1;
+	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthDesc.SampleDesc.Count = m_MSAASampleCount;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthDesc.CPUAccessFlags = 0;
+	depthDesc.MiscFlags = 0;
+
+	HR_T(m_pDevice->CreateTexture2D(&depthDesc, nullptr, m_pMSAADepthStencil.GetAddressOf()));
+
+	// Create MSAA depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = depthDesc.Format;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+	HR_T(m_pDevice->CreateDepthStencilView(m_pMSAADepthStencil.Get(), &dsvDesc, m_pMSAADepthStencilView.GetAddressOf()));
+
+	return true;
+}
+
+void TutorialApp::UninitMSAA()
+{
+	// ComPtr이 자동으로 메모리 해제를 처리하므로 명시적 해제 불필요
+}
+
 bool TutorialApp::InitImGUI()
 {
 	IMGUI_CHECKVERSION();
@@ -505,6 +586,12 @@ void TutorialApp::RenderImGUI()
 
 	ImGui::Begin("Render Settings");
 	
+	// Frame Info
+	float fps = 1.0f / GameTimer::m_Instance->DeltaTime();
+	float frameTime = GameTimer::m_Instance->DeltaTime() * 1000.0f; // ms
+	ImGui::Text("FPS: %.1f (%.2f ms)", fps, frameTime);
+	ImGui::Separator();
+	
 	ImGui::Text("Camera Info");
 	ImGui::Text("Position: (%.2f, %.2f, %.2f)", m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z);
 	ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", m_Camera.m_Rotation.x, m_Camera.m_Rotation.y, m_Camera.m_Rotation.z);
@@ -526,8 +613,25 @@ void TutorialApp::RenderImGUI()
 	ImGui::ColorEdit4("Cube 2 Color", (float*)&m_vMeshColor2, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 	ImGui::ColorEdit4("Cube 3 Color", (float*)&m_vMeshColor3, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 	
-	ImGui::Separator();
-	ImGui::Text("Draw Order Control");
+	ImGui::Separator();	ImGui::Text("MSAA Settings");
+	bool msaaChanged = false;
+	if (ImGui::Checkbox("Enable MSAA", &m_MSAAEnable))
+		msaaChanged = true;
+	const char* sampleCounts[] = { "1x", "2x", "4x", "8x" };
+	int sampleIndex = (m_MSAASampleCount == 1) ? 0 : (m_MSAASampleCount == 2) ? 1 : (m_MSAASampleCount == 4) ? 2 : 3;
+	if (ImGui::Combo("Sample Count", &sampleIndex, sampleCounts, 4))
+	{
+		int counts[] = { 1, 2, 4, 8 };
+		m_MSAASampleCount = counts[sampleIndex];
+		msaaChanged = true;
+	}
+	if (msaaChanged)
+	{
+		UninitMSAA();
+		InitMSAA();
+	}
+	
+	ImGui::Separator();	ImGui::Text("Draw Order Control");
 	ImGui::Text("(Change drawing order to test depth/blend)");
 	
 	const char* cubeNames[] = { "Cube (Red)", "Cube (Green)", "Cube (Blue)" };
