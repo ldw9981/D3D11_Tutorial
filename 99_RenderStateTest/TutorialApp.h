@@ -65,7 +65,7 @@ public:
 	bool m_AlphaToCoverageEnable = false;
 
 	// MSAA Options
-	bool m_MSAAEnable = true;
+	bool m_MSAAEnable = false;
 	int m_MSAASampleCount = 4; // 1, 2, 4, 8
 
 	// 그리기에 파이프라인에 적용하는 정보
