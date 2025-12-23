@@ -4,15 +4,20 @@
 Texture2D sceneTexture : register(t0);
 SamplerState linearSampler : register(s0);
 
+cbuffer FXAAParams : register(b0)
+{
+    float fxaaReduceMul;
+    float fxaaReduceMin;
+    float fxaaSpanMax;
+    float padding;
+};
+
 struct PSInput
 {
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD0;
 };
 
-#define FXAA_SPAN_MAX 8.0
-#define FXAA_REDUCE_MUL (1.0/FXAA_SPAN_MAX)
-#define FXAA_REDUCE_MIN (1.0/128.0)
 #define FXAA_SUBPIX_SHIFT (1.0/4.0)
 
 float4 main(PSInput input) : SV_TARGET
@@ -45,13 +50,13 @@ float4 main(PSInput input) : SV_TARGET
     dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
     
     float dirReduce = max(
-        (lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL),
-        FXAA_REDUCE_MIN);
+        (lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * fxaaReduceMul),
+        fxaaReduceMin);
     
     float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
     
-    dir = min(float2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
-          max(float2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
+    dir = min(float2(fxaaSpanMax, fxaaSpanMax),
+          max(float2(-fxaaSpanMax, -fxaaSpanMax),
           dir * rcpDirMin)) * rcpFrame;
     
     float3 rgbA = 0.5 * (

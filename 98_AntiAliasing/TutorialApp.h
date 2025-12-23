@@ -46,6 +46,7 @@ public:
 	ComPtr<ID3D11PixelShader> m_pFXAAPS;
 	ComPtr<ID3D11InputLayout> m_pFullscreenInputLayout;
 	ComPtr<ID3D11SamplerState> m_pLinearSampler;
+	ComPtr<ID3D11Buffer> m_pFXAAConstantBuffer;
 
 	// 그리기에 파이프라인에 적용하는 리소스 객체와 인터페이스
 	ComPtr<ID3D11Buffer> m_pVertexBuffer;
@@ -60,6 +61,11 @@ public:
 	// Anti-Aliasing Options
 	int m_AAMode = AA_NONE; // 0=None, 1=MSAA, 2=FXAA
 	int m_MSAASampleCount = 4; // 1, 2, 4, 8
+	
+	// FXAA Quality Parameters
+	float m_FXAAReduceMul = 1.0f / 16.0f;  // Blur strength (1/8 to 1/32)
+	float m_FXAAReduceMin = 1.0f / 256.0f; // Edge detection threshold (1/128 to 1/512)
+	float m_FXAASpanMax = 8.0f;            // Max span for search (4.0 to 16.0)
 
 	// 그리기에 파이프라인에 적용하는 정보
 	UINT m_VertexBufferStride = 0;

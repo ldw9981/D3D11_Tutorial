@@ -182,6 +182,10 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->OMSetRenderTargets(1, backBufferRTV, nullptr);
 		// Don't clear - we want to apply FXAA to the rendered scene
 		
+		// Update FXAA constant buffer
+		float fxaaParams[4] = { m_FXAAReduceMul, m_FXAAReduceMin, m_FXAASpanMax, 0.0f };
+		m_pDeviceContext->UpdateSubresource(m_pFXAAConstantBuffer.Get(), 0, nullptr, fxaaParams, 0, 0);
+		
 		// Setup FXAA rendering
 		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_pDeviceContext->IASetInputLayout(nullptr);
@@ -194,6 +198,8 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->PSSetShaderResources(0, 1, srvs);
 		ID3D11SamplerState* samplers[] = { m_pLinearSampler.Get() };
 		m_pDeviceContext->PSSetSamplers(0, 1, samplers);
+		ID3D11Buffer* cbs[] = { m_pFXAAConstantBuffer.Get() };
+		m_pDeviceContext->PSSetConstantBuffers(0, 1, cbs);
 		
 		// Disable depth test for fullscreen quad
 		m_pDeviceContext->OMSetDepthStencilState(nullptr, 0);
@@ -558,6 +564,14 @@ bool TutorialApp::InitFXAA()
 	HR_T(CompileShaderFromFile(L"../Shaders/98_FXAA_PS.hlsl", "main", "ps_4_0", psBlob.GetAddressOf()));
 	HR_T(m_pDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pFXAAPS.GetAddressOf()));
 
+	// Create FXAA constant buffer
+	D3D11_BUFFER_DESC cbDesc = {};
+	cbDesc.ByteWidth = sizeof(float) * 4; // 3 floats + 1 padding
+	cbDesc.Usage = D3D11_USAGE_DEFAULT;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = 0;
+	HR_T(m_pDevice->CreateBuffer(&cbDesc, nullptr, m_pFXAAConstantBuffer.GetAddressOf()));
+
 	return true;
 }
 
@@ -638,6 +652,35 @@ void TutorialApp::RenderImGUI()
 			int counts[] = { 1, 2, 4, 8 };
 			m_MSAASampleCount = counts[sampleIndex];
 			aaChanged = true;
+		}
+	}
+	
+	if (m_AAMode == AA_FXAA)
+	{
+		ImGui::Text("FXAA Quality Parameters");
+		
+		float reduceMulSlider = 1.0f / m_FXAAReduceMul; // Convert to 1/x range (8 to 32)
+		if (ImGui::SliderFloat("Blur Strength", &reduceMulSlider, 8.0f, 32.0f, "1/%.0f"))
+		{
+			m_FXAAReduceMul = 1.0f / reduceMulSlider;
+		}
+		ImGui::Text("  (Higher = Sharper, Lower = More Blur)");
+		
+		float reduceMinSlider = 1.0f / m_FXAAReduceMin; // Convert to 1/x range (128 to 512)
+		if (ImGui::SliderFloat("Edge Threshold", &reduceMinSlider, 128.0f, 512.0f, "1/%.0f"))
+		{
+			m_FXAAReduceMin = 1.0f / reduceMinSlider;
+		}
+		ImGui::Text("  (Higher = More Sensitive Edge Detection)");
+		
+		ImGui::SliderFloat("Search Span", &m_FXAASpanMax, 4.0f, 16.0f, "%.1f");
+		ImGui::Text("  (Higher = Wider Search Range)");
+		
+		if (ImGui::Button("Reset to Default"))
+		{
+			m_FXAAReduceMul = 1.0f / 16.0f;
+			m_FXAAReduceMin = 1.0f / 256.0f;
+			m_FXAASpanMax = 8.0f;
 		}
 	}
 	
