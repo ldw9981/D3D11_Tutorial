@@ -160,7 +160,7 @@ bool TutorialApp::InitD3D()
 
 	// 스왑체인 속성을 담는 구조체 생성.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
-	swapDesc.BufferCount = 1;
+	swapDesc.BufferCount = 2;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapDesc.OutputWindow = m_hWnd;
 	swapDesc.Windowed = true;
@@ -171,6 +171,7 @@ bool TutorialApp::InitD3D()
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
+	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
 	UINT creationFlags = 0;
 #ifdef _DEBUG
