@@ -67,15 +67,15 @@ public:
 	Matrix m_World3;
 	Matrix m_View;
 	Matrix m_Projection;
-	Vector4 m_vMeshColor1 = {1.0f, 0.0f, 0.0f, 1.0f}; // Red
-	Vector4 m_vMeshColor2 = {0.0f, 1.0f, 0.0f, 1.0f}; // Green
-	Vector4 m_vMeshColor3 = {0.0f, 0.0f, 1.0f, 1.0f}; // Blue
-	Vector4 m_vClearColor = {0.0f, 0.5f, 0.5f, 1.0f}; // Background clear color
+	Vector4 m_vMeshColor1 = {1.0f, 0.0f, 0.0f, 0.5f}; // Red
+	Vector4 m_vMeshColor2 = {0.0f, 1.0f, 0.0f, 0.5f}; // Green
+	Vector4 m_vMeshColor3 = {0.0f, 0.0f, 1.0f, 0.5f}; // Blue
+	Vector4 m_vClearColor = {0.0f, 0.0f, 0.0f, 1.0f}; // Background clear color
 	Vector3 m_vLightDir = {0.0f, 0.0f, 1.0f};
 	Vector3 m_vLightColor = {1.0f, 1.0f, 1.0f};
 	
 	bool m_bRotateAnimation = false;
-	int m_DrawOrder[3] = {0, 1, 2}; // 0=Cube1, 1=Cube2, 2=Cube3
+	int m_DrawOrder[3] = {2, 1, 0}; // 0=Cube1, 1=Cube2, 2=Cube3
 	
 	bool m_bWireframe = false;
 

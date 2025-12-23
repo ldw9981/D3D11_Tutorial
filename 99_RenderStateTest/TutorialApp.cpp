@@ -529,7 +529,7 @@ void TutorialApp::RenderImGUI()
 	ImGui::Text("Draw Order Control");
 	ImGui::Text("(Change drawing order to test depth/blend)");
 	
-	const char* cubeNames[] = { "Cube 1 (Red)", "Cube 2 (Green)", "Cube 3 (Blue)" };
+	const char* cubeNames[] = { "Cube (Red)", "Cube (Green)", "Cube (Blue)" };
 	for (int i = 0; i < 3; i++)
 	{
 		ImGui::Text("  %d. %s", i + 1, cubeNames[m_DrawOrder[i]]);
