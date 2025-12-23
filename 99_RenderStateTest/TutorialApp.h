@@ -75,6 +75,7 @@ public:
 	Vector3 m_vLightColor = {1.0f, 1.0f, 1.0f};
 	
 	bool m_bRotateAnimation = false;
+	int m_DrawOrder[3] = {0, 1, 2}; // 0=Cube1, 1=Cube2, 2=Cube3
 	
 	bool m_bWireframe = false;
 

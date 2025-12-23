@@ -117,30 +117,35 @@ void TutorialApp::OnRender()
 	m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
 	m_pDeviceContext->PSSetConstantBuffers(2, 1, cbs2);
 
-	// Update matrix variables and lighting variables - Cube 1
+	// Draw cubes in the order specified by m_DrawOrder
 	CBChangesEveryFrame cb;
-	cb.mWorld = XMMatrixTranspose(m_World1);
 	cb.mView = XMMatrixTranspose(m_View);
-	cb.vMeshColor = m_vMeshColor1;
 	cb.vLightDir = m_vLightDir;
 	cb.vLightColor = m_vLightColor;
-	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
 
-	m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
-
-	// Update matrix variables and lighting variables - Cube 2
-	cb.mWorld = XMMatrixTranspose(m_World2);
-	cb.vMeshColor = m_vMeshColor2;
-	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
-
-	m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
-
-	// Update matrix variables and lighting variables - Cube 3
-	cb.mWorld = XMMatrixTranspose(m_World3);
-	cb.vMeshColor = m_vMeshColor3;
-	m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
-
-	m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+	for (int i = 0; i < 3; i++)
+	{
+		int cubeIndex = m_DrawOrder[i];
+		
+		switch(cubeIndex)
+		{
+		case 0: // Cube 1
+			cb.mWorld = XMMatrixTranspose(m_World1);
+			cb.vMeshColor = m_vMeshColor1;
+			break;
+		case 1: // Cube 2
+			cb.mWorld = XMMatrixTranspose(m_World2);
+			cb.vMeshColor = m_vMeshColor2;
+			break;
+		case 2: // Cube 3
+			cb.mWorld = XMMatrixTranspose(m_World3);
+			cb.vMeshColor = m_vMeshColor3;
+			break;
+		}
+		
+		m_pDeviceContext->UpdateSubresource(m_pCBChangesEveryFrame.Get(), 0, nullptr, &cb, 0, 0);
+		m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
+	}
 
 	// Render ImGUI
 	RenderImGUI();
@@ -519,6 +524,50 @@ void TutorialApp::RenderImGUI()
 	ImGui::ColorEdit4("Cube 1 Color", (float*)&m_vMeshColor1, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 	ImGui::ColorEdit4("Cube 2 Color", (float*)&m_vMeshColor2, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 	ImGui::ColorEdit4("Cube 3 Color", (float*)&m_vMeshColor3, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
+	
+	ImGui::Separator();
+	ImGui::Text("Draw Order Control");
+	ImGui::Text("(Change drawing order to test depth/blend)");
+	
+	const char* cubeNames[] = { "Cube 1 (Red)", "Cube 2 (Green)", "Cube 3 (Blue)" };
+	for (int i = 0; i < 3; i++)
+	{
+		ImGui::Text("  %d. %s", i + 1, cubeNames[m_DrawOrder[i]]);
+		ImGui::SameLine(200);
+		
+		if (i > 0)
+		{
+			ImGui::PushID(i * 10);
+			if (ImGui::ArrowButton("##up", ImGuiDir_Up))
+			{
+				std::swap(m_DrawOrder[i], m_DrawOrder[i - 1]);
+			}
+			ImGui::PopID();
+			ImGui::SameLine();
+		}
+		else
+		{
+			ImGui::Dummy(ImVec2(24, 0));
+			ImGui::SameLine();
+		}
+		
+		if (i < 2)
+		{
+			ImGui::PushID(i * 10 + 1);
+			if (ImGui::ArrowButton("##down", ImGuiDir_Down))
+			{
+				std::swap(m_DrawOrder[i], m_DrawOrder[i + 1]);
+			}
+			ImGui::PopID();
+		}
+	}
+	
+	if (ImGui::Button("Reset Draw Order"))
+	{
+		m_DrawOrder[0] = 0;
+		m_DrawOrder[1] = 1;
+		m_DrawOrder[2] = 2;
+	}
 	
 	ImGui::Text("---------------------------------");
 	ImGui::Text("Rasterizer State");
