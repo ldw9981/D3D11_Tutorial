@@ -55,7 +55,7 @@ public:
 	bool m_BlendEnable = false;
 	int m_SrcBlend = 5; // 5=SrcAlpha
 	int m_DestBlend = 6; // 6=InvSrcAlpha
-	int m_BlendOp = 1; // 1=Add, 2=Subtract, 3=RevSubtract, 4=Min, 5=Max
+	int m_BlendOp = 0; // 0=Add, 1=Subtract, 2=RevSubtract, 3=Min, 4=Max
 	bool m_AlphaToCoverageEnable = false;
 
 	// 그리기에 파이프라인에 적용하는 정보

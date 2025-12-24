@@ -159,7 +159,15 @@
     <Image Include="TextRendering.ico" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\Shaders\12_Effects.hlsl" />
+    <FxCompile Include="..\Shaders\12_VertexShader.hlsl">
+      <ShaderType>Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\12_PixelShader.hlsl">
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Shaders\12_Common.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

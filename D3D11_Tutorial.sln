@@ -31,9 +31,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "10_Camera", "10_Camera\10_C
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "11_StencilBuffer", "11_StencilBuffer\11_StencilBuffer.vcxproj", "{C6C3D66A-6BEC-4DFE-9191-194BC5D98F9B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "12_TextD2DRenderTarget", "TextRendering\TextRendering.vcxproj", "{67EC0087-9D62-41C7-B539-31C591712B32}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "12_TextD2DRenderTarget", "12_TextRendering\TextRendering.vcxproj", "{67EC0087-9D62-41C7-B539-31C591712B32}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "13_ScreenResizing", "ScreenResizing\ScreenResizing.vcxproj", "{FFDC17E9-DBE8-4397-A2E6-34AEE95449B3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "13_ScreenResizing", "13_ScreenResizing\ScreenResizing.vcxproj", "{FFDC17E9-DBE8-4397-A2E6-34AEE95449B3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "14_HDR_RenderTarget", "14_HDR_RenderTarget\14_HDR_RenderTarget.vcxproj", "{0E5F6F72-258C-4BDA-91D0-7CDC5CF866C5}"
 EndProject
