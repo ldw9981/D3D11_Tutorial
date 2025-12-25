@@ -147,6 +147,7 @@
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="Helper.h" />
     <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TimeSystem.h" />
   </ItemGroup>

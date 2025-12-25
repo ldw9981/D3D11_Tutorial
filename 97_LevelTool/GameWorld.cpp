@@ -2,6 +2,7 @@
 #include "CubeObject.h"
 #include <rttr/registration>
 #include <algorithm>
+#include <fstream>
 
 // Windows.h의 min/max 매크로를 해제하여 RTTR과의 충돌 방지
 #ifdef min
@@ -11,7 +12,10 @@
 #undef max
 #endif
 
+#include "../Common/json.hpp"
+
 using namespace rttr;
+using json = nlohmann::json;
 
 GameWorld::GameWorld()
 {
@@ -116,26 +120,22 @@ void GameWorld::DestroyGameObject(GameObject* obj)
 
 bool GameWorld::SaveToFile(const std::string& filename) const
 {
-	FILE* file = nullptr;
-	fopen_s(&file, filename.c_str(), "w");
-	if (!file)
-		return false;
+	json root;
+	root["version"] = "1.0";
+	root["objects"] = json::array();
 
-	fprintf(file, "{\n");
-	fprintf(file, "  \"objects\": [\n");
-
-	for (size_t i = 0; i < m_GameObjects.size(); ++i)
+	for (GameObject* obj : m_GameObjects)
 	{
-		GameObject* obj = m_GameObjects[i];
 		if (!obj)
 			continue;
 
-		// RTTR로 타입 이름 가져오기
+		// RTTR로 타입 정보 가져오기
 		type t = type::get(*obj);
 		std::string typeName = t.get_name().to_string();
 
-		fprintf(file, "    {\n");
-		fprintf(file, "      \"type\": \"%s\",\n", typeName.c_str());
+		json objJson;
+		objJson["type"] = typeName;
+		objJson["properties"] = json::object();
 
 		// 모든 프로퍼티 직렬화
 		for (auto& prop : t.get_properties())
@@ -145,116 +145,134 @@ bool GameWorld::SaveToFile(const std::string& filename) const
 
 			if (value.is_type<float>())
 			{
-				fprintf(file, "      \"%s\": %.3f,\n", propName.c_str(), value.get_value<float>());
+				objJson["properties"][propName] = value.get_value<float>();
+			}
+			else if (value.is_type<int>())
+			{
+				objJson["properties"][propName] = value.get_value<int>();
 			}
 			else if (value.is_type<std::string>())
 			{
-				fprintf(file, "      \"%s\": \"%s\",\n", propName.c_str(), value.get_value<std::string>().c_str());
+				objJson["properties"][propName] = value.get_value<std::string>();
 			}
 			else if (value.is_type<Vector3>())
 			{
 				Vector3 v = value.get_value<Vector3>();
-				fprintf(file, "      \"%s\": [%.3f, %.3f, %.3f],\n", propName.c_str(), v.x, v.y, v.z);
+				objJson["properties"][propName] = { v.x, v.y, v.z };
 			}
 			else if (value.is_type<Vector4>())
 			{
 				Vector4 v = value.get_value<Vector4>();
-				fprintf(file, "      \"%s\": [%.3f, %.3f, %.3f, %.3f],\n", propName.c_str(), v.x, v.y, v.z, v.w);
+				objJson["properties"][propName] = { v.x, v.y, v.z, v.w };
 			}
 		}
 
-		// 마지막 쉼표 제거를 위해 더미 필드 추가
-		fprintf(file, "      \"_end\": true\n");
-
-		if (i < m_GameObjects.size() - 1)
-			fprintf(file, "    },\n");
-		else
-			fprintf(file, "    }\n");
+		root["objects"].push_back(objJson);
 	}
 
-	fprintf(file, "  ]\n");
-	fprintf(file, "}\n");
-	fclose(file);
+	// 파일에 저장 (들여쓰기 2칸)
+	std::ofstream file(filename);
+	if (!file.is_open())
+		return false;
+
+	file << root.dump(2);
+	file.close();
 	return true;
 }
 
 bool GameWorld::LoadFromFile(const std::string& filename)
 {
-	FILE* file = nullptr;
-	fopen_s(&file, filename.c_str(), "r");
-	if (!file)
+	// 파일에서 JSON 읽기
+	std::ifstream file(filename);
+	if (!file.is_open())
 		return false;
+
+	json root;
+	try
+	{
+		file >> root;
+	}
+	catch (const json::exception& e)
+	{
+		file.close();
+		return false;
+	}
+	file.close();
 
 	// 기존 객체들 모두 제거
 	Clear();
 
-	char line[1024];
-	std::string currentType;
-	GameObject* currentObj = nullptr;
-
-	while (fgets(line, sizeof(line), file))
+	// 버전 확인 (선택적)
+	if (root.contains("version"))
 	{
-		// "type" 필드 찾기
-		if (strstr(line, "\"type\":"))
+		std::string version = root["version"];
+		// 필요시 버전별로 다른 로딩 로직 적용 가능
+	}
+
+	// 오브젝트 로드
+	if (!root.contains("objects") || !root["objects"].is_array())
+		return false;
+
+	for (const auto& objJson : root["objects"])
+	{
+		if (!objJson.contains("type"))
+			continue;
+
+		std::string typeName = objJson["type"];
+		GameObject* obj = CreateGameObjectByTypeName(typeName);
+		if (!obj)
+			continue;
+
+		// 프로퍼티 복원
+		if (objJson.contains("properties") && objJson["properties"].is_object())
 		{
-			char typeName[256];
-			if (sscanf_s(line, "      \"type\": \"%[^\"]\"", typeName, (unsigned)_countof(typeName)) == 1)
-			{
-				currentType = typeName;
-				currentObj = CreateGameObjectByTypeName(currentType);
-			}
-		}
-		else if (currentObj != nullptr)
-		{
-			// 프로퍼티 파싱
-			type t = type::get(*currentObj);
+			type t = type::get(*obj);
 
 			for (auto& prop : t.get_properties())
 			{
 				std::string propName = prop.get_name().to_string();
-				std::string searchPattern = "\"" + propName + "\":";
 
-				if (strstr(line, searchPattern.c_str()))
+				if (!objJson["properties"].contains(propName))
+					continue;
+
+				type propType = prop.get_type();
+				const auto& propValue = objJson["properties"][propName];
+
+				if (propType == type::get<float>() && propValue.is_number())
 				{
-					type propType = prop.get_type();
-
-					if (propType == type::get<float>())
-					{
-						float value;
-						if (sscanf_s(line, "      \"%*[^\"]\": %f", &value) == 1)
-						{
-							prop.set_value(*currentObj, value);
-						}
-					}
-					else if (propType == type::get<std::string>())
-					{
-						char value[256];
-						if (sscanf_s(line, "      \"%*[^\"]\": \"%[^\"]\"", value, (unsigned)_countof(value)) == 1)
-						{
-							prop.set_value(*currentObj, std::string(value));
-						}
-					}
-					else if (propType == type::get<Vector3>())
-					{
-						Vector3 v;
-						if (sscanf_s(line, "      \"%*[^\"]\": [%f, %f, %f]", &v.x, &v.y, &v.z) == 3)
-						{
-							prop.set_value(*currentObj, v);
-						}
-					}
-					else if (propType == type::get<Vector4>())
-					{
-						Vector4 v;
-						if (sscanf_s(line, "      \"%*[^\"]\": [%f, %f, %f, %f]", &v.x, &v.y, &v.z, &v.w) == 4)
-						{
-							prop.set_value(*currentObj, v);
-						}
-					}
+					prop.set_value(*obj, propValue.get<float>());
+				}
+				else if (propType == type::get<int>() && propValue.is_number_integer())
+				{
+					prop.set_value(*obj, propValue.get<int>());
+				}
+				else if (propType == type::get<std::string>() && propValue.is_string())
+				{
+					prop.set_value(*obj, propValue.get<std::string>());
+				}
+				else if (propType == type::get<Vector3>() && propValue.is_array() && propValue.size() == 3)
+				{
+					Vector3 v;
+					v.x = propValue[0].get<float>();
+					v.y = propValue[1].get<float>();
+					v.z = propValue[2].get<float>();
+					prop.set_value(*obj, v);
+				}
+				else if (propType == type::get<Vector4>() && propValue.is_array() && propValue.size() == 4)
+				{
+					Vector4 v;
+					v.x = propValue[0].get<float>();
+					v.y = propValue[1].get<float>();
+					v.z = propValue[2].get<float>();
+					v.w = propValue[3].get<float>();
+					prop.set_value(*obj, v);
 				}
 			}
 		}
+
+		// AABB 업데이트
+		obj->UpdateAABB();
 	}
 
-	fclose(file);
 	return true;
 }
