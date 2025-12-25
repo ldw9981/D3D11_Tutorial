@@ -66,7 +66,7 @@ public:
 	Vector3 m_DebugRayDirection;
 
 
-	bool m_bShowAABB = false;
+	bool m_bShowAllAABB = false;			// 모든 오브젝트의 AABB 표시
 
 	bool OnInitialize() override;
 	void OnUninitialize() override;

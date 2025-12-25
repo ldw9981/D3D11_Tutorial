@@ -125,9 +125,8 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
 	}
 
-	// AABB 디버그 렌더링(설정 이후, ImGui 이전)
-	// 선택된 오브젝트는 항상 표시, Show AABB가 켜져있으면 모든 오브젝트 표시
-	if (m_bShowAABB || m_pSelectedObject != nullptr)
+	// 모든 오브젝트 AABB 디버그 렌더링
+	if (m_bShowAllAABB)
 	{
 		// 렌더타겟 다시 설정 (ImGui가 변경했을 수 있음)
 		m_pDeviceContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), m_pDepthStencilView.Get());
@@ -153,15 +152,8 @@ void TutorialApp::OnRender()
 			if (!obj)
 				continue;
 
-			// Show AABB가 꺼져있으면 선택된 오브젝트만 그리기
-			if (!m_bShowAABB && obj != m_pSelectedObject)
-				continue;
-
-			// 선택된 오브젝트는 밝은 초록색 아니면 어두운 초록색
-			XMVECTOR color = (obj == m_pSelectedObject) ?
-				XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f) : XMVectorSet(0.0f, 0.2f, 0.0f, 0.7f);
-
-			// DebugDraw의 BoundingBox 렌더링 함수 사용
+			// 모든 오브젝트는 어두운 초록색
+			XMVECTOR color = XMVectorSet(0.0f, 0.2f, 0.0f, 0.7f);
 			DebugDraw::Draw(DebugDraw::g_Batch.get(), obj->m_AABB, color);
 		}
 
@@ -172,6 +164,41 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->OMSetDepthStencilState(nullptr, 0);
 		m_pDeviceContext->RSSetState(nullptr);
 	}
+
+	// 선택된 오브젝트 AABB 렌더링 (설정 이후, ImGui 이전) - 항상 표시
+	if (m_pSelectedObject != nullptr)
+	{
+		// 렌더타겟 다시 설정 (ImGui가 변경했을 수 있음)
+		m_pDeviceContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), m_pDepthStencilView.Get());
+
+		// DebugDraw의 BasicEffect 설정
+		DebugDraw::g_BatchEffect->SetWorld(Matrix::Identity);
+		DebugDraw::g_BatchEffect->SetView(m_View);
+		DebugDraw::g_BatchEffect->SetProjection(m_Projection);
+		DebugDraw::g_BatchEffect->Apply(m_pDeviceContext.Get());
+
+		// InputLayout 설정
+		m_pDeviceContext->IASetInputLayout(DebugDraw::g_pBatchInputLayout.Get());
+
+		// 블렌드 스테이트 설정 (깊이 테스트 활성화)
+		m_pDeviceContext->OMSetBlendState(DebugDraw::g_States->AlphaBlend(), nullptr, 0xFFFFFFFF);
+		m_pDeviceContext->OMSetDepthStencilState(DebugDraw::g_States->DepthRead(), 0);
+		m_pDeviceContext->RSSetState(DebugDraw::g_States->CullNone());
+
+		DebugDraw::g_Batch->Begin();
+
+		// 선택된 오브젝트는 밝은 초록색
+		XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		DebugDraw::Draw(DebugDraw::g_Batch.get(), m_pSelectedObject->m_AABB, color);
+
+		DebugDraw::g_Batch->End();
+
+		// 렌더 스테이트 복원
+		m_pDeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+		m_pDeviceContext->OMSetDepthStencilState(nullptr, 0);
+		m_pDeviceContext->RSSetState(nullptr);
+	}
+	
 
 	// RTTR로 GameObject 멤버를 조회해 ImGui UI를 자동 생성하는 함수 호출
 	RenderImGuiCubeRTTR();
@@ -497,7 +524,7 @@ void TutorialApp::RenderImGuiCubeRTTR()
 		if (ImGui::BeginMenu("Debug"))
 		{
 			ImGui::MenuItem("Show Ray", nullptr, &m_bShowDebugRay);
-			ImGui::MenuItem("Show AABB", nullptr, &m_bShowAABB);
+			ImGui::MenuItem("Show All AABB", nullptr, &m_bShowAllAABB);
 			ImGui::EndMenu();
 		}
 
