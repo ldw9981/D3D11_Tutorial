@@ -1,6 +1,5 @@
 #include "GameObject.h"
 
-// Windows.h의 min/max 매크로를 해제하여 RTTR과의 충돌 방지
 #ifdef min
 #undef min
 #endif
@@ -8,14 +7,10 @@
 #undef max
 #endif
 
+#define RTTR_DLL
 #include <rttr/registration>
 #include <rttr/detail/policies/ctor_policies.h>
 
-#ifdef _DEBUG
-#pragma comment(lib, "rttr_core.lib")
-#else 
-#pragma comment(lib, "rttr_core.lib")
-#endif
 
 using namespace rttr;
 
@@ -28,7 +23,7 @@ RTTR_REGISTRATION
 		.property("Rotation", &GameObject::m_Rotation)
 		.property("Scale", &GameObject::m_Scale);
 
-	// Vector3 타입 등록
+	
 	registration::class_<Vector3>("Vector3")
 		.constructor<>()
 		.constructor<float, float, float>()
@@ -36,7 +31,6 @@ RTTR_REGISTRATION
 		.property("y", &Vector3::y)
 		.property("z", &Vector3::z);
 
-	// Vector4 타입 등록
 	registration::class_<Vector4>("Vector4")
 		.constructor<>()
 		.constructor<float, float, float, float>()
@@ -60,7 +54,7 @@ GameObject::~GameObject()
 
 Matrix GameObject::GetWorldMatrix()
 {
-	// Scale -> Rotation -> Translation 순서로 변환
+	// Scale -> Rotation -> Translation
 	Matrix scaleMatrix = Matrix::CreateScale(m_Scale);
 	Matrix rotationMatrix = Matrix::CreateFromYawPitchRoll(m_Rotation.y, m_Rotation.x, m_Rotation.z);
 	Matrix translationMatrix = Matrix::CreateTranslation(m_Position);
@@ -70,14 +64,106 @@ Matrix GameObject::GetWorldMatrix()
 }
 
 void GameObject::UpdateAABB()
-{
-	// 기본 AABB를 변환하여 새로운 AABB 생성
+{	
 	BoundingBox originalAABB(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.5f, 0.5f, 0.5f));
-	
-	// Scale 적용
+
+	// Scale 
 	Vector3 scaledExtents = originalAABB.Extents * m_Scale;
-	
-	// Position 적용 (Rotation은 AABB에 직접 적용하지 않음 - AABB는 축 정렬되어 있어야 함)
+
+	// Position 
 	m_AABB.Center = m_Position;
 	m_AABB.Extents = scaledExtents;
+}
+
+nlohmann::json GameObject::Serialize() const
+{
+	nlohmann::json objJson;
+	
+	type t = type::get(*this);
+	objJson["type"] = t.get_name().to_string();
+	objJson["properties"] = nlohmann::json::object();
+	
+	for (auto& prop : t.get_properties())
+	{
+		std::string propName = prop.get_name().to_string();
+		variant value = prop.get_value(*this);
+
+		if (value.is_type<float>())
+		{
+			objJson["properties"][propName] = value.get_value<float>();
+		}
+		else if (value.is_type<int>())
+		{
+			objJson["properties"][propName] = value.get_value<int>();
+		}
+		else if (value.is_type<std::string>())
+		{
+			objJson["properties"][propName] = value.get_value<std::string>();
+		}
+		else if (value.is_type<Vector3>())
+		{
+			Vector3 v = value.get_value<Vector3>();
+			objJson["properties"][propName] = { v.x, v.y, v.z };
+		}
+		else if (value.is_type<Vector4>())
+		{
+			Vector4 v = value.get_value<Vector4>();
+			objJson["properties"][propName] = { v.x, v.y, v.z, v.w };
+		}
+	}
+
+	return objJson;
+}
+
+bool GameObject::Deserialize(const nlohmann::json& jsonObj)
+{
+	if (!jsonObj.contains("properties") || !jsonObj["properties"].is_object())
+		return false;
+
+	type t = type::get(*this);
+
+	for (auto& prop : t.get_properties())
+	{
+		std::string propName = prop.get_name().to_string();
+
+		if (!jsonObj["properties"].contains(propName))
+			continue;
+
+		type propType = prop.get_type();
+		const auto& propValue = jsonObj["properties"][propName];
+
+		if (propType == type::get<float>() && propValue.is_number())
+		{
+			prop.set_value(*this, propValue.get<float>());
+		}
+		else if (propType == type::get<int>() && propValue.is_number_integer())
+		{
+			prop.set_value(*this, propValue.get<int>());
+		}
+		else if (propType == type::get<std::string>() && propValue.is_string())
+		{
+			prop.set_value(*this, propValue.get<std::string>());
+		}
+		else if (propType == type::get<Vector3>() && propValue.is_array() && propValue.size() == 3)
+		{
+			Vector3 v;
+			v.x = propValue[0].get<float>();
+			v.y = propValue[1].get<float>();
+			v.z = propValue[2].get<float>();
+			prop.set_value(*this, v);
+		}
+		else if (propType == type::get<Vector4>() && propValue.is_array() && propValue.size() == 4)
+		{
+			Vector4 v;
+			v.x = propValue[0].get<float>();
+			v.y = propValue[1].get<float>();
+			v.z = propValue[2].get<float>();
+			v.w = propValue[3].get<float>();
+			prop.set_value(*this, v);
+		}
+	}
+	
+	UpdateAABB();
+
+	return true;
 }

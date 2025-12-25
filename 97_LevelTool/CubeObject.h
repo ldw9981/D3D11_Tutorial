@@ -2,7 +2,7 @@
 #include "GameObject.h"
 #include <directxtk/SimpleMath.h>
 
-// Windows.h의 min/max 매크로를 해제하여 RTTR과의 충돌 방지
+// Windows.h�� min/max ��ũ�θ� �����Ͽ� RTTR���� �浹 ����
 #ifdef min
 #undef min
 #endif
@@ -10,6 +10,7 @@
 #undef max
 #endif
 
+#define RTTR_DLL
 #include <rttr/registration>
 
 using namespace DirectX::SimpleMath;
@@ -21,7 +22,7 @@ public:
 	CubeObject();
 	~CubeObject();
 
-	// 색상
+	// ����
 	Vector4 m_Color;
 	std::string m_Name;
 	float m_Value;

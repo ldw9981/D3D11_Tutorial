@@ -1,14 +1,23 @@
+
+
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
 #include <d3dcompiler.h>
 #include "CubeObject.h"
 #include <imgui.h>
-#include <rttr/registration>
 
+
+#define RTTR_DLL
+#include <rttr/registration>
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
 
+#ifdef _DEBUG
+#pragma comment(lib, "rttr_core_d.lib")
+#else 
+#pragma comment(lib, "rttr_core.lib")
+#endif
 
 // 정점 구조체
 struct Vertex
@@ -512,7 +521,7 @@ void TutorialApp::RenderImGuiCubeRTTR()
 	ImGui::End();
 
 	// Inspector
-	ImGui::SetNextWindowPos(ImVec2(m_ClientWidth - 410, 30), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(static_cast<float>(m_ClientWidth - 410), 30), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(400, 700), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Inspector");
 	RenderInspectorContent();
@@ -681,11 +690,6 @@ void TutorialApp::LoadScene()
 	}
 }
 
-void TutorialApp::RenderObjectPalette()
-{
-	RenderObjectPaletteContent();
-}
-
 void TutorialApp::RenderObjectPaletteContent()
 {
 	ImGui::Text("Available Objects:");
@@ -705,11 +709,6 @@ void TutorialApp::RenderObjectPaletteContent()
 			ImGui::EndDragDropSource();
 		}
 	}
-}
-
-void TutorialApp::RenderWorldHierarchy()
-{
-	RenderWorldHierarchyContent();
 }
 
 void TutorialApp::RenderWorldHierarchyContent()
@@ -811,21 +810,6 @@ void TutorialApp::RenderWorldHierarchyContent()
 	ImGui::EndChild();
 }
 
-void TutorialApp::RenderSceneView()
-{
-	// Scene View 창 제거됨 - 3D 렌더링이 배경으로 표시됨
-}
-
-void TutorialApp::RenderSceneViewContent()
-{
-	// Scene View 창 제거됨 - 3D 렌더링이 배경으로 표시됨
-}
-
-void TutorialApp::RenderInspector()
-{
-	RenderInspectorContent();
-}
-
 void TutorialApp::RenderInspectorContent()
 {
 	using namespace rttr;
@@ -888,11 +872,6 @@ void TutorialApp::RenderInspectorContent()
 			ImGui::SetTooltip("%s", desc_var.to_string().c_str());
 		}
 	}
-}
-
-void TutorialApp::HandleGameViewDrop()
-{
-	// 이제 RenderSceneView()에서 처리
 }
 
 Vector3 TutorialApp::GetWorldPositionFromMouse(const ImVec2& mousePos)

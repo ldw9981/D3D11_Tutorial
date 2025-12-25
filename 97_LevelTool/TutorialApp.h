@@ -84,15 +84,10 @@ public:
 	void UninitImGui();
 
 	void RenderImGuiCubeRTTR();
-	void RenderObjectPalette();
 	void RenderObjectPaletteContent();
-	void RenderWorldHierarchy();
 	void RenderWorldHierarchyContent();
-	void RenderSceneView();
-	void RenderSceneViewContent();
-	void RenderInspector();
 	void RenderInspectorContent();
-	void HandleGameViewDrop();
+
 	Vector3 GetWorldPositionFromMouse(const ImVec2& mousePos);
 
 	void SaveScene();

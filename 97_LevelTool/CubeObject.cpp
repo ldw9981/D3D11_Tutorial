@@ -1,6 +1,4 @@
 #include "CubeObject.h"
-
-// Windows.h의 min/max 매크로를 해제하여 RTTR과의 충돌 방지
 #ifdef min
 #undef min
 #endif
@@ -8,16 +6,11 @@
 #undef max
 #endif
 
+#define RTTR_DLL
 #include <rttr/registration>
 
 using namespace rttr;
 
-
-#ifdef _DEBUG
-	#pragma comment(lib, "rttr_core_d.lib")
-#else 
-	#pragma comment(lib, "rttr_core.lib")
-#endif
 
 RTTR_REGISTRATION
 {

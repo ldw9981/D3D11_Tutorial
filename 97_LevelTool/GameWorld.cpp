@@ -15,7 +15,7 @@
 #include "../Common/json.hpp"
 
 using namespace rttr;
-using json = nlohmann::json;
+
 
 GameWorld::GameWorld()
 {
@@ -120,53 +120,17 @@ void GameWorld::DestroyGameObject(GameObject* obj)
 
 bool GameWorld::SaveToFile(const std::string& filename) const
 {
-	json root;
-	root["version"] = "1.0";
-	root["objects"] = json::array();
+	nlohmann::json root;
+	
+	root["objects"] = nlohmann::json::array();
 
 	for (GameObject* obj : m_GameObjects)
 	{
 		if (!obj)
 			continue;
 
-		// RTTR로 타입 정보 가져오기
-		type t = type::get(*obj);
-		std::string typeName = t.get_name().to_string();
-
-		json objJson;
-		objJson["type"] = typeName;
-		objJson["properties"] = json::object();
-
-		// 모든 프로퍼티 직렬화
-		for (auto& prop : t.get_properties())
-		{
-			std::string propName = prop.get_name().to_string();
-			variant value = prop.get_value(*obj);
-
-			if (value.is_type<float>())
-			{
-				objJson["properties"][propName] = value.get_value<float>();
-			}
-			else if (value.is_type<int>())
-			{
-				objJson["properties"][propName] = value.get_value<int>();
-			}
-			else if (value.is_type<std::string>())
-			{
-				objJson["properties"][propName] = value.get_value<std::string>();
-			}
-			else if (value.is_type<Vector3>())
-			{
-				Vector3 v = value.get_value<Vector3>();
-				objJson["properties"][propName] = { v.x, v.y, v.z };
-			}
-			else if (value.is_type<Vector4>())
-			{
-				Vector4 v = value.get_value<Vector4>();
-				objJson["properties"][propName] = { v.x, v.y, v.z, v.w };
-			}
-		}
-
+		// GameObject의 Serialize 함수 호출
+		nlohmann::json objJson = obj->Serialize();
 		root["objects"].push_back(objJson);
 	}
 
@@ -187,27 +151,21 @@ bool GameWorld::LoadFromFile(const std::string& filename)
 	if (!file.is_open())
 		return false;
 
-	json root;
+	nlohmann::json root;
 	try
 	{
 		file >> root;
 	}
-	catch (const json::exception& e)
+	catch (const nlohmann::json::exception& e)
 	{
+		MessageBoxA(nullptr, e.what(), "Error", MB_OK | MB_ICONERROR);
 		file.close();
 		return false;
 	}
 	file.close();
 
 	// 기존 객체들 모두 제거
-	Clear();
-
-	// 버전 확인 (선택적)
-	if (root.contains("version"))
-	{
-		std::string version = root["version"];
-		// 필요시 버전별로 다른 로딩 로직 적용 가능
-	}
+	Clear();		
 
 	// 오브젝트 로드
 	if (!root.contains("objects") || !root["objects"].is_array())
@@ -223,55 +181,8 @@ bool GameWorld::LoadFromFile(const std::string& filename)
 		if (!obj)
 			continue;
 
-		// 프로퍼티 복원
-		if (objJson.contains("properties") && objJson["properties"].is_object())
-		{
-			type t = type::get(*obj);
-
-			for (auto& prop : t.get_properties())
-			{
-				std::string propName = prop.get_name().to_string();
-
-				if (!objJson["properties"].contains(propName))
-					continue;
-
-				type propType = prop.get_type();
-				const auto& propValue = objJson["properties"][propName];
-
-				if (propType == type::get<float>() && propValue.is_number())
-				{
-					prop.set_value(*obj, propValue.get<float>());
-				}
-				else if (propType == type::get<int>() && propValue.is_number_integer())
-				{
-					prop.set_value(*obj, propValue.get<int>());
-				}
-				else if (propType == type::get<std::string>() && propValue.is_string())
-				{
-					prop.set_value(*obj, propValue.get<std::string>());
-				}
-				else if (propType == type::get<Vector3>() && propValue.is_array() && propValue.size() == 3)
-				{
-					Vector3 v;
-					v.x = propValue[0].get<float>();
-					v.y = propValue[1].get<float>();
-					v.z = propValue[2].get<float>();
-					prop.set_value(*obj, v);
-				}
-				else if (propType == type::get<Vector4>() && propValue.is_array() && propValue.size() == 4)
-				{
-					Vector4 v;
-					v.x = propValue[0].get<float>();
-					v.y = propValue[1].get<float>();
-					v.z = propValue[2].get<float>();
-					v.w = propValue[3].get<float>();
-					prop.set_value(*obj, v);
-				}
-			}
-		}
-
-		// AABB 업데이트
-		obj->UpdateAABB();
+		// GameObject의 Deserialize 함수 호출
+		obj->Deserialize(objJson);
 	}
 
 	return true;
