@@ -44,7 +44,7 @@
     <!-- Assimp DLL 자동 복사 (Debug) -->
     <PostBuildEvent>
       <Command>
-        xcopy /Y /D "$(VcpkgRoot)\installed\$(TripletDynamic)\debug\bin\assimp-vc143-mtd.dll" "$(OutDir)"
+        xcopy /Y /D "$(VcpkgRoot)\installed\$(TripletDynamic)\debug\bin\*.dll" "$(OutDir)"
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -69,7 +69,7 @@
     <!-- Assimp DLL 자동 복사 (Release) -->
     <PostBuildEvent>
       <Command>
-        xcopy /Y /D "$(VcpkgRoot)\installed\$(TripletDynamic)\bin\assimp-vc143-mt.dll" "$(OutDir)"
+        xcopy /Y /D "$(VcpkgRoot)\installed\$(TripletDynamic)\bin\*.dll" "$(OutDir)"
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
