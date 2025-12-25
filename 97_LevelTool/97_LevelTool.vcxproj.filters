@@ -56,4 +56,7 @@
       <Filter>Shader Files</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="D:\vcpkg\installed\x64-windows\lib\rttr_core.lib" />
+  </ItemGroup>
 </Project>

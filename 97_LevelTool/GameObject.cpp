@@ -9,6 +9,13 @@
 #endif
 
 #include <rttr/registration>
+#include <rttr/detail/policies/ctor_policies.h>
+
+#ifdef _DEBUG
+#pragma comment(lib, "rttr_core.lib")
+#else 
+#pragma comment(lib, "rttr_core.lib")
+#endif
 
 using namespace rttr;
 
@@ -16,6 +23,7 @@ RTTR_REGISTRATION
 {
 	registration::class_<GameObject>("GameObject")
 		.constructor<>()
+			(rttr::policy::ctor::as_raw_ptr)
 		.property("Position", &GameObject::m_Position)
 		.property("Rotation", &GameObject::m_Rotation)
 		.property("Scale", &GameObject::m_Scale);

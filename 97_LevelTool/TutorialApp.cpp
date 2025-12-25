@@ -51,53 +51,70 @@ void TutorialApp::OnUninitialize()
 void TutorialApp::OnUpdate()
 {
 	float t = GameTimer::m_Instance->TotalTime();
-	// CubeObject의 회전값을 갱신
-	
-	m_Cube.UpdateAABB();
-	
+	float dt = GameTimer::m_Instance->DeltaTime();
+
+	// 카메라 업데이트
+	m_Camera.Update(dt);
+
+	// 모든 GameObject AABB 업데이트
+	for (GameObject* obj : m_World.GetGameObjects())
+	{
+		if (obj)
+			obj->UpdateAABB();
+	}
+
 	m_Camera.GetViewMatrix(m_View);
 }
 
 void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
-	
+
 	// 렌더타겟 설정
 	ID3D11RenderTargetView* rtvs[] = { m_pRenderTargetView.Get() };
 	m_pDeviceContext->OMSetRenderTargets(1, rtvs, m_pDepthStencilView.Get());
 
-	// Clear 
+	// Clear
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), color);
 	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	// 상수 버퍼 업데이트
-	ConstantBuffer cb;
-	cb.mWorld = m_Cube.GetWorldMatrix().Transpose();
-	cb.mView = XMMatrixTranspose(m_View);
-	cb.mProjection = XMMatrixTranspose(m_Projection);
-	cb.vLightDir = m_LightDir;
-	cb.vLightColor = m_LightColor;
-	cb.vMaterialColor = m_Cube.m_Color;
-	m_pDeviceContext->UpdateSubresource(m_pConstantBuffer.Get(), 0, nullptr, &cb, 0, 0);
+	// 모든 GameObject 렌더링
+	for (GameObject* obj : m_World.GetGameObjects())
+	{
+		if (!obj)
+			continue;
 
-	// 렌더 큐브
-	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	ID3D11Buffer* vbs[] = { m_pVertexBuffer.Get() };
-	m_pDeviceContext->IASetVertexBuffers(0, 1, vbs, &m_VertexBufferStride, &m_VertexBufferOffset);
-	m_pDeviceContext->IASetInputLayout(m_pInputLayout.Get());
-	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
-	ID3D11Buffer* cbs[] = { m_pConstantBuffer.Get() };
-	m_pDeviceContext->VSSetConstantBuffers(0, 1, cbs);
-	m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
-	m_pDeviceContext->PSSetConstantBuffers(0, 1, cbs);
+		// CubeObject만 렌더링
+		CubeObject* cube = dynamic_cast<CubeObject*>(obj);
+		if (!cube)
+			continue;
 
-	m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
+		// 상수 버퍼 업데이트
+		ConstantBuffer cb;
+		cb.mWorld = cube->GetWorldMatrix().Transpose();
+		cb.mView = XMMatrixTranspose(m_View);
+		cb.mProjection = XMMatrixTranspose(m_Projection);
+		cb.vLightDir = m_LightDir;
+		cb.vLightColor = m_LightColor;
+		cb.vMaterialColor = cube->m_Color;
+		m_pDeviceContext->UpdateSubresource(m_pConstantBuffer.Get(), 0, nullptr, &cb, 0, 0);
 
-	// ImGui로 CubeObject 멤버를 조회/수정하는 UI 함수 추가
-	//RenderImGuiCube();
+		// 렌더 큐브
+		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		ID3D11Buffer* vbs[] = { m_pVertexBuffer.Get() };
+		m_pDeviceContext->IASetVertexBuffers(0, 1, vbs, &m_VertexBufferStride, &m_VertexBufferOffset);
+		m_pDeviceContext->IASetInputLayout(m_pInputLayout.Get());
+		m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+		m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
+		ID3D11Buffer* cbs[] = { m_pConstantBuffer.Get() };
+		m_pDeviceContext->VSSetConstantBuffers(0, 1, cbs);
+		m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
+		m_pDeviceContext->PSSetConstantBuffers(0, 1, cbs);
 
-	// RTTR로 CubeObject 멤버를 조회해 ImGui UI를 자동 생성하는 함수 호출
+		m_pDeviceContext->DrawIndexed(m_nIndices, 0, 0);
+	}
+
+	// RTTR로 GameObject 멤버를 조회해 ImGui UI를 자동 생성하는 함수 호출
 	RenderImGuiCubeRTTR();
 
 	// Present
@@ -295,12 +312,32 @@ bool TutorialApp::InitScene()
 	HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pConstantBuffer.GetAddressOf()));
 
 	// 초기값 설정
-	m_World = XMMatrixIdentity();
 	XMVECTOR Eye = XMVectorSet(0.0f, 2.0f, -5.0f, 0.0f);
 	XMVECTOR At = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	m_View = XMMatrixLookAtLH(Eye, At, Up);
 	m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.1f, 1000.0f);
+
+	// 테스트용 Cube 생성
+	CubeObject* cube = m_World.CreateGameObject<CubeObject>();
+	cube->m_Name = "TestCube";
+	cube->m_Position = Vector3(0.0f, 0.0f, 0.0f);
+	m_pSelectedObject = cube;
+
+	// RTTR에 등록된 GameObject 파생 타입들을 가져와서 오브젝트 팔레트에 표시
+	using namespace rttr;
+	type baseType = type::get<GameObject>();
+	for (auto& t : type::get_types())
+	{
+		if (t.is_derived_from(baseType) && t != baseType)
+		{
+			m_AvailableObjectTypes.push_back(t.get_name().to_string());
+		}
+	}
+
+	// 카메라 초기화
+	m_Camera.m_Position = Vector3(0.0f, 2.0f, -10.0f);
+	m_Camera.m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
 
 	return true;
 }
@@ -310,17 +347,6 @@ void TutorialApp::UninitScene()
 	// ComPtr 사용으로 자동 해제
 }
 
-void TutorialApp::RenderImGuiCube()
-{
-    ImGui::Begin("CubeObject Inspector");
-    ImGui::Text("Name: %s", m_Cube.m_Name.c_str());
-    ImGui::InputFloat3("Position", &m_Cube.m_Position.x);
-    ImGui::InputFloat3("Rotation", &m_Cube.m_Rotation.x);
-    ImGui::InputFloat3("Scale", &m_Cube.m_Scale.x);
-    ImGui::ColorEdit4("Color", &m_Cube.m_Color.x);
-    ImGui::InputFloat("Value", &m_Cube.m_Value);
-    ImGui::End();
-}
 
 void TutorialApp::RenderImGuiCubeRTTR()
 {
@@ -356,25 +382,39 @@ void TutorialApp::RenderImGuiCubeRTTR()
 	}
 
     using namespace rttr;
-    ImGui::Begin("CubeObject RTTR Inspector");
-    type t = type::get(m_Cube);
+    ImGui::Begin("GameObject Inspector");
+
+    // 선택된 객체가 없으면 메시지 표시
+    if (!m_pSelectedObject)
+    {
+        ImGui::Text("No GameObject selected");
+        ImGui::End();
+        ImGui::Render();
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        return;
+    }
+
+    type t = type::get(*m_pSelectedObject);
+    ImGui::Text("Type: %s", t.get_name().to_string().c_str());
+    ImGui::Separator();
+
     for (auto& prop : t.get_properties())
     {
-        variant value = prop.get_value(m_Cube);
+        variant value = prop.get_value(*m_pSelectedObject);
         std::string name = prop.get_name().to_string();
         if (value.is_type<float>())
         {
             float v = value.get_value<float>();
             ImGui::InputFloat(name.c_str(), &v, 0.0f, 0.0f, "%.3f");
             if (ImGui::IsItemDeactivatedAfterEdit())
-                prop.set_value(m_Cube, v);
+                prop.set_value(*m_pSelectedObject, v);
         }
         else if (value.is_type<std::string>())
         {
             char buf[256] = {};
             strncpy_s(buf, value.get_value<std::string>().c_str(), sizeof(buf)-1);
             if (ImGui::InputText(name.c_str(), buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))
-                prop.set_value(m_Cube, std::string(buf));
+                prop.set_value(*m_pSelectedObject, std::string(buf));
         }
         else if (value.is_type<Vector3>())
         {
@@ -384,7 +424,7 @@ void TutorialApp::RenderImGuiCubeRTTR()
             if (ImGui::IsItemDeactivatedAfterEdit())
             {
                 v.x = arr[0]; v.y = arr[1]; v.z = arr[2];
-                prop.set_value(m_Cube, v);
+                prop.set_value(*m_pSelectedObject, v);
             }
         }
         else if (value.is_type<Vector4>())
@@ -394,7 +434,7 @@ void TutorialApp::RenderImGuiCubeRTTR()
             if (ImGui::ColorEdit4(name.c_str(), arr))
             {
                 v.x = arr[0]; v.y = arr[1]; v.z = arr[2]; v.w = arr[3];
-                prop.set_value(m_Cube, v);
+                prop.set_value(*m_pSelectedObject, v);
             }
         }
 
@@ -406,6 +446,12 @@ void TutorialApp::RenderImGuiCubeRTTR()
 		}
     }
     ImGui::End();
+
+	// 월드 하이어라키 창 렌더링 (왼쪽)
+	RenderWorldHierarchy();
+
+	// 오브젝트 팔레트 창 렌더링 (왼쪽 아래)
+	RenderObjectPalette();
 
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -444,6 +490,13 @@ LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 	return __super::WndProc(hWnd, message, wParam, lParam);
 }
 
+void TutorialApp::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker,
+	const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker)
+{
+	// 카메라로 입력 전달
+	m_Camera.OnInputProcess(KeyState, KeyTracker, MouseState, MouseTracker);
+}
+
 void TutorialApp::SaveScene()
 {
 	// 파일 저장 다이얼로그
@@ -467,21 +520,9 @@ void TutorialApp::SaveScene()
 
 	std::string filename = szFile;
 
-	// JSON 형식으로 저장
-	FILE* file = nullptr;
-	fopen_s(&file, filename.c_str(), "w");
-	if (file)
+	// GameWorld를 파일에 저장
+	if (m_World.SaveToFile(filename))
 	{
-		fprintf(file, "{\n");
-		fprintf(file, "  \"Name\": \"%s\",\n", m_Cube.m_Name.c_str());
-		fprintf(file, "  \"Position\": [%.3f, %.3f, %.3f],\n", m_Cube.m_Position.x, m_Cube.m_Position.y, m_Cube.m_Position.z);
-		fprintf(file, "  \"Rotation\": [%.3f, %.3f, %.3f],\n", m_Cube.m_Rotation.x, m_Cube.m_Rotation.y, m_Cube.m_Rotation.z);
-		fprintf(file, "  \"Scale\": [%.3f, %.3f, %.3f],\n", m_Cube.m_Scale.x, m_Cube.m_Scale.y, m_Cube.m_Scale.z);
-		fprintf(file, "  \"Color\": [%.3f, %.3f, %.3f, %.3f],\n", m_Cube.m_Color.x, m_Cube.m_Color.y, m_Cube.m_Color.z, m_Cube.m_Color.w);
-		fprintf(file, "  \"Value\": %.3f\n", m_Cube.m_Value);
-		fprintf(file, "}\n");
-		fclose(file);
-
 		MessageBoxA(m_hWnd, "Scene saved successfully!", "Save", MB_OK | MB_ICONINFORMATION);
 	}
 	else
@@ -512,32 +553,18 @@ void TutorialApp::LoadScene()
 
 	std::string filename = szFile;
 
-	FILE* file = nullptr;
-	fopen_s(&file, filename.c_str(), "r");
-	if (file)
+	// GameWorld를 파일에서 로드
+	if (m_World.LoadFromFile(filename))
 	{
-		char name[256];
-		Vector3 pos, rot, scale;
-		Vector4 color;
-		float value;
-
-		// 간단한 JSON 파싱 (실제로는 JSON 라이브러리 사용 권장)
-		fscanf_s(file, "{\n");
-		fscanf_s(file, "  \"Name\": \"%[^\"]\",\n", name, (unsigned)_countof(name));
-		fscanf_s(file, "  \"Position\": [%f, %f, %f],\n", &pos.x, &pos.y, &pos.z);
-		fscanf_s(file, "  \"Rotation\": [%f, %f, %f],\n", &rot.x, &rot.y, &rot.z);
-		fscanf_s(file, "  \"Scale\": [%f, %f, %f],\n", &scale.x, &scale.y, &scale.z);
-		fscanf_s(file, "  \"Color\": [%f, %f, %f, %f],\n", &color.x, &color.y, &color.z, &color.w);
-		fscanf_s(file, "  \"Value\": %f\n", &value);
-
-		m_Cube.m_Name = name;
-		m_Cube.m_Position = pos;
-		m_Cube.m_Rotation = rot;
-		m_Cube.m_Scale = scale;
-		m_Cube.m_Color = color;
-		m_Cube.m_Value = value;
-
-		fclose(file);
+		// 첫 번째 객체를 선택
+		if (m_World.GetCount() > 0)
+		{
+			m_pSelectedObject = m_World.GetGameObjects()[0];
+		}
+		else
+		{
+			m_pSelectedObject = nullptr;
+		}
 
 		MessageBoxA(m_hWnd, "Scene loaded successfully!", "Load", MB_OK | MB_ICONINFORMATION);
 	}
@@ -545,4 +572,141 @@ void TutorialApp::LoadScene()
 	{
 		MessageBoxA(m_hWnd, "Failed to load scene! File not found.", "Error", MB_OK | MB_ICONERROR);
 	}
+}
+
+void TutorialApp::RenderObjectPalette()
+{
+	ImGui::Begin("Object Palette");
+
+	ImGui::Text("Available Objects:");
+	ImGui::Separator();
+
+	// 사용 가능한 오브젝트 타입 목록 표시
+	for (const std::string& typeName : m_AvailableObjectTypes)
+	{
+		ImGui::Button(typeName.c_str(), ImVec2(150, 30));
+
+		// 드래그 소스 설정
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+		{
+			// 페이로드로 타입 이름 전달
+			ImGui::SetDragDropPayload("GAMEOBJECT_TYPE", typeName.c_str(), typeName.size() + 1);
+			ImGui::Text("Create %s", typeName.c_str());
+			ImGui::EndDragDropSource();
+		}
+	}
+
+	// World Hierarchy 창에서도 드롭 가능하도록
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT_TYPE"))
+		{
+			const char* typeName = (const char*)payload->Data;
+			GameObject* newObj = m_World.CreateGameObjectByTypeName(typeName);
+			if (newObj)
+			{
+				newObj->m_Position = Vector3(0.0f, 0.0f, 0.0f);
+				m_pSelectedObject = newObj;
+
+				CubeObject* cube = dynamic_cast<CubeObject*>(newObj);
+				if (cube)
+				{
+					static int cubeCount = 0;
+					cube->m_Name = "Cube_" + std::to_string(cubeCount++);
+				}
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
+
+	ImGui::End();
+}
+
+void TutorialApp::RenderWorldHierarchy()
+{
+	ImGui::Begin("World Hierarchy");
+
+	ImGui::Text("Scene Objects (%zu)", m_World.GetCount());
+	ImGui::Separator();
+
+	// 모든 GameObject 목록 표시
+	const auto& objects = m_World.GetGameObjects();
+	for (size_t i = 0; i < objects.size(); ++i)
+	{
+		GameObject* obj = objects[i];
+		if (!obj)
+			continue;
+
+		// 선택된 오브젝트는 하이라이트
+		bool isSelected = (obj == m_pSelectedObject);
+
+		// 오브젝트 이름 가져오기 (CubeObject의 경우)
+		std::string objectName = "GameObject";
+		CubeObject* cube = dynamic_cast<CubeObject*>(obj);
+		if (cube && !cube->m_Name.empty())
+		{
+			objectName = cube->m_Name;
+		}
+		else
+		{
+			// RTTR로 타입 이름 가져오기
+			using namespace rttr;
+			type t = type::get(*obj);
+			objectName = t.get_name().to_string() + "_" + std::to_string(i);
+		}
+
+		// Selectable 항목으로 표시
+		if (ImGui::Selectable(objectName.c_str(), isSelected))
+		{
+			m_pSelectedObject = obj;
+		}
+
+		// 우클릭 메뉴
+		if (ImGui::BeginPopupContextItem())
+		{
+			if (ImGui::MenuItem("Delete"))
+			{
+				m_World.DestroyGameObject(obj);
+				if (m_pSelectedObject == obj)
+					m_pSelectedObject = nullptr;
+			}
+			ImGui::EndPopup();
+		}
+	}
+
+	// World Hierarchy 창의 빈 공간에 드롭 가능
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT_TYPE"))
+		{
+			const char* typeName = (const char*)payload->Data;
+			GameObject* newObj = m_World.CreateGameObjectByTypeName(typeName);
+			if (newObj)
+			{
+				newObj->m_Position = Vector3(0.0f, 0.0f, 0.0f);
+				m_pSelectedObject = newObj;
+
+				CubeObject* cube = dynamic_cast<CubeObject*>(newObj);
+				if (cube)
+				{
+					static int cubeCount = 0;
+					cube->m_Name = "Cube_" + std::to_string(cubeCount++);
+				}
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
+
+	ImGui::End();
+}
+
+void TutorialApp::HandleGameViewDrop()
+{
+	// 현재는 사용하지 않음 - World Hierarchy에서 드롭 처리
+}
+
+Vector3 TutorialApp::GetWorldPositionFromMouse(const ImVec2& mousePos)
+{
+	// 현재는 사용하지 않음
+	return Vector3(0.0f, 0.0f, 0.0f);
 }
