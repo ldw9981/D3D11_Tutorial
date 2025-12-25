@@ -446,11 +446,28 @@ LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 void TutorialApp::SaveScene()
 {
-	// TODO: 파일 다이얼로그를 통해 저장 경로 선택
-	// 임시로 고정 경로 사용
-	std::string filename = "scene.json";
+	// 파일 저장 다이얼로그
+	OPENFILENAMEA ofn = {};
+	char szFile[260] = {};
 
-	// JSON 형식으로 저장 (간단한 구현)
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = m_hWnd;
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = "JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+	ofn.lpstrDefExt = "json";
+
+	if (GetSaveFileNameA(&ofn) != TRUE)
+		return; // 사용자가 취소함
+
+	std::string filename = szFile;
+
+	// JSON 형식으로 저장
 	FILE* file = nullptr;
 	fopen_s(&file, filename.c_str(), "w");
 	if (file)
@@ -475,9 +492,25 @@ void TutorialApp::SaveScene()
 
 void TutorialApp::LoadScene()
 {
-	// TODO: 파일 다이얼로그를 통해 로드 경로 선택
-	// 임시로 고정 경로 사용
-	std::string filename = "scene.json";
+	// 파일 열기 다이얼로그
+	OPENFILENAMEA ofn = {};
+	char szFile[260] = {};
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = m_hWnd;
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = "JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+	if (GetOpenFileNameA(&ofn) != TRUE)
+		return; // 사용자가 취소함
+
+	std::string filename = szFile;
 
 	FILE* file = nullptr;
 	fopen_s(&file, filename.c_str(), "r");
