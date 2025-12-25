@@ -7,10 +7,15 @@
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
+#include <directxtk/PrimitiveBatch.h>
+#include <directxtk/VertexTypes.h>
+#include <directxtk/Effects.h>
+#include <directxtk/CommonStates.h>
 
 #include "CubeObject.h"
 #include "GameWorld.h"
 #include "../Common/Camera.h"
+#include "../Common/DebugDraw.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX::SimpleMath;
@@ -55,6 +60,14 @@ public:
 	// 오브젝트 팔레트
 	std::vector<std::string> m_AvailableObjectTypes;
 
+	// 디버그 레이 정보
+	bool m_bShowDebugRay = false;
+	Vector3 m_DebugRayOrigin;
+	Vector3 m_DebugRayDirection;
+
+	// 디버그 렌더링 옵션
+	bool m_bShowAABB = false;
+
 	bool OnInitialize() override;
 	void OnUninitialize() override;
 	void OnUpdate() override;
@@ -72,7 +85,13 @@ public:
 
 	void RenderImGuiCubeRTTR();
 	void RenderObjectPalette();
+	void RenderObjectPaletteContent();
 	void RenderWorldHierarchy();
+	void RenderWorldHierarchyContent();
+	void RenderSceneView();
+	void RenderSceneViewContent();
+	void RenderInspector();
+	void RenderInspectorContent();
 	void HandleGameViewDrop();
 	Vector3 GetWorldPositionFromMouse(const ImVec2& mousePos);
 
