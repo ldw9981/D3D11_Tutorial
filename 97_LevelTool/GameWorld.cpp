@@ -1,4 +1,4 @@
-#include "GameWorld.h"
+﻿#include "GameWorld.h"
 #include "CubeObject.h"
 #include <rttr/registration>
 #include <algorithm>
@@ -67,7 +67,7 @@ GameObject* GameWorld::RayCast(const Ray& ray, float* outDistance) const
 		float distance = 0.0f;
 		if (ray.Intersects(obj->m_AABB, distance))
 		{
-			// 더 가까운 충돌체만 기록
+			// 가장 가까운 충돌체만 기록
 			if (distance < minDistance)
 			{
 				minDistance = distance;
@@ -97,7 +97,7 @@ GameObject* GameWorld::CreateGameObjectByTypeName(const std::string& typeName)
 	if (!obj.is_valid())
 		return nullptr;
 
-	// as_raw_ptr로 등록했으므로 포인터로 직접 추출
+	// as_raw_ptr로 등록되었으므로 포인터로 직접 추출
 	GameObject* gameObj = obj.get_value<GameObject*>();
 
 	if (gameObj != nullptr)
@@ -121,7 +121,7 @@ void GameWorld::DestroyGameObject(GameObject* obj)
 bool GameWorld::SaveToFile(const std::string& filename) const
 {
 	nlohmann::json root;
-	
+
 	root["objects"] = nlohmann::json::array();
 
 	for (GameObject* obj : m_GameObjects)
@@ -165,7 +165,7 @@ bool GameWorld::LoadFromFile(const std::string& filename)
 	file.close();
 
 	// 기존 객체들 모두 제거
-	Clear();		
+	Clear();
 
 	// 오브젝트 로드
 	if (!root.contains("objects") || !root["objects"].is_array())
@@ -180,8 +180,7 @@ bool GameWorld::LoadFromFile(const std::string& filename)
 		GameObject* obj = CreateGameObjectByTypeName(typeName);
 		if (!obj)
 			continue;
-
-		// GameObject의 Deserialize 함수 호출
+	
 		obj->Deserialize(objJson);
 	}
 

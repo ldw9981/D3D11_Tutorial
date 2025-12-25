@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 #include "GameObject.h"
 #include <directxtk/SimpleMath.h>
 
-// Windows.h�� min/max ��ũ�θ� �����Ͽ� RTTR���� �浹 ����
+
 #ifdef min
 #undef min
 #endif
@@ -22,7 +22,7 @@ public:
 	CubeObject();
 	~CubeObject();
 
-	// ����
+	// 속성
 	Vector4 m_Color;
 	std::string m_Name;
 	float m_Value;

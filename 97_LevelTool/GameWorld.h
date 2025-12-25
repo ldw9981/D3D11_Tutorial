@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "GameObject.h"
 #include <DirectXCollision.h>
 #include <vector>
@@ -11,7 +11,7 @@ class GameWorld
 public:
 	GameWorld();
 	~GameWorld();
-	
+
 
 	// GameObject 추가
 	void Insert(GameObject* gameObject);

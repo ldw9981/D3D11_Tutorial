@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <directxtk/SimpleMath.h>
 #include <DirectXCollision.h>
 #include <string>
