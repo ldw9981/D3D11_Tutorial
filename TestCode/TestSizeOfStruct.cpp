@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "SizeOfStruct.h"
+#include "TestSizeOfStruct.h"
 
 struct MyMixedData
 {
@@ -76,7 +76,7 @@ struct alignas(16) Test4  // alignas가 적용된 멤버가 있으면 그 멤버의 정렬 요구�
 	alignas(16) Math::Vector2 d;	// 이멤버는 정렬 요구사항이 16바이트 
 };
 
-void SizeOfStruct()
+void TestSizeOfStruct()
 {
 	std::cout <<  "\nMyMixedData" << " " << sizeof(MyMixedData) << "\n";
 	std::cout << "alignof(MyMixedData) = " << alignof(MyMixedData) << "\n";

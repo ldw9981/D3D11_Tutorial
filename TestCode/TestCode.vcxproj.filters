@@ -15,16 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TestCode.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="SizeOfStruct.cpp">
+    <ClCompile Include="TestSizeOfStruct.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Math.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="TestReflection.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,10 +35,13 @@
     <ClInclude Include="pch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="SizeOfStruct.h">
+    <ClInclude Include="TestSizeOfStruct.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Math.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="TestReflection.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
