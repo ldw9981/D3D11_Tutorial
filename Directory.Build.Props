@@ -3,9 +3,12 @@
   <PropertyGroup>
     <!-- vcpkg 루트 경로: 필요시 본인 경로로 수정 -->
     <VcpkgRoot>D:\vcpkg</VcpkgRoot>
-    
+
     <TripletStatic>x64-windows-static-md</TripletStatic>
     <TripletDynamic>x64-windows</TripletDynamic>
+
+    <!-- UTF-8 지원 (콘솔 및 출력 창) -->
+    <UseUTF8>true</UseUTF8>
   </PropertyGroup>
 
   <!-- ==== 공통: 포함 디렉터리 및 전처리기 정의 ==== -->

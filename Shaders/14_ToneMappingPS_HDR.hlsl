@@ -11,7 +11,7 @@ float3 Rec709ToRec2020(float3 color)
     return mul(conversion, color);
 }
 
-// PQ´Â 10,000nit ±âÁØ ÀÌ¹Ç·Î
+// PQëŠ” 10,000nit ê¸°ì¤€ ì´ë¯€ë¡œ
 // color_for_PQ = linear01 * (displayMaxNits / 10000.0)
 float3 LinearToST2084(float3 color)
 {
@@ -26,16 +26,16 @@ float3 LinearToST2084(float3 color)
 
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {
-     // 1. ¼±Çü HDR °ª ·Îµå (Nits °ªÀ¸·Î °£ÁÖ)
-    float3 C_linear709 = gSceneHDR.Sample(gSamplerLinear, input.uv).rgb;  
-    float3 C_exposure = C_linear709 * pow(2.0f, gExposure);    
+     // 1. ë Œë”ë§ëœ HDR ìƒ‰ ë¡œë“œ (Nits ìŠ¤ì¼€ì¼ë¡œ í‘œí˜„)
+    float3 C_linear709 = gSceneHDR.Sample(gSamplerLinear, input.uv).rgb;
+    float3 C_exposure = C_linear709 * pow(2.0f, gExposure);
     float3 C_tonemapped = ACESFilm(C_exposure);
-  
+
     const float st2084max = 10000.0;
     const float hdrScalar = gMaxHDRNits / st2084max;
-    float3 C_Rec2020 = Rec709ToRec2020(C_tonemapped); 
+    float3 C_Rec2020 = Rec709ToRec2020(C_tonemapped);
     float3 C_ST2084 = LinearToST2084(C_Rec2020 * hdrScalar);
-    
-    // ÃÖÁ¾ PQ ÀÎÄÚµùµÈ °ª [0.0, 1.0]À» R10G10B10A2_UNORM ¹é¹öÆÛ¿¡ Ãâ·Â
+
+    // ìµœì¢… PQ ì¸ì½”ë”©ëœ ê°’ [0.0, 1.0]ì„ R10G10B10A2_UNORM ë°±ë²„í¼ì— ì¶œë ¥
     return float4(C_ST2084, 1.0);
 }

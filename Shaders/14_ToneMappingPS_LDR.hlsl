@@ -8,7 +8,7 @@ float3 LinearToSRGB(float3 linearColor)
 
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {
-     // 1. ¼±Çü HDR °ª ·Îµå (Nits °ªÀ¸·Î °£ÁÖ)
+     // 1. ë Œë”ë§ëœ HDR ìƒ‰ ë¡œë“œ (Nits ìŠ¤ì¼€ì¼ë¡œ í‘œí˜„)
     float3 C_linear709 = gSceneHDR.Sample(gSamplerLinear, input.uv).rgb;
     
     float exposureFactor = pow(2.0f, gExposure);

@@ -3,16 +3,24 @@
 
 #include "pch.h"
 #include <iostream>
+#include <Windows.h>
 
 #include "TestSizeOfStruct.h"
 #include "Math.h"
-#include "TestReflection.h"
+#include "TestRttr.h"
 
 int main()
 {
+	// 콘솔 코드페이지를 UTF-8로 설정
+	SetConsoleOutputCP(CP_UTF8);
+	OutputDebugStringW(L"Test한글!\n");
+	OutputDebugStringA("Test한글!\n");
+	
+	
+
 	TestSizeOfStruct();
 	TestMath();
-	TestReflection();
+	TestRttr();
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴

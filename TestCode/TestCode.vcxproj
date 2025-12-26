@@ -144,13 +144,13 @@
     </ClCompile>
     <ClCompile Include="TestSizeOfStruct.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="TestReflection.cpp" />
+    <ClCompile Include="TestRttr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TestSizeOfStruct.h" />
-    <ClInclude Include="TestReflection.h" />
+    <ClInclude Include="TestRttr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
