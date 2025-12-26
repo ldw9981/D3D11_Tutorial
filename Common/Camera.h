@@ -9,10 +9,10 @@ class Camera : public InputProcesser
 {
 public:
 	Camera();
-	Vector3 m_Rotation;	//  z´Â Roll ÇØ´çµÇ¹Ç·Î »ç¿ë¾ÈÇÔ.
+	Vector3 m_Rotation;	//  zëŠ” Roll í•´ë‹¹ë˜ë¯€ë¡œ ì‚¬ìš©ì•ˆí•¨.
 	Vector3 m_PositionInitial = { 0,0,-30 };
 	Vector3 m_Position;
-	Matrix m_World;		// ÀÓ½ÃÄ«¸Ş¶ó´Â ºÎ¸ğ°¡ ¾øÀ¸´Ï ¿ùµåÇà·Ä·Î ¹Ù·Î ¼³Á¤ 
+	Matrix m_World;		// ì„ì‹œì¹´ë©”ë¼ëŠ” ë¶€ëª¨ê°€ ì—†ìœ¼ë‹ˆ ì›”ë“œí–‰ë ¬ë¡œ ë°”ë¡œ ì„¤ì • 
 	Vector3 m_InputVector;
 
 	float m_MoveSpeed = 20.0f;		

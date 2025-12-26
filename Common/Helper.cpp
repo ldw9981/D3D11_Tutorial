@@ -7,7 +7,7 @@
 #include <dxgidebug.h>
 #include <dxgi1_3.h>    // DXGIGetDebugInterface1
 
-#pragma comment(lib, "dxguid.lib")  // ²À ÇÊ¿ä!
+#pragma comment(lib, "dxguid.lib")  // ê¼­ í•„ìš”!
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
@@ -26,13 +26,13 @@ std::string GetComErrorStringA(HRESULT hr)
 	_com_error err(hr);
 	LPCWSTR wMsg = err.ErrorMessage();
 
-	// ÇÊ¿äÇÑ ¹öÆÛ Å©±â °è»ê
+	// í•„ìš”í•œ ë²„í¼ í¬ê¸° ê³„ì‚°
 	int len = WideCharToMultiByte(CP_ACP, 0, wMsg, -1, nullptr, 0, nullptr, nullptr);
 
 	std::string msg(len, '\0');
 	WideCharToMultiByte(CP_ACP, 0, wMsg, -1, &msg[0], len, nullptr, nullptr);
 
-	return msg; // std::stringÀ¸·Î ¹ÝÈ¯ (³»ºÎÀûÀ¸·Î LPCSTR°ú È£È¯)
+	return msg; // std::stringìœ¼ë¡œ ë°˜í™˜ (ë‚´ë¶€ì ìœ¼ë¡œ LPCSTRê³¼ í˜¸í™˜)
 }
 
 
@@ -96,10 +96,10 @@ void CheckDXGIDebug()
 
 	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
 	{
-		// ÇöÀç »ì¾ÆÀÖ´Â DXGI/D3D °´Ã¼ Ãâ·Â
+		// í˜„ìž¬ ì‚´ì•„ìžˆëŠ” DXGI/D3D ê°ì²´ ì¶œë ¥
 		pDebug->ReportLiveObjects(
-			DXGI_DEBUG_ALL,                 // ¸ðµç DXGI/D3D ÄÄÆ÷³ÍÆ®
-			DXGI_DEBUG_RLO_ALL              // ÀüÃ¼ ¸®Æ÷Æ® ¿É¼Ç
+			DXGI_DEBUG_ALL,                 // ëª¨ë“  DXGI/D3D ì»´í¬ë„ŒíŠ¸
+			DXGI_DEBUG_RLO_ALL              // ì „ì²´ ë¦¬í¬íŠ¸ ì˜µì…˜
 		);
 
 		pDebug->Release();

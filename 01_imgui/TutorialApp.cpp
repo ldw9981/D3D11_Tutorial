@@ -24,19 +24,19 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
-	//±×¸±´ë»ó ¼³Á¤
+	//ê·¸ë¦´ëŒ€ìƒ ì„¤ì •
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 
 	const float clear_color_with_alpha[4] = { m_ClearColor.x , m_ClearColor.y , m_ClearColor.z, m_ClearColor.w };	
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, clear_color_with_alpha);
 	/////
-	// ÀÌ°÷¿¡ ¸ÕÀú ·»´õ¸µ ÇÕ´Ï´Ù.
+	// ì´ê³³ì— ë¨¼ì € ë Œë”ë§ í•©ë‹ˆë‹¤.
 	// DeviceContext::Draw(); 
 	/////
 
 	/////////////////
-	//¾Æ·¡ºÎÅÍ´Â ImGUI
+	//ì•„ëž˜ë¶€í„°ëŠ” ImGUI
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -94,33 +94,33 @@ void TutorialApp::OnRender()
 	ImGui::Render();	
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-	// ½º¿ÒÃ¼ÀÎ ±³Ã¼.
+	// ìŠ¤ì™‘ì²´ì¸ êµì²´.
 	m_pSwapChain->Present(0, 0);
 }
 
 bool TutorialApp::InitD3D()
 {
-	// °á°ú°ª.
+	// ê²°ê³¼ê°’.
 	HRESULT hr=0;
 
 	// Create DXGI factory
 	HR_T(CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)m_pDXGIFactory.GetAddressOf()));
 	HR_T(m_pDXGIFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter**>(m_pDXGIAdapter.GetAddressOf())));
 
-	// ½º¿ÒÃ¼ÀÎ ¼Ó¼º ¼³Á¤ ±¸Á¶Ã¼ »ý¼º.
+	// ìŠ¤ì™‘ì²´ì¸ ì†ì„± ì„¤ì • êµ¬ì¡°ì²´ ìƒì„±.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
 	swapDesc.BufferCount = 1;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = m_hWnd;	// ½º¿ÒÃ¼ÀÎ Ãâ·ÂÇÒ Ã¢ ÇÚµé °ª.
-	swapDesc.Windowed = true;		// Ã¢ ¸ðµå ¿©ºÎ ¼³Á¤.
+	swapDesc.OutputWindow = m_hWnd;	// ìŠ¤ì™‘ì²´ì¸ ì¶œë ¥í•  ì°½ í•¸ë“¤ ê°’.
+	swapDesc.Windowed = true;		// ì°½ ëª¨ë“œ ì—¬ë¶€ ì„¤ì •.
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	// ¹é¹öÆÛ(ÅØ½ºÃ³)ÀÇ °¡·Î/¼¼·Î Å©±â ¼³Á¤.
+	// ë°±ë²„í¼(í…ìŠ¤ì²˜)ì˜ ê°€ë¡œ/ì„¸ë¡œ í¬ê¸° ì„¤ì •.
 	swapDesc.BufferDesc.Width = m_ClientWidth;
 	swapDesc.BufferDesc.Height = m_ClientHeight;
-	// È­¸é ÁÖ»çÀ² ¼³Á¤.
+	// í™”ë©´ ì£¼ì‚¬ìœ¨ ì„¤ì •.
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-	// »ùÇÃ¸µ °ü·Ã ¼³Á¤.
+	// ìƒ˜í”Œë§ ê´€ë ¨ ì„¤ì •.
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
@@ -128,16 +128,16 @@ bool TutorialApp::InitD3D()
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// 1. ÀåÄ¡ »ý¼º.   2.½º¿ÒÃ¼ÀÎ »ý¼º. 3.ÀåÄ¡ ÄÁÅØ½ºÆ® »ý¼º.
+	// 1. ìž¥ì¹˜ ìƒì„±.   2.ìŠ¤ì™‘ì²´ì¸ ìƒì„±. 3.ìž¥ì¹˜ ì»¨í…ìŠ¤íŠ¸ ìƒì„±.
 	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
 
-	// 4. ·»´õÅ¸°Ùºä »ý¼º.  (¹é¹öÆÛ¸¦ ÀÌ¿ëÇÏ´Â ·»´õÅ¸°Ùºä)	
+	// 4. ë Œë”íƒ€ê²Ÿë·° ìƒì„±.  (ë°±ë²„í¼ë¥¼ ì´ìš©í•˜ëŠ” ë Œë”íƒ€ê²Ÿë·°)	
 	ID3D11Texture2D* pBackBufferTexture = nullptr;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // ÅØ½ºÃ³´Â ³»ºÎ ÂüÁ¶ Áõ°¡
-	SAFE_RELEASE(pBackBufferTexture);	//¿ÜºÎ ÂüÁ¶ Ä«¿îÆ®¸¦ °¨¼Ò½ÃÅ²´Ù.
-	// ·»´õ Å¸°ÙÀ» ÃÖÁ¾ Ãâ·Â ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // í…ìŠ¤ì²˜ëŠ” ë‚´ë¶€ ì°¸ì¡° ì¦ê°€
+	SAFE_RELEASE(pBackBufferTexture);	//ì™¸ë¶€ ì°¸ì¡° ì¹´ìš´íŠ¸ë¥¼ ê°ì†Œì‹œí‚¨ë‹¤.
+	// ë Œë” íƒ€ê²Ÿì„ ìµœì¢… ì¶œë ¥ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•©ë‹ˆë‹¤.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);	
 	return true;
 }
@@ -153,7 +153,7 @@ void TutorialApp::UninitD3D()
 bool TutorialApp::InitImGUI()
 {
 	/*
-		ImGui ÃÊ±âÈ­.
+		ImGui ì´ˆê¸°í™”.
 	*/
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();

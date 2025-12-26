@@ -20,19 +20,19 @@ void CreateDump(EXCEPTION_POINTERS* pExceptionPointers)
 	wchar_t moduleFileName[MAX_PATH]={0,};
 	std::wstring fileName(moduleFileName);
 	if (GetModuleFileName(NULL, moduleFileName, MAX_PATH) == 0) {
-		fileName = L"unknown_project.dmp"; // ¿¹¿Ü »óÈ² Ã³¸®
+		fileName = L"unknown_project.dmp"; // ì˜ˆì™¸ ìƒí™© ì²˜ë¦¬
 	}
 	else
 	{
 		fileName = std::wstring(moduleFileName);
 		size_t pos = fileName.find_last_of(L"\\/");
 		if (pos != std::wstring::npos) {
-			fileName = fileName.substr(pos + 1); // ÆÄÀÏ ÀÌ¸§ ÃßÃâ
+			fileName = fileName.substr(pos + 1); // íŒŒì¼ ì´ë¦„ ì¶”ì¶œ
 		}
 
 		pos = fileName.find_last_of(L'.');
 		if (pos != std::wstring::npos) {
-			fileName = fileName.substr(0, pos); // È®ÀåÀÚ Á¦°Å
+			fileName = fileName.substr(0, pos); // í™•ìž¥ìž ì œê±°
 		}
 		fileName += L".dmp";
 	}
@@ -82,16 +82,16 @@ bool GameApp::Initialize()
 {
 	SetUnhandledExceptionFilter(CustomExceptionHandler);
 
-	// µî·Ï
+	// ë“±ë¡
 	RegisterClassExW(&m_wcex);
 
-	// ¿øÇÏ´Â Å©±â°¡ Á¶Á¤µÇ¾î ¸®ÅÏ
+	// ì›í•˜ëŠ” í¬ê¸°ê°€ ì¡°ì •ë˜ì–´ ë¦¬í„´
 	RECT rcClient = { 0, 0, (LONG)m_ClientWidth, (LONG)m_ClientHeight };
 	AdjustWindowRect(&rcClient, WS_OVERLAPPEDWINDOW, FALSE);
 
-	//»ý¼º
+	//ìƒì„±
 	m_hWnd = CreateWindowW(m_szWindowClass, m_szTitle, WS_OVERLAPPEDWINDOW,
-		100, 100,	// ½ÃÀÛ À§Ä¡
+		100, 100,	// ì‹œìž‘ ìœ„ì¹˜
 		rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
 		nullptr, nullptr, m_hInstance, nullptr);
 
@@ -100,7 +100,7 @@ bool GameApp::Initialize()
 		return false;
 	}
 
-	// À©µµ¿ì º¸ÀÌ±â
+	// ìœˆë„ìš° ë³´ì´ê¸°
 	ShowWindow(m_hWnd,SW_SHOW);
 	UpdateWindow(m_hWnd);
 
@@ -135,7 +135,7 @@ bool GameApp::Run(HINSTANCE hInstance)
 		if (!Initialize())
 			return false;
 
-		// PeekMessage ¸Þ¼¼Áö°¡ ÀÖÀ¸¸é true,¾øÀ¸¸é false
+		// PeekMessage ë©”ì„¸ì§€ê°€ ìžˆìœ¼ë©´ true,ì—†ìœ¼ë©´ false
 		while (TRUE)
 		{
 			if (PeekMessage(&m_msg, NULL, 0, 0, PM_REMOVE))
@@ -143,8 +143,8 @@ bool GameApp::Run(HINSTANCE hInstance)
 				if (m_msg.message == WM_QUIT)
 					break;
 
-				//À©µµ¿ì ¸Þ½ÃÁö Ã³¸® 
-				TranslateMessage(&m_msg); // Å°ÀÔ·Â°ü·Ã ¸Þ½ÃÁö º¯È¯  WM_KEYDOWN -> WM_CHAR
+				//ìœˆë„ìš° ë©”ì‹œì§€ ì²˜ë¦¬ 
+				TranslateMessage(&m_msg); // í‚¤ìž…ë ¥ê´€ë ¨ ë©”ì‹œì§€ ë³€í™˜  WM_KEYDOWN -> WM_CHAR
 				DispatchMessage(&m_msg);
 			}
 			else
@@ -186,10 +186,10 @@ void GameApp::OnInputProcess(const Keyboard::State& KeyState, const Keyboard::Ke
 }
 
 //
-//  ÇÔ¼ö: WndProc(HWND, UINT, WPARAM, LPARAM)
+//  í•¨ìˆ˜: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
-//  ¿ëµµ: ÁÖ Ã¢ÀÇ ¸Þ½ÃÁö¸¦ Ã³¸®ÇÕ´Ï´Ù.
-//  WM_DESTROY  - Á¾·á ¸Þ½ÃÁö¸¦ °Ô½ÃÇÏ°í ¹ÝÈ¯ÇÕ´Ï´Ù.
+//  ìš©ë„: ì£¼ ì°½ì˜ ë©”ì‹œì§€ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤.
+//  WM_DESTROY  - ì¢…ë£Œ ë©”ì‹œì§€ë¥¼ ê²Œì‹œí•˜ê³  ë°˜í™˜í•©ë‹ˆë‹¤.
 //
 //
 LRESULT CALLBACK GameApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

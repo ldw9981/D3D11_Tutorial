@@ -13,15 +13,15 @@ public:
 	GameApp();
 	virtual ~GameApp();
 	
-	static HWND m_hWnd;		//ÀÚÁÖÇÊ¿äÇÏ´Ï Æ÷ÀÎÅÍ °£Á¢Á¢±ÙÀ» ÇÇÇÏ±âÀ§ÇØ Á¤Àû¸â¹ö·Î ¸¸µé¾ú´Ù.
-	static GameApp* m_pInstance;			// »ı¼ºÀÚ¿¡¼­ ÀÎ½ºÅÏ½º Æ÷ÀÎÅÍ¸¦ º¸°üÇÑ´Ù.
+	static HWND m_hWnd;		//ìì£¼í•„ìš”í•˜ë‹ˆ í¬ì¸í„° ê°„ì ‘ì ‘ê·¼ì„ í”¼í•˜ê¸°ìœ„í•´ ì •ì ë©¤ë²„ë¡œ ë§Œë“¤ì—ˆë‹¤.
+	static GameApp* m_pInstance;			// ìƒì„±ìì—ì„œ ì¸ìŠ¤í„´ìŠ¤ í¬ì¸í„°ë¥¼ ë³´ê´€í•œë‹¤.
 	
 public:
 	HACCEL m_hAccelTable;
 	MSG m_msg;
-	HINSTANCE m_hInstance;                                // ÇöÀç ÀÎ½ºÅÏ½ºÀÔ´Ï´Ù.
-	WCHAR m_szTitle[MAX_LOADSTRING];                  // Á¦¸ñ Ç¥½ÃÁÙ ÅØ½ºÆ®ÀÔ´Ï´Ù.
-	WCHAR m_szWindowClass[MAX_LOADSTRING];            // ±âº» Ã¢ Å¬·¡½º ÀÌ¸§ÀÔ´Ï´Ù.
+	HINSTANCE m_hInstance;                                // í˜„ì¬ ì¸ìŠ¤í„´ìŠ¤ì…ë‹ˆë‹¤.
+	WCHAR m_szTitle[MAX_LOADSTRING];                  // ì œëª© í‘œì‹œì¤„ í…ìŠ¤íŠ¸ì…ë‹ˆë‹¤.
+	WCHAR m_szWindowClass[MAX_LOADSTRING];            // ê¸°ë³¸ ì°½ í´ë˜ìŠ¤ ì´ë¦„ì…ë‹ˆë‹¤.
 	WNDCLASSEXW m_wcex;
 	float m_previousTime;
 	float m_currentTime;
@@ -32,19 +32,19 @@ public:
 	UINT m_ClientHeight;
 	Camera m_Camera;
 public:
-	// À©µµ¿ì Á¤º¸ µî·Ï,»ı¼º,º¸ÀÌ±â ÇÑ´Ù.
+	// ìœˆë„ìš° ì •ë³´ ë“±ë¡,ìƒì„±,ë³´ì´ê¸° í•œë‹¤.
 	bool Initialize();
 	void Uninitialize();
 	bool Run(HINSTANCE hInstance);
-	void Update(); // »ó¼Ó ¹ŞÀº Å¬·¡½º¿¡¼­ ±¸Çö
-	void Render(); // »ó¼Ó ¹ŞÀº Å¬·¡½º¿¡¼­ ±¸Çö
+	void Update(); // ìƒì† ë°›ì€ í´ë˜ìŠ¤ì—ì„œ êµ¬í˜„
+	void Render(); // ìƒì† ë°›ì€ í´ë˜ìŠ¤ì—ì„œ êµ¬í˜„
 	virtual void OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker,
 		const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker);
 	virtual LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);		
 	void SetClientSize(UINT width, UINT height) { m_ClientWidth = width; m_ClientHeight = height; }
 	void SetWindowTitle(const WCHAR* title);
 public:	
-	virtual bool OnInitialize() { return true; }; // »ó¼Ó ¹ŞÀº Å¬·¡½º¿¡¼­ ±¸Çö
+	virtual bool OnInitialize() { return true; }; // ìƒì† ë°›ì€ í´ë˜ìŠ¤ì—ì„œ êµ¬í˜„
 	virtual void OnRender() {};
 	virtual void OnUpdate() {};
 	virtual void OnUninitialize() {};

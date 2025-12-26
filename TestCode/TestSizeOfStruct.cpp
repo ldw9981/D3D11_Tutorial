@@ -10,15 +10,15 @@ struct MyMixedData
 	bool d;  //1Byte?
 };
 /*
-int a: 4¹ÙÀÌÆ®, 4¹ÙÀÌÆ® Á¤·Ä
-float b: 4¹ÙÀÌÆ®, 4¹ÙÀÌÆ® Á¤·Ä
-char d: 1¹ÙÀÌÆ®, 1¹ÙÀÌÆ® Á¤·Ä
-bool e: 1¹ÙÀÌÆ®, 1¹ÙÀÌÆ® Á¤·Ä
-MyMixedDataÀÇ °¡Àå Å« Á¤·Ä ¿ä±¸»çÇ×Àº int¿Í floatÀÇ 4¹ÙÀÌÆ®. µû¶ó¼­ ÀüÃ¼ Å©±â´Â 4ÀÇ ¹è¼ö°¡ µÇ¾î¾ß ÇÕ´Ï´Ù.
-ÇöÀç Å©±â: 4 + 4 + 1 + 1 = 10¹ÙÀÌÆ®
+int a: 4ë°”ì´íŠ¸, 4ë°”ì´íŠ¸ ì •ë ¬
+float b: 4ë°”ì´íŠ¸, 4ë°”ì´íŠ¸ ì •ë ¬
+char d: 1ë°”ì´íŠ¸, 1ë°”ì´íŠ¸ ì •ë ¬
+bool e: 1ë°”ì´íŠ¸, 1ë°”ì´íŠ¸ ì •ë ¬
+MyMixedDataì˜ ê°€ìž¥ í° ì •ë ¬ ìš”êµ¬ì‚¬í•­ì€ intì™€ floatì˜ 4ë°”ì´íŠ¸. ë”°ë¼ì„œ ì „ì²´ í¬ê¸°ëŠ” 4ì˜ ë°°ìˆ˜ê°€ ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
+í˜„ìž¬ í¬ê¸°: 4 + 4 + 1 + 1 = 10ë°”ì´íŠ¸
 
-10¹ÙÀÌÆ®´Â 4ÀÇ ¹è¼ö°¡ ¾Æ´Ï¹Ç·Î, ÄÄÆÄÀÏ·¯´Â ¸¶Áö¸·¿¡ 2¹ÙÀÌÆ®ÀÇ ÆÐµùÀ» Ãß°¡ÇÕ´Ï´Ù.
-MyMixedDataÀÇ ÃÖÁ¾ Å©±â´Â 12¹ÙÀÌÆ®ÀÔ´Ï´Ù.
+10ë°”ì´íŠ¸ëŠ” 4ì˜ ë°°ìˆ˜ê°€ ì•„ë‹ˆë¯€ë¡œ, ì»´íŒŒì¼ëŸ¬ëŠ” ë§ˆì§€ë§‰ì— 2ë°”ì´íŠ¸ì˜ íŒ¨ë”©ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
+MyMixedDataì˜ ìµœì¢… í¬ê¸°ëŠ” 12ë°”ì´íŠ¸ìž…ë‹ˆë‹¤.
 */
 
 
@@ -28,52 +28,52 @@ struct MyMixedData2
 	double b;	// 8Byte
 };
 /*
-MyMixedData a : Å©±â 12¹ÙÀÌÆ®, Á¤·Ä ¿ä±¸»çÇ× 4¹ÙÀÌÆ®(°¡Àå Å« ¸â¹öÀÇ Á¤·Ä ¿ä±¸»çÇ×À» µû¸§).
-double c : Å©±â 8¹ÙÀÌÆ®, Á¤·Ä ¿ä±¸»çÇ× 8¹ÙÀÌÆ®.
-MyMixedData2ÀÇ °¡Àå Å« Á¤·Ä ¿ä±¸»çÇ×Àº double cÀÇ 8¹ÙÀÌÆ®. µû¶ó¼­ ÀüÃ¼ Å©±â´Â 8ÀÇ ¹è¼ö°¡ µÇ¾î¾ß ÇÕ´Ï´Ù.
+MyMixedData a : í¬ê¸° 12ë°”ì´íŠ¸, ì •ë ¬ ìš”êµ¬ì‚¬í•­ 4ë°”ì´íŠ¸(ê°€ìž¥ í° ë©¤ë²„ì˜ ì •ë ¬ ìš”êµ¬ì‚¬í•­ì„ ë”°ë¦„).
+double c : í¬ê¸° 8ë°”ì´íŠ¸, ì •ë ¬ ìš”êµ¬ì‚¬í•­ 8ë°”ì´íŠ¸.
+MyMixedData2ì˜ ê°€ìž¥ í° ì •ë ¬ ìš”êµ¬ì‚¬í•­ì€ double cì˜ 8ë°”ì´íŠ¸. ë”°ë¼ì„œ ì „ì²´ í¬ê¸°ëŠ” 8ì˜ ë°°ìˆ˜ê°€ ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
 
-MyMixedData a : 12¹ÙÀÌÆ®
-double c : 8¹ÙÀÌÆ®.a°¡ 12¹ÙÀÌÆ®¸¦ Â÷ÁöÇßÀ¸¹Ç·Î c´Â ¿ÀÇÁ¼Â 12¿¡¼­ ½ÃÀÛÇÕ´Ï´Ù.
-ÇÏÁö¸¸ doubleÀº 8ÀÇ ¹è¼ö ÁÖ¼Ò¿¡ Á¤·ÄµÇ¾î¾ß ÇÏ¹Ç·Î, ¿ÀÇÁ¼Â 12´Â ¿Ã¹Ù¸£Áö ¾Ê½À´Ï´Ù.
+MyMixedData a : 12ë°”ì´íŠ¸
+double c : 8ë°”ì´íŠ¸.aê°€ 12ë°”ì´íŠ¸ë¥¼ ì°¨ì§€í–ˆìœ¼ë¯€ë¡œ cëŠ” ì˜¤í”„ì…‹ 12ì—ì„œ ì‹œìž‘í•©ë‹ˆë‹¤.
+í•˜ì§€ë§Œ doubleì€ 8ì˜ ë°°ìˆ˜ ì£¼ì†Œì— ì •ë ¬ë˜ì–´ì•¼ í•˜ë¯€ë¡œ, ì˜¤í”„ì…‹ 12ëŠ” ì˜¬ë°”ë¥´ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
-ÄÄÆÄÀÏ·¯´Â a¿Í c »çÀÌ¿¡ 4¹ÙÀÌÆ®ÀÇ ÆÐµùÀ» Ãß°¡ÇÏ¿© cÀÇ ½ÃÀÛ ÁÖ¼Ò¸¦ 16À¸·Î ¸ÂÃä´Ï´Ù.
-ÇöÀç Å©±â : 12 + 4(ÆÐµù)+8 = 24¹ÙÀÌÆ®
-24¹ÙÀÌÆ®´Â 8ÀÇ ¹è¼öÀÌ¹Ç·Î Ãß°¡ÀûÀÎ ÆÐµù ¾øÀÌ ±¸Á¶Ã¼ Å©±â´Â 24¹ÙÀÌÆ®°¡ µË´Ï´Ù.
+ì»´íŒŒì¼ëŸ¬ëŠ” aì™€ c ì‚¬ì´ì— 4ë°”ì´íŠ¸ì˜ íŒ¨ë”©ì„ ì¶”ê°€í•˜ì—¬ cì˜ ì‹œìž‘ ì£¼ì†Œë¥¼ 16ìœ¼ë¡œ ë§žì¶¥ë‹ˆë‹¤.
+í˜„ìž¬ í¬ê¸° : 12 + 4(íŒ¨ë”©)+8 = 24ë°”ì´íŠ¸
+24ë°”ì´íŠ¸ëŠ” 8ì˜ ë°°ìˆ˜ì´ë¯€ë¡œ ì¶”ê°€ì ì¸ íŒ¨ë”© ì—†ì´ êµ¬ì¡°ì²´ í¬ê¸°ëŠ” 24ë°”ì´íŠ¸ê°€ ë©ë‹ˆë‹¤.
 */
 
 struct Test1
 {
 	float a;	   	 // 4
-	Math::Vector4 b; // Å©±â´Â 16¹ÙÀÌÆ®, °æ°èÁ¤·Ä Å©±â´Â 4¹ÙÀÌÆ®
+	Math::Vector4 b; // í¬ê¸°ëŠ” 16ë°”ì´íŠ¸, ê²½ê³„ì •ë ¬ í¬ê¸°ëŠ” 4ë°”ì´íŠ¸
 	float c;         // 4
 };// 24 (4+16+4)
 
-struct alignas(16) Test2  // alignas(16) »ç¿ëÇÏ¸é ÀüÃ¼ Å©±â°¡ 16¹ÙÀÌÆ® ¹è¼ö·Î ¸ÂÃçÁü
+struct alignas(16) Test2  // alignas(16) ì‚¬ìš©í•˜ë©´ ì „ì²´ í¬ê¸°ê°€ 16ë°”ì´íŠ¸ ë°°ìˆ˜ë¡œ ë§žì¶°ì§
 {
 	float a;
 	float b;
-	Math::Vector3 c; // Å©±â´Â 12¹ÙÀÌÆ®, °æ°èÁ¤·Ä Å©±â´Â 4¹ÙÀÌÆ®
+	Math::Vector3 c; // í¬ê¸°ëŠ” 12ë°”ì´íŠ¸, ê²½ê³„ì •ë ¬ í¬ê¸°ëŠ” 4ë°”ì´íŠ¸
 	float d;
-	// µÚÂÊ¿¡ 8¹ÙÀÌÆ® ÆÐµù Ãß°¡
+	// ë’¤ìª½ì— 8ë°”ì´íŠ¸ íŒ¨ë”© ì¶”ê°€
 };
 
-// °°Àº ±¸Á¶Ã¼ ÀüÃ¼ 16¹ÙÀÌÆ® °æ°èÁ¤·ÄÀÌÁö¸¸ °¢ ¸â¹öÀÇ Á¤·Ä ¿ä±¸»çÇ×ÀÌ ´Ù¸£´Ù.
-struct alignas(16) Test3  // alignas°¡ Àû¿ëµÈ ¸â¹ö°¡ ÀÖÀ¸¸é ±× ¸â¹öÀÇ Á¤·Ä ¿ä±¸»çÇ×ÀÌ ±¸Á¶Ã¼ ÀüÃ¼¿¡ Àû¿ëµË´Ï´Ù.
+// ê°™ì€ êµ¬ì¡°ì²´ ì „ì²´ 16ë°”ì´íŠ¸ ê²½ê³„ì •ë ¬ì´ì§€ë§Œ ê° ë©¤ë²„ì˜ ì •ë ¬ ìš”êµ¬ì‚¬í•­ì´ ë‹¤ë¥´ë‹¤.
+struct alignas(16) Test3  // alignasê°€ ì ìš©ëœ ë©¤ë²„ê°€ ìžˆìœ¼ë©´ ê·¸ ë©¤ë²„ì˜ ì •ë ¬ ìš”êµ¬ì‚¬í•­ì´ êµ¬ì¡°ì²´ ì „ì²´ì— ì ìš©ë©ë‹ˆë‹¤.
 {
 	float a;	   	 
 	float b;
-	// bÀÌÈÄ¿¡ 8¹ÙÀÌÆ® ÆÐµù Ãß°¡
-	alignas(16) Math::Vector3 c;	// ÀÌ¸â¹ö´Â Á¤·Ä ¿ä±¸»çÇ×ÀÌ 16¹ÙÀÌÆ® 
+	// bì´í›„ì— 8ë°”ì´íŠ¸ íŒ¨ë”© ì¶”ê°€
+	alignas(16) Math::Vector3 c;	// ì´ë©¤ë²„ëŠ” ì •ë ¬ ìš”êµ¬ì‚¬í•­ì´ 16ë°”ì´íŠ¸ 
 	float d;         
 };  
 
-struct alignas(16) Test4  // alignas°¡ Àû¿ëµÈ ¸â¹ö°¡ ÀÖÀ¸¸é ±× ¸â¹öÀÇ Á¤·Ä ¿ä±¸»çÇ×ÀÌ ±¸Á¶Ã¼ ÀüÃ¼¿¡ Àû¿ëµË´Ï´Ù.
+struct alignas(16) Test4  // alignasê°€ ì ìš©ëœ ë©¤ë²„ê°€ ìžˆìœ¼ë©´ ê·¸ ë©¤ë²„ì˜ ì •ë ¬ ìš”êµ¬ì‚¬í•­ì´ êµ¬ì¡°ì²´ ì „ì²´ì— ì ìš©ë©ë‹ˆë‹¤.
 {
 	float a;
 	float b;
-	// bÀÌÈÄ¿¡ 8¹ÙÀÌÆ® ÆÐµù Ãß°¡
-	alignas(16) Math::Vector2 c;	// ÀÌ¸â¹ö´Â Á¤·Ä ¿ä±¸»çÇ×ÀÌ 16¹ÙÀÌÆ® 
-	alignas(16) Math::Vector2 d;	// ÀÌ¸â¹ö´Â Á¤·Ä ¿ä±¸»çÇ×ÀÌ 16¹ÙÀÌÆ® 
+	// bì´í›„ì— 8ë°”ì´íŠ¸ íŒ¨ë”© ì¶”ê°€
+	alignas(16) Math::Vector2 c;	// ì´ë©¤ë²„ëŠ” ì •ë ¬ ìš”êµ¬ì‚¬í•­ì´ 16ë°”ì´íŠ¸ 
+	alignas(16) Math::Vector2 d;	// ì´ë©¤ë²„ëŠ” ì •ë ¬ ìš”êµ¬ì‚¬í•­ì´ 16ë°”ì´íŠ¸ 
 };
 
 void TestSizeOfStruct()

@@ -16,20 +16,20 @@ class TutorialApp :
 	public GameApp
 {
 public:
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀ» ±¸¼ºÇÏ´Â ÇÊ¼ö °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º 
-	ID3D11Device* m_pDevice = nullptr;						// µğ¹ÙÀÌ½º	
-	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// Áï½Ã µğ¹ÙÀÌ½º ÄÁÅØ½ºÆ®
-	IDXGISwapChain* m_pSwapChain = nullptr;					// ½º¿ÒÃ¼ÀÎ
-	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ·»´õ¸µ Å¸°Ùºä
-	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;  // ±íÀÌ°ª Ã³¸®¸¦ À§ÇÑ ‰X½º½ºÅÙ½Ç ºä
-	ID3D11SamplerState* m_pSamplerLinear = nullptr;			// ¼±Çü ÇÊÅÍ¸µ »ùÇÃ·¯ »óÅÂ °´Ã¼
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì„ êµ¬ì„±í•˜ëŠ” í•„ìˆ˜ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤ 
+	ID3D11Device* m_pDevice = nullptr;						// ë””ë°”ì´ìŠ¤	
+	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// ì¦‰ì‹œ ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+	IDXGISwapChain* m_pSwapChain = nullptr;					// ìŠ¤ì™‘ì²´ì¸
+	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ë Œë”ë§ íƒ€ê²Ÿë·°
+	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;  // ê¹Šì´ê°’ ì²˜ë¦¬ë¥¼ ìœ„í•œ ëŠìŠ¤ìŠ¤í…ì‹¤ ë·°
+	ID3D11SamplerState* m_pSamplerLinear = nullptr;			// ì„ í˜• í•„í„°ë§ ìƒ˜í”ŒëŸ¬ ìƒíƒœ ê°ì²´
 
-	// HDR ·»´õ Å¸°Ù °ü·Ã °´Ã¼µé.
-	ID3D11Texture2D* m_pHdrRenderTarget = nullptr;	// ·»´õ Å¸°Ù ÅØ½ºÃ³
+	// HDR ë Œë” íƒ€ê²Ÿ ê´€ë ¨ ê°ì²´ë“¤.
+	ID3D11Texture2D* m_pHdrRenderTarget = nullptr;	// ë Œë” íƒ€ê²Ÿ í…ìŠ¤ì²˜
 	ID3D11RenderTargetView* m_pHdrRenderTargetView = nullptr; 
 	ID3D11ShaderResourceView* m_pHdrShaderResourceView = nullptr;
 
-	// Quad ·»´õ¸µ¿¡ ÇÊ¿äÇÑ °´Ã¼µé.
+	// Quad ë Œë”ë§ì— í•„ìš”í•œ ê°ì²´ë“¤.
 	ID3D11VertexShader* m_pQuadVertexShader = nullptr;
 
 	ID3D11PixelShader* m_pPS_ToneMappingLDR = nullptr;
@@ -42,7 +42,7 @@ public:
 	ID3D11Buffer* m_pQuadIndexBuffer = nullptr;
 	int m_nQuadIndices = 0;
 
-	// Cube ·»´õ¸µ¿¡ ÇÊ¿äÇÑ °´Ã¼µé.
+	// Cube ë Œë”ë§ì— í•„ìš”í•œ ê°ì²´ë“¤.
 	ID3D11VertexShader* m_pCubeVertexShader = nullptr;
 	ID3D11PixelShader* m_pCubePixelShader = nullptr;
 	ID3D11PixelShader* m_pSolidPixelShader = nullptr;
@@ -58,26 +58,26 @@ public:
 
 	DXGI_FORMAT m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	ID3D11Buffer* m_pLightConstantBuffer = nullptr;
-	Matrix                m_World;				// ¿ùµåÁÂÇ¥°è °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
-	Matrix                m_View;				// ºäÁÂÇ¥°è °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
-	Matrix                m_Projection;			// ´ÜÀ§ÀåÄ¡ÁÂÇ¥°è( Normalized Device Coordinate) °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
+	Matrix                m_World;				// ì›”ë“œì¢Œí‘œê³„ ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
+	Matrix                m_View;				// ë·°ì¢Œí‘œê³„ ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
+	Matrix                m_Projection;			// ë‹¨ìœ„ì¥ì¹˜ì¢Œí‘œê³„( Normalized Device Coordinate) ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
 
 
-	XMFLOAT4 m_LightColors[2] =		// ¶óÀÌÆ® »ö»ó
+	XMFLOAT4 m_LightColors[2] =		// ë¼ì´íŠ¸ ìƒ‰ìƒ
 	{
 		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f)
 	};
 
-	XMFLOAT4 m_InitialLightDirs[2] =	// ÃÊ±â ¶óÀÌÆ® ¹æÇâ
+	XMFLOAT4 m_InitialLightDirs[2] =	// ì´ˆê¸° ë¼ì´íŠ¸ ë°©í–¥
 	{
 		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
 		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 	};	
-	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// °è»êµÈ ¶óÀÌÆ® ¹æÇâ
+	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// ê³„ì‚°ëœ ë¼ì´íŠ¸ ë°©í–¥
 	float m_rotationAngle = 0.0f;
 
-	float m_LightIntensity[2] = { 0.1f,1.0f };	// ¶óÀÌÆ® ¼¼±â
+	float m_LightIntensity[2] = { 0.1f,1.0f };	// ë¼ì´íŠ¸ ì„¸ê¸°
 	float m_MonitorMaxNits=0.0f;
 	float m_Exposure = 0.0f;
 	bool m_isHDRSupported = false;
@@ -92,7 +92,7 @@ public:
 	void CreateSwapChainAndBackBuffer(DXGI_FORMAT format);
 	bool CheckHDRSupportAndGetMaxNits(float& outMaxLuminance, DXGI_FORMAT& outFormat);
 
-	bool InitScene();		// ½¦ÀÌ´õ,¹öÅØ½º,ÀÎµ¦½º
+	bool InitScene();		// ì‰ì´ë”,ë²„í…ìŠ¤,ì¸ë±ìŠ¤
 	void UninitScene();
 	
 	bool InitImGUI();

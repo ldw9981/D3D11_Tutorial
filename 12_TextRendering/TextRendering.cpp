@@ -1,4 +1,4 @@
-﻿// TextRendering.cpp : 애플리케이션에 대한 진입점을 정의합니다.
+// TextRendering.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
 
 #include "pch.h"
@@ -803,7 +803,7 @@ void RenderText(std::wstring text)
 	//Draw the Text
 	D2DRenderTarget->DrawText(
 		printText.c_str(),
-		wcslen(printText.c_str()),
+		static_cast<UINT32>(wcslen(printText.c_str())),
 		TextFormat,
 		layoutRect,
 		Brush
@@ -923,7 +923,7 @@ int messageloop() {
 			DrawScene();
 		}
 	}
-	return msg.wParam;
+	return static_cast<int>(msg.wParam);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd,

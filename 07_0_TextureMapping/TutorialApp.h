@@ -12,31 +12,31 @@ class TutorialApp :
     public GameApp
 {
 public:
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀ» ±¸¼ºÇÏ´Â ÇÊ¼ö °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º
-	ID3D11Device* m_pDevice = nullptr;						// µğ¹ÙÀÌ½º
-	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// Áï½Ã µğ¹ÙÀÌ½º ÄÁÅØ½ºÆ®
-	IDXGISwapChain* m_pSwapChain = nullptr;					// ½º¿ÒÃ¼ÀÎ
-	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ·»´õ¸µ Å¸°Ùºä
-	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;	// ±íÀÌ/½ºÅÙ½Ç ºä
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì„ êµ¬ì„±í•˜ëŠ” í•„ìˆ˜ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤
+	ID3D11Device* m_pDevice = nullptr;						// ë””ë°”ì´ìŠ¤
+	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// ì¦‰ì‹œ ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+	IDXGISwapChain* m_pSwapChain = nullptr;					// ìŠ¤ì™‘ì²´ì¸
+	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ë Œë”ë§ íƒ€ê²Ÿë·°
+	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;	// ê¹Šì´/ìŠ¤í…ì‹¤ ë·°
 
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ Àû¿ëÇÏ´Â ¸®¼Ò½º °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º
-	ID3D11Buffer* m_pVertexBuffer = nullptr;			// Á¤Á¡ ¹öÆÛ.
-	ID3D11Buffer* m_pIndexBuffer = nullptr;				// ÀÎµ¦½º ¹öÆÛ.
-	ID3D11VertexShader* m_pVertexShader = nullptr;		// Á¤Á¡ ¼ÎÀÌ´õ.
-	ID3D11PixelShader* m_pPixelShader = nullptr;		// ÇÈ¼¿ ¼ÎÀÌ´õ.
-	ID3D11PixelShader* m_pPixelShaderSolid = nullptr;	// ÇÈ¼¿ ¼ÎÀÌ´õ.
-	ID3D11InputLayout* m_pInputLayout = nullptr;		// ÀÔ·Â ·¹ÀÌ¾Æ¿ô.
-	ID3D11Buffer* m_pLightConstantBuffer = nullptr;			// »ó¼ö ¹öÆÛ.
-	ID3D11ShaderResourceView* m_pTextureRV = nullptr;	// ÅØ½ºÃ³ ¸®¼Ò½º ºä.
-	ID3D11SamplerState* m_pSamplerLinear = nullptr;		// »ùÇÃ·¯ »óÅÂ.
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— ì ìš©í•˜ëŠ” ë¦¬ì†ŒìŠ¤ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤
+	ID3D11Buffer* m_pVertexBuffer = nullptr;			// ì •ì  ë²„í¼.
+	ID3D11Buffer* m_pIndexBuffer = nullptr;				// ì¸ë±ìŠ¤ ë²„í¼.
+	ID3D11VertexShader* m_pVertexShader = nullptr;		// ì •ì  ì…°ì´ë”.
+	ID3D11PixelShader* m_pPixelShader = nullptr;		// í”½ì…€ ì…°ì´ë”.
+	ID3D11PixelShader* m_pPixelShaderSolid = nullptr;	// í”½ì…€ ì…°ì´ë”.
+	ID3D11InputLayout* m_pInputLayout = nullptr;		// ì…ë ¥ ë ˆì´ì•„ì›ƒ.
+	ID3D11Buffer* m_pLightConstantBuffer = nullptr;			// ìƒìˆ˜ ë²„í¼.
+	ID3D11ShaderResourceView* m_pTextureRV = nullptr;	// í…ìŠ¤ì²˜ ë¦¬ì†ŒìŠ¤ ë·°.
+	ID3D11SamplerState* m_pSamplerLinear = nullptr;		// ìƒ˜í”ŒëŸ¬ ìƒíƒœ.
 
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ Àû¿ëÇÏ´Â Á¤º¸
-	UINT m_VertexBufferStride = 0;						// ¹öÅØ½º ÇÏ³ªÀÇ Å©±â.
-	UINT m_VertexBufferOffset = 0;						// ¹öÅØ½º ¹öÆÛÀÇ ¿ÀÇÁ¼Â.
-	int m_nQuadIndices = 0;				// ÀÎµ¦½º °³¼ö.
-	Matrix	m_World;				// ¿ùµåÁÂÇ¥°è °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
-	Matrix  m_View;					// ºäÁÂÇ¥°è °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
-	Matrix  m_Projection;			// ´ÜÀ§ÀåÄ¡ÁÂÇ¥°è( Normalized Device Coordinate) °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— ì ìš©í•˜ëŠ” ì •ë³´
+	UINT m_VertexBufferStride = 0;						// ë²„í…ìŠ¤ í•˜ë‚˜ì˜ í¬ê¸°.
+	UINT m_VertexBufferOffset = 0;						// ë²„í…ìŠ¤ ë²„í¼ì˜ ì˜¤í”„ì…‹.
+	int m_nQuadIndices = 0;				// ì¸ë±ìŠ¤ ê°œìˆ˜.
+	Matrix	m_World;				// ì›”ë“œì¢Œí‘œê³„ ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
+	Matrix  m_View;					// ë·°ì¢Œí‘œê³„ ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
+	Matrix  m_Projection;			// ë‹¨ìœ„ì¥ì¹˜ì¢Œí‘œê³„( Normalized Device Coordinate) ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
 	Vector4	m_vMeshColor = {0.7f, 0.7f, 0.7f, 1.0f};
 
 	bool OnInitialize() override;
@@ -47,7 +47,7 @@ public:
 	bool InitD3D();			
 	void UninitD3D();
 
-	bool InitScene();		// ½¦ÀÌ´õ,¹öÅØ½º,ÀÎµ¦½º
+	bool InitScene();		// ì‰ì´ë”,ë²„í…ìŠ¤,ì¸ë±ìŠ¤
 	void UninitScene();		 
 };
 

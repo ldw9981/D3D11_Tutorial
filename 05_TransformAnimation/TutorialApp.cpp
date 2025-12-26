@@ -7,17 +7,17 @@
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "dxguid.lib")  // ²À ÇÊ¿ä!
+#pragma comment(lib, "dxguid.lib")  // ê¼­ í•„ìš”!
 #pragma comment(lib, "d3dcompiler.lib")
 
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
-// Á¤Á¡ ¼±¾ð.
+// ì •ì  ì„ ì–¸.
 struct CubeVertex
 {
-	Vector3 position;		// Á¤Á¡ À§Ä¡ Á¤º¸.
-	Vector4 color;			// Á¤Á¡ »ö»ó Á¤º¸.
+	Vector3 position;		// ì •ì  ìœ„ì¹˜ ì •ë³´.
+	Vector4 color;			// ì •ì  ìƒ‰ìƒ ì •ë³´.
 
 	CubeVertex(float x, float y, float z) : position(x, y, z) { }
 	CubeVertex(Vector3 position) : position(position) { }
@@ -65,17 +65,17 @@ void TutorialApp::OnUpdate()
 	XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
 	XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
-	m_World2 = mScale * mSpin * mTranslate * mOrbit; // ½ºÄÉÀÏÀû¿ë -> R(Á¦ÀÚ¸®YÈ¸Àü) -> ¿ÞÂÊÀ¸·Î ÀÌµ¿ ->  ±ËµµÈ¸Àü  
+	m_World2 = mScale * mSpin * mTranslate * mOrbit; // ìŠ¤ì¼€ì¼ì ìš© -> R(ì œìžë¦¬YíšŒì „) -> ì™¼ìª½ìœ¼ë¡œ ì´ë™ ->  ê¶¤ë„íšŒì „  
 }
 
 void TutorialApp::OnRender()
 {
-	//±×¸±´ë»ó ¼³Á¤
+	//ê·¸ë¦´ëŒ€ìƒ ì„¤ì •
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color); 	
-	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0); // µª½º¹öÆÛ 1.0f·Î ÃÊ±âÈ­.
+	m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0); // ëŽìŠ¤ë²„í¼ 1.0fë¡œ ì´ˆê¸°í™”.
 
 	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_VertexBufferStride, &m_VertexBufferOffset);
@@ -112,17 +112,17 @@ bool TutorialApp::InitD3D()
 {	
 	HRESULT hr = 0;
 
-	// 1. D3D11 Device,DeviceContext »ý¼º
+	// 1. D3D11 Device,DeviceContext ìƒì„±
 	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// ±×·¡ÇÈ Ä«µå ÇÏµå¿þ¾îÀÇ ½ºÆåÀ¸·Î È£È¯µÇ´Â °¡Àå ³ôÀº DirectX ±â´É·¹º§·Î »ý¼ºÇÏ¿© µå¶óÀÌ¹ö°¡ ÀÛµ¿ ÇÑ´Ù.
-	// ÀÎÅÍÆäÀÌ½º´Â Direc3D11 ÀÌÁö¸¸ GPUµå¶óÀÌ¹ö´Â D3D12 µå¶óÀÌ¹ö°¡ ÀÛµ¿ÇÒ¼öµµ ÀÖ´Ù.
-	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ºÎÅÍ ¼ø¼­´ë·Î ½ÃµµÇÑ´Ù.
+	// ê·¸ëž˜í”½ ì¹´ë“œ í•˜ë“œì›¨ì–´ì˜ ìŠ¤íŽ™ìœ¼ë¡œ í˜¸í™˜ë˜ëŠ” ê°€ìž¥ ë†’ì€ DirectX ê¸°ëŠ¥ë ˆë²¨ë¡œ ìƒì„±í•˜ì—¬ ë“œë¼ì´ë²„ê°€ ìž‘ë™ í•œë‹¤.
+	// ì¸í„°íŽ˜ì´ìŠ¤ëŠ” Direc3D11 ì´ì§€ë§Œ GPUë“œë¼ì´ë²„ëŠ” D3D12 ë“œë¼ì´ë²„ê°€ ìž‘ë™í• ìˆ˜ë„ ìžˆë‹¤.
+	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ë¶€í„° ìˆœì„œëŒ€ë¡œ ì‹œë„í•œë‹¤.
 		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0,D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
 	};
-	D3D_FEATURE_LEVEL actualFeatureLevel; // ÃÖÁ¾ ÇÇÃ³ ·¹º§À» ÀúÀåÇÒ º¯¼ö
+	D3D_FEATURE_LEVEL actualFeatureLevel; // ìµœì¢… í”¼ì²˜ ë ˆë²¨ì„ ì €ìž¥í•  ë³€ìˆ˜
 
 	HR_T(D3D11CreateDevice(
 		nullptr,
@@ -137,7 +137,7 @@ bool TutorialApp::InitD3D()
 		&m_pDeviceContext
 	));
 
-	// 2. ½º¿ÒÃ¼ÀÎ »ý¼ºÀ» À§ÇÑ DXGI Factory »ý¼º
+	// 2. ìŠ¤ì™‘ì²´ì¸ ìƒì„±ì„ ìœ„í•œ DXGI Factory ìƒì„±
 	UINT dxgiFactoryFlags = 0;
 #ifdef _DEBUG
 	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
@@ -152,15 +152,15 @@ bool TutorialApp::InitD3D()
 
 	swapChainDesc.Width = m_ClientWidth;
 	swapChainDesc.Height = m_ClientHeight;
-	// ÇÏ³ªÀÇ ÇÈ¼¿ÀÌ Ã¤³Î RGBA °¢ 8ºñÆ® Çü½ÄÀ¸·Î Ç¥ÇöµÇ¸ç 
-	// Unsigned Normalized Integer 8ºñÆ® Á¤¼ö(0~255)´Ü°è¸¦ ºÎµ¿¼Ò¼öÁ¡À¸·Î Á¤±ÔÈ­ÇÑ 0.0~1.0À¸·Î ¸ÅÇÎÇÏ¿© Ç¥ÇöÇÑ´Ù.
+	// í•˜ë‚˜ì˜ í”½ì…€ì´ ì±„ë„ RGBA ê° 8ë¹„íŠ¸ í˜•ì‹ìœ¼ë¡œ í‘œí˜„ë˜ë©° 
+	// Unsigned Normalized Integer 8ë¹„íŠ¸ ì •ìˆ˜(0~255)ë‹¨ê³„ë¥¼ ë¶€ë™ì†Œìˆ˜ì ìœ¼ë¡œ ì •ê·œí™”í•œ 0.0~1.0ìœ¼ë¡œ ë§¤í•‘í•˜ì—¬ í‘œí˜„í•œë‹¤.
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ½º¿Ò Ã¼ÀÎÀÇ ¹é ¹öÆÛ°¡ ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀÇ ÃÖÁ¾ Ãâ·Â ´ë»óÀ¸·Î »ç¿ë
-	swapChainDesc.SampleDesc.Count = 1;  // ¸ÖÆ¼»ùÇÃ¸µ »ç¿ë ¾ÈÇÔ
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ìŠ¤ì™‘ ì²´ì¸ì˜ ë°± ë²„í¼ê°€ ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì˜ ìµœì¢… ì¶œë ¥ ëŒ€ìƒìœ¼ë¡œ ì‚¬ìš©
+	swapChainDesc.SampleDesc.Count = 1;  // ë©€í‹°ìƒ˜í”Œë§ ì‚¬ìš© ì•ˆí•¨
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE; // Recommended for flip models
-	swapChainDesc.Stereo = FALSE;  // ½ºÅ×·¹¿À 3D ·»´õ¸µÀ» ºñÈ°¼ºÈ­
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ÀüÃ¼ È­¸é ÀüÈ¯À» Çã¿ë
-	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  Ã¢ÀÇ Å©±â¿Í ¹é ¹öÆÛÀÇ Å©±â°¡ ´Ù¸¦ ¶§. ¹é¹öÆÛ Å©±â¿¡ ¸Â°Ô ½ºÄÉÀÏ¸µ ÇÏÁö ¾Ê´Â´Ù.
+	swapChainDesc.Stereo = FALSE;  // ìŠ¤í…Œë ˆì˜¤ 3D ë Œë”ë§ì„ ë¹„í™œì„±í™”
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ì „ì²´ í™”ë©´ ì „í™˜ì„ í—ˆìš©
+	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  ì°½ì˜ í¬ê¸°ì™€ ë°± ë²„í¼ì˜ í¬ê¸°ê°€ ë‹¤ë¥¼ ë•Œ. ë°±ë²„í¼ í¬ê¸°ì— ë§žê²Œ ìŠ¤ì¼€ì¼ë§ í•˜ì§€ ì•ŠëŠ”ë‹¤.
 
 	HR_T(pFactory->CreateSwapChainForHwnd(
 		m_pDevice,
@@ -171,14 +171,14 @@ bool TutorialApp::InitD3D()
 		&m_pSwapChain
 	));
 
-	// 3. ·»´õÅ¸°Ù ºä »ý¼º.  ·»´õ Å¸°Ù ºä´Â "¿©±â´Ù°¡ ±×¸²À» ±×·Á¶ó"¶ó°í GPU¿¡°Ô ¾Ë·ÁÁÖ´Â ¿ªÇÒÀ» ÇÏ´Â °´Ã¼.
-	// ÅØ½ºÃ³¿Í ¿µ±¸Àû ¿¬°áµÇ´Â °´Ã¼ÀÌ´Ù. 
+	// 3. ë Œë”íƒ€ê²Ÿ ë·° ìƒì„±.  ë Œë” íƒ€ê²Ÿ ë·°ëŠ” "ì—¬ê¸°ë‹¤ê°€ ê·¸ë¦¼ì„ ê·¸ë ¤ë¼"ë¼ê³  GPUì—ê²Œ ì•Œë ¤ì£¼ëŠ” ì—­í• ì„ í•˜ëŠ” ê°ì²´.
+	// í…ìŠ¤ì²˜ì™€ ì˜êµ¬ì  ì—°ê²°ë˜ëŠ” ê°ì²´ì´ë‹¤. 
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	//ÅØ½ºÃ³´Â ³»ºÎ ÂüÁ¶ Áõ°¡
+	//í…ìŠ¤ì²˜ëŠ” ë‚´ë¶€ ì°¸ì¡° ì¦ê°€
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView)); 
 	
-	//5. ºäÆ÷Æ® ¼³Á¤.	
+	//5. ë·°í¬íŠ¸ ì„¤ì •.	
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -188,7 +188,7 @@ bool TutorialApp::InitD3D()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-	//6. ‰X½º&½ºÅÙ½Ç ºä »ý¼º
+	//6. ëŽŠìŠ¤&ìŠ¤í…ì‹¤ ë·° ìƒì„±
 	D3D11_TEXTURE2D_DESC descDepth = {};
 	descDepth.Width = m_ClientWidth;
 	descDepth.Height = m_ClientHeight;
@@ -224,17 +224,17 @@ void TutorialApp::UninitD3D()
 	SAFE_RELEASE(m_pSwapChain);
 }
 
-// 1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ
-// 2. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ý¼º 	
-// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ý¼º
-// 4. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÀÎµ¦½º ¹öÆÛ »ý¼º
-// 5. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ý¼º
-// 6. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ »ó¼ö ¹öÆÛ »ý¼º
+// 1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„
+// 2. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
+// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
+// 4. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ì¸ë±ìŠ¤ ë²„í¼ ìƒì„±
+// 5. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±
+// 6. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ìƒìˆ˜ ë²„í¼ ìƒì„±
 bool TutorialApp::InitScene()
 {
-	HRESULT hr=0; // °á°ú°ª.
+	HRESULT hr=0; // ê²°ê³¼ê°’.
 
-	// 1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ		
+	// 1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„		
 	CubeVertex vertices[] = // Local or Object or Model Space    position
 	{
 		{ Vector3(-1.0f, 1.0f, -1.0f),	Vector4(0.0f, 0.0f, 1.0f, 1.0f) },
@@ -253,14 +253,14 @@ bool TutorialApp::InitScene()
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0;
 	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = vertices;			// ¹è¿­ µ¥ÀÌÅÍ ÇÒ´ç.
+	vbData.pSysMem = vertices;			// ë°°ì—´ ë°ì´í„° í• ë‹¹.
 	HR_T(m_pDevice->CreateBuffer(&bd, &vbData, &m_pVertexBuffer));
 
-	m_VertexBufferStride = sizeof(CubeVertex); 	// ¹öÅØ½º ¹öÆÛÀÇ Á¤º¸
+	m_VertexBufferStride = sizeof(CubeVertex); 	// ë²„í…ìŠ¤ ë²„í¼ì˜ ì •ë³´
 	m_VertexBufferOffset = 0;
 	
-	// 2. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ý¼º 	
-	// ÀÔ·Â ·¹ÀÌ¾Æ¿ô.
+	// 2. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
+	// ìž…ë ¥ ë ˆì´ì•„ì›ƒ.
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -272,12 +272,12 @@ bool TutorialApp::InitScene()
 	HR_T( m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));
 
-	// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ý¼º
+	// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
 	HR_T( m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
 	SAFE_RELEASE(vertexShaderBuffer);
 
-	// 4. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÀÎµ¦½º ¹öÆÛ »ý¼º
+	// 4. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ì¸ë±ìŠ¤ ë²„í¼ ìƒì„±
 	WORD indices[] =
 	{
 		3,1,0,  2,1,3,
@@ -288,7 +288,7 @@ bool TutorialApp::InitScene()
 		6,4,5,  7,4,6,
 	};
 
-	// ÀÎµ¦½º °³¼ö ÀúÀå.
+	// ì¸ë±ìŠ¤ ê°œìˆ˜ ì €ìž¥.
 	m_nQuadIndices = ARRAYSIZE(indices);
 
 	bd.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
@@ -299,8 +299,8 @@ bool TutorialApp::InitScene()
 	ibData.pSysMem = indices;
 	HR_T(m_pDevice->CreateBuffer(&bd, &ibData, &m_pIndexBuffer));
 
-	// 5. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ý¼º	
-	ID3D10Blob* pixelShaderBuffer = nullptr;	// ÇÈ¼¿ ¼ÎÀÌ´õ ÄÚµå°¡ ÀúÀåµÉ ¹öÆÛ.
+	// 5. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±	
+	ID3D10Blob* pixelShaderBuffer = nullptr;	// í”½ì…€ ì…°ì´ë” ì½”ë“œê°€ ì €ìž¥ë  ë²„í¼.
 
 	HR_T( CompileShaderFromFile(L"../shaders/05_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T( m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
@@ -309,7 +309,7 @@ bool TutorialApp::InitScene()
 	SAFE_RELEASE(pixelShaderBuffer);
 
 
-	// 6. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ »ó¼ö ¹öÆÛ »ý¼º
+	// 6. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ìƒìˆ˜ ë²„í¼ ìƒì„±
 	bd = {};
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.ByteWidth = sizeof(ConstantBuffer);
@@ -318,7 +318,7 @@ bool TutorialApp::InitScene()
 	HR_T( m_pDevice->CreateBuffer(&bd, nullptr, &m_pLightConstantBuffer));
 
 	
-	// ½¦ÀÌ´õ¿¡ »ó¼ö¹öÆÛ¿¡ Àü´ÞÇÒ ½Ã½ºÅÛ ¸Þ¸ð¸® µ¥ÀÌÅÍ ÃÊ±âÈ­
+	// ì‰ì´ë”ì— ìƒìˆ˜ë²„í¼ì— ì „ë‹¬í•  ì‹œìŠ¤í…œ ë©”ëª¨ë¦¬ ë°ì´í„° ì´ˆê¸°í™”
 	m_World1 = XMMatrixIdentity();
 	m_World2 = XMMatrixIdentity();
 

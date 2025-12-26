@@ -15,11 +15,11 @@ using Microsoft::WRL::ComPtr;
 
 using namespace DirectX::SimpleMath;
 
-// Á¤Á¡ ¼±¾ð.
+// ì •ì  ì„ ì–¸.
 struct CubeVertex
 {
-	Vector3 position;		// Á¤Á¡ À§Ä¡ Á¤º¸.
-	Vector4 color;			// Á¤Á¡ »ö»ó Á¤º¸.
+	Vector3 position;		// ì •ì  ìœ„ì¹˜ ì •ë³´.
+	Vector4 color;			// ì •ì  ìƒ‰ìƒ ì •ë³´.
 
 	CubeVertex(float x, float y, float z) : position(x, y, z) { }
 	CubeVertex(Vector3 position) : position(position) { }
@@ -54,15 +54,15 @@ void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
-	//±×¸±´ë»ó ¼³Á¤
+	//ê·¸ë¦´ëŒ€ìƒ ì„¤ì •
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 
-	// È­¸é Ä¥ÇÏ±â.
+	// í™”ë©´ ì¹ í•˜ê¸°.
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
-	// Draw°è¿­ ÇÔ¼ö¸¦ È£ÃâÇÏ±âÀü¿¡ ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ ÇÊ¼ö ½ºÅ×ÀÌÁö ¼³Á¤À» ÇØ¾ßÇÑ´Ù.	
-	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // Á¤Á¡À» ÀÌ¾î¼­ ±×¸± ¹æ½Ä ¼³Á¤.
+	// Drawê³„ì—´ í•¨ìˆ˜ë¥¼ í˜¸ì¶œí•˜ê¸°ì „ì— ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— í•„ìˆ˜ ìŠ¤í…Œì´ì§€ ì„¤ì •ì„ í•´ì•¼í•œë‹¤.	
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // ì •ì ì„ ì´ì–´ì„œ ê·¸ë¦´ ë°©ì‹ ì„¤ì •.
 	m_pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &m_QuadVertextBufferStride, &m_QuadVertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout);
 	m_pDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
@@ -77,17 +77,17 @@ bool TutorialApp::InitD3D()
 {
 	HRESULT hr = 0;
 
-	// 1. D3D11 Device,DeviceContext »ý¼º
+	// 1. D3D11 Device,DeviceContext ìƒì„±
 	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// ±×·¡ÇÈ Ä«µå ÇÏµå¿þ¾îÀÇ ½ºÆåÀ¸·Î È£È¯µÇ´Â °¡Àå ³ôÀº DirectX ±â´É·¹º§·Î »ý¼ºÇÏ¿© µå¶óÀÌ¹ö°¡ ÀÛµ¿ ÇÑ´Ù.
-	// ÀÎÅÍÆäÀÌ½º´Â Direc3D11 ÀÌÁö¸¸ GPUµå¶óÀÌ¹ö´Â D3D12 µå¶óÀÌ¹ö°¡ ÀÛµ¿ÇÒ¼öµµ ÀÖ´Ù.
-	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ºÎÅÍ ¼ø¼­´ë·Î ½ÃµµÇÑ´Ù.
+	// ê·¸ëž˜í”½ ì¹´ë“œ í•˜ë“œì›¨ì–´ì˜ ìŠ¤íŽ™ìœ¼ë¡œ í˜¸í™˜ë˜ëŠ” ê°€ìž¥ ë†’ì€ DirectX ê¸°ëŠ¥ë ˆë²¨ë¡œ ìƒì„±í•˜ì—¬ ë“œë¼ì´ë²„ê°€ ìž‘ë™ í•œë‹¤.
+	// ì¸í„°íŽ˜ì´ìŠ¤ëŠ” Direc3D11 ì´ì§€ë§Œ GPUë“œë¼ì´ë²„ëŠ” D3D12 ë“œë¼ì´ë²„ê°€ ìž‘ë™í• ìˆ˜ë„ ìžˆë‹¤.
+	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ë¶€í„° ìˆœì„œëŒ€ë¡œ ì‹œë„í•œë‹¤.
 		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0,D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
 	};
-	D3D_FEATURE_LEVEL actualFeatureLevel; // ÃÖÁ¾ ÇÇÃ³ ·¹º§À» ÀúÀåÇÒ º¯¼ö
+	D3D_FEATURE_LEVEL actualFeatureLevel; // ìµœì¢… í”¼ì²˜ ë ˆë²¨ì„ ì €ìž¥í•  ë³€ìˆ˜
 
 	HR_T(D3D11CreateDevice(
 		nullptr,
@@ -102,7 +102,7 @@ bool TutorialApp::InitD3D()
 		&m_pDeviceContext
 	));
 
-	// 2. ½º¿ÒÃ¼ÀÎ »ý¼ºÀ» À§ÇÑ DXGI Factory »ý¼º
+	// 2. ìŠ¤ì™‘ì²´ì¸ ìƒì„±ì„ ìœ„í•œ DXGI Factory ìƒì„±
 	UINT dxgiFactoryFlags = 0;
 #ifdef _DEBUG
 	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
@@ -117,15 +117,15 @@ bool TutorialApp::InitD3D()
 
 	swapChainDesc.Width = m_ClientWidth;
 	swapChainDesc.Height = m_ClientHeight;
-	// ÇÏ³ªÀÇ ÇÈ¼¿ÀÌ Ã¤³Î RGBA °¢ 8ºñÆ® Çü½ÄÀ¸·Î Ç¥ÇöµÇ¸ç 
-	// Unsigned Normalized Integer 8ºñÆ® Á¤¼ö(0~255)´Ü°è¸¦ ºÎµ¿¼Ò¼öÁ¡À¸·Î Á¤±ÔÈ­ÇÑ 0.0~1.0À¸·Î ¸ÅÇÎÇÏ¿© Ç¥ÇöÇÑ´Ù.
+	// í•˜ë‚˜ì˜ í”½ì…€ì´ ì±„ë„ RGBA ê° 8ë¹„íŠ¸ í˜•ì‹ìœ¼ë¡œ í‘œí˜„ë˜ë©° 
+	// Unsigned Normalized Integer 8ë¹„íŠ¸ ì •ìˆ˜(0~255)ë‹¨ê³„ë¥¼ ë¶€ë™ì†Œìˆ˜ì ìœ¼ë¡œ ì •ê·œí™”í•œ 0.0~1.0ìœ¼ë¡œ ë§¤í•‘í•˜ì—¬ í‘œí˜„í•œë‹¤.
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ½º¿Ò Ã¼ÀÎÀÇ ¹é ¹öÆÛ°¡ ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀÇ ÃÖÁ¾ Ãâ·Â ´ë»óÀ¸·Î »ç¿ë
-	swapChainDesc.SampleDesc.Count = 1;  // ¸ÖÆ¼»ùÇÃ¸µ »ç¿ë ¾ÈÇÔ
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ìŠ¤ì™‘ ì²´ì¸ì˜ ë°± ë²„í¼ê°€ ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì˜ ìµœì¢… ì¶œë ¥ ëŒ€ìƒìœ¼ë¡œ ì‚¬ìš©
+	swapChainDesc.SampleDesc.Count = 1;  // ë©€í‹°ìƒ˜í”Œë§ ì‚¬ìš© ì•ˆí•¨
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE; // Recommended for flip models
-	swapChainDesc.Stereo = FALSE;  // ½ºÅ×·¹¿À 3D ·»´õ¸µÀ» ºñÈ°¼ºÈ­
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ÀüÃ¼ È­¸é ÀüÈ¯À» Çã¿ë
-	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  Ã¢ÀÇ Å©±â¿Í ¹é ¹öÆÛÀÇ Å©±â°¡ ´Ù¸¦ ¶§. ¹é¹öÆÛ Å©±â¿¡ ¸Â°Ô ½ºÄÉÀÏ¸µ ÇÏÁö ¾Ê´Â´Ù.
+	swapChainDesc.Stereo = FALSE;  // ìŠ¤í…Œë ˆì˜¤ 3D ë Œë”ë§ì„ ë¹„í™œì„±í™”
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ì „ì²´ í™”ë©´ ì „í™˜ì„ í—ˆìš©
+	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  ì°½ì˜ í¬ê¸°ì™€ ë°± ë²„í¼ì˜ í¬ê¸°ê°€ ë‹¤ë¥¼ ë•Œ. ë°±ë²„í¼ í¬ê¸°ì— ë§žê²Œ ìŠ¤ì¼€ì¼ë§ í•˜ì§€ ì•ŠëŠ”ë‹¤.
 
 	HR_T(pFactory->CreateSwapChainForHwnd(
 		m_pDevice,
@@ -136,13 +136,13 @@ bool TutorialApp::InitD3D()
 		&m_pSwapChain
 	));
 
-	// 3. ·»´õÅ¸°Ù ºä »ý¼º.  ·»´õ Å¸°Ù ºä´Â "¿©±â´Ù°¡ ±×¸²À» ±×·Á¶ó"¶ó°í GPU¿¡°Ô ¾Ë·ÁÁÖ´Â ¿ªÇÒÀ» ÇÏ´Â °´Ã¼.
-	// ÅØ½ºÃ³¿Í ¿µ±¸Àû ¿¬°áµÇ´Â °´Ã¼ÀÌ´Ù. 
+	// 3. ë Œë”íƒ€ê²Ÿ ë·° ìƒì„±.  ë Œë” íƒ€ê²Ÿ ë·°ëŠ” "ì—¬ê¸°ë‹¤ê°€ ê·¸ë¦¼ì„ ê·¸ë ¤ë¼"ë¼ê³  GPUì—ê²Œ ì•Œë ¤ì£¼ëŠ” ì—­í• ì„ í•˜ëŠ” ê°ì²´.
+	// í…ìŠ¤ì²˜ì™€ ì˜êµ¬ì  ì—°ê²°ë˜ëŠ” ê°ì²´ì´ë‹¤. 
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView));
 
-	// ºäÆ÷Æ® ¼³Á¤.	
+	// ë·°í¬íŠ¸ ì„¤ì •.	
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -151,7 +151,7 @@ bool TutorialApp::InitD3D()
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 
-	// ºäÆ÷Æ® ¼³Á¤.
+	// ë·°í¬íŠ¸ ì„¤ì •.
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 	return true;
 }
@@ -164,14 +164,14 @@ void TutorialApp::UninitD3D()
 	SAFE_RELEASE(m_pRenderTargetView);
 }
 
-// 1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ
-// 2. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ý¼º 	
-// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ý¼º
-// 4. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ý¼º
+// 1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„
+// 2. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
+// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
+// 4. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±
 bool TutorialApp::InitScene()
 {
-	HRESULT hr=0; // °á°ú°ª.
-	// 1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ
+	HRESULT hr=0; // ê²°ê³¼ê°’.
+	// 1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„
 	CubeVertex vertices[] =
 	{
 		CubeVertex(Vector3(0.0f,  0.5f, 0.5f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
@@ -183,34 +183,34 @@ bool TutorialApp::InitScene()
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;	
 	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = vertices;	// ¹è¿­ µ¥ÀÌÅÍ ÇÒ´ç
+	vbData.pSysMem = vertices;	// ë°°ì—´ ë°ì´í„° í• ë‹¹
 	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pVertexBuffer));	
 	m_QuadVertextBufferStride = sizeof(CubeVertex);
 	m_QuadVertextBufferOffset = 0;
 
-	// 2. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ý¼º	
+	// 2. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±	
 	ID3D10Blob* vertexShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"../Shaders/03_BasicVertexShader.hlsl", "main","vs_4_0",&vertexShaderBuffer));		
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
 
-	// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ý¼º 	
-	D3D11_INPUT_ELEMENT_DESC layout[] = // ÀÔ·Â ·¹ÀÌ¾Æ¿ô.
+	// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
+	D3D11_INPUT_ELEMENT_DESC layout[] = // ìž…ë ¥ ë ˆì´ì•„ì›ƒ.
 	{   // SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate	
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },// 4byte * 3 = 12byte ´ÙÀ½ÀÇ µ¥ÀÌÅÍ´Â 12byte ¶³¾îÁü.
-		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 } // 12 ´ë½Å D3D11_APPEND_ALIGNED_ELEMENT »ç¿ë °¡´É.
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },// 4byte * 3 = 12byte ë‹¤ìŒì˜ ë°ì´í„°ëŠ” 12byte ë–¨ì–´ì§.
+		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 } // 12 ëŒ€ì‹  D3D11_APPEND_ALIGNED_ELEMENT ì‚¬ìš© ê°€ëŠ¥.
 	};
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout));
 
-	SAFE_RELEASE(vertexShaderBuffer);	// ¹öÆÛ ´õÀÌ»ó ÇÊ¿ä¾øÀ½.
+	SAFE_RELEASE(vertexShaderBuffer);	// ë²„í¼ ë”ì´ìƒ í•„ìš”ì—†ìŒ.
 
-	// 4. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ý¼º
+	// 4. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±
 	ID3D10Blob* pixelShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"../Shaders/03_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T( m_pDevice->CreatePixelShader( pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPixelShader));
-	SAFE_RELEASE(pixelShaderBuffer);	// ¹öÆÛ ´õÀÌ»ó ÇÊ¿ä¾øÀ½.
+	SAFE_RELEASE(pixelShaderBuffer);	// ë²„í¼ ë”ì´ìƒ í•„ìš”ì—†ìŒ.
 	return true;
 }
 

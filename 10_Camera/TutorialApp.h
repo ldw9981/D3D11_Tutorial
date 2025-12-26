@@ -14,44 +14,44 @@ class TutorialApp :
 	public GameApp
 {
 public:
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀ» ±¸¼ºÇÏ´Â ÇÊ¼ö °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º 
-	ID3D11Device* m_pDevice = nullptr;						// µğ¹ÙÀÌ½º	
-	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// Áï½Ã µğ¹ÙÀÌ½º ÄÁÅØ½ºÆ®
-	IDXGISwapChain* m_pSwapChain = nullptr;					// ½º¿ÒÃ¼ÀÎ
-	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ·»´õ¸µ Å¸°Ùºä
-	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;  // ±íÀÌ°ª Ã³¸®¸¦ À§ÇÑ ‰X½º½ºÅÙ½Ç ºä
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì„ êµ¬ì„±í•˜ëŠ” í•„ìˆ˜ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤ 
+	ID3D11Device* m_pDevice = nullptr;						// ë””ë°”ì´ìŠ¤	
+	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// ì¦‰ì‹œ ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+	IDXGISwapChain* m_pSwapChain = nullptr;					// ìŠ¤ì™‘ì²´ì¸
+	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ë Œë”ë§ íƒ€ê²Ÿë·°
+	ID3D11DepthStencilView* m_pDepthStencilView = nullptr;  // ê¹Šì´ê°’ ì²˜ë¦¬ë¥¼ ìœ„í•œ ëŠìŠ¤ìŠ¤í…ì‹¤ ë·°
 
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ Àû¿ëÇÏ´Â  °´Ã¼¿Í Á¤º¸
-	ID3D11VertexShader* m_pVertexShader = nullptr;		// Á¤Á¡ ¼ÎÀÌ´õ.
-	ID3D11PixelShader* m_pPixelShader = nullptr;		// ÇÈ¼¿ ¼ÎÀÌ´õ.	
-	ID3D11PixelShader* m_pPixelShaderSolid = nullptr;	// ÇÈ¼¿ ¼ÎÀÌ´õ ¶óÀÌÆ® Ç¥½Ã¿ë.	
-	ID3D11InputLayout* m_pInputLayout = nullptr;		// ÀÔ·Â ·¹ÀÌ¾Æ¿ô.
-	ID3D11Buffer* m_pVertexBuffer = nullptr;			// ¹öÅØ½º ¹öÆÛ.
-	UINT m_VertexBufferStride = 0;						// ¹öÅØ½º ÇÏ³ªÀÇ Å©±â.
-	UINT m_VertexBufferOffset = 0;						// ¹öÅØ½º ¹öÆÛÀÇ ¿ÀÇÁ¼Â.
-	ID3D11Buffer* m_pIndexBuffer = nullptr;				// ¹öÅØ½º ¹öÆÛ.
-	int m_nQuadIndices = 0;									// ÀÎµ¦½º °³¼ö.
-	ID3D11Buffer* m_pLightConstantBuffer = nullptr;			// »ó¼ö ¹öÆÛ.
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— ì ìš©í•˜ëŠ”  ê°ì²´ì™€ ì •ë³´
+	ID3D11VertexShader* m_pVertexShader = nullptr;		// ì •ì  ì…°ì´ë”.
+	ID3D11PixelShader* m_pPixelShader = nullptr;		// í”½ì…€ ì…°ì´ë”.	
+	ID3D11PixelShader* m_pPixelShaderSolid = nullptr;	// í”½ì…€ ì…°ì´ë” ë¼ì´íŠ¸ í‘œì‹œìš©.	
+	ID3D11InputLayout* m_pInputLayout = nullptr;		// ì…ë ¥ ë ˆì´ì•„ì›ƒ.
+	ID3D11Buffer* m_pVertexBuffer = nullptr;			// ë²„í…ìŠ¤ ë²„í¼.
+	UINT m_VertexBufferStride = 0;						// ë²„í…ìŠ¤ í•˜ë‚˜ì˜ í¬ê¸°.
+	UINT m_VertexBufferOffset = 0;						// ë²„í…ìŠ¤ ë²„í¼ì˜ ì˜¤í”„ì…‹.
+	ID3D11Buffer* m_pIndexBuffer = nullptr;				// ë²„í…ìŠ¤ ë²„í¼.
+	int m_nQuadIndices = 0;									// ì¸ë±ìŠ¤ ê°œìˆ˜.
+	ID3D11Buffer* m_pLightConstantBuffer = nullptr;			// ìƒìˆ˜ ë²„í¼.
 
-	Matrix                m_World;				// ¿ùµåÁÂÇ¥°è °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
-	Matrix                m_View;				// ºäÁÂÇ¥°è °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
-	Matrix                m_Projection;			// ´ÜÀ§ÀåÄ¡ÁÂÇ¥°è( Normalized Device Coordinate) °ø°£À¸·Î º¯È¯À» À§ÇÑ Çà·Ä.
+	Matrix                m_World;				// ì›”ë“œì¢Œí‘œê³„ ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
+	Matrix                m_View;				// ë·°ì¢Œí‘œê³„ ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
+	Matrix                m_Projection;			// ë‹¨ìœ„ì¥ì¹˜ì¢Œí‘œê³„( Normalized Device Coordinate) ê³µê°„ìœ¼ë¡œ ë³€í™˜ì„ ìœ„í•œ í–‰ë ¬.
 
-	Matrix				  m_CameraInverse;		// Ä«¸Ş¶óÀÇ ¿ªÇà·Ä
+	Matrix				  m_CameraInverse;		// ì¹´ë©”ë¼ì˜ ì—­í–‰ë ¬
 	Vector3 m_RotationDegree = {0,0,0};
 	Vector3 m_Scale = { 1.0, 1.0f , 1.0f};
 
-	XMFLOAT4 m_LightColors[2] =		// ¶óÀÌÆ® »ö»ó
+	XMFLOAT4 m_LightColors[2] =		// ë¼ì´íŠ¸ ìƒ‰ìƒ
 	{
 		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 		XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f)
 	};
-	XMFLOAT4 m_InitialLightDirs[2] =	// ÃÊ±â ¶óÀÌÆ® ¹æÇâ
+	XMFLOAT4 m_InitialLightDirs[2] =	// ì´ˆê¸° ë¼ì´íŠ¸ ë°©í–¥
 	{
 		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
 		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 	};	
-	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// °è»êµÈ ¶óÀÌÆ® ¹æÇâ
+	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// ê³„ì‚°ëœ ë¼ì´íŠ¸ ë°©í–¥
 
 	bool OnInitialize() override;
 	void OnUninitialize() override;
@@ -62,7 +62,7 @@ public:
 	bool InitD3D();
 	void UninitD3D();
 
-	bool InitScene();		// ½¦ÀÌ´õ,¹öÅØ½º,ÀÎµ¦½º
+	bool InitScene();		// ì‰ì´ë”,ë²„í…ìŠ¤,ì¸ë±ìŠ¤
 	void UninitScene();
 
 	bool InitImGUI();

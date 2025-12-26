@@ -1,4 +1,4 @@
-// ¡§¡° ºŒ¿Ã¥ı.
+// Ï†ïÏ†ê ÏÖ∞Ïù¥Îçî.
 float4 main(float4 pos : POSITION) : SV_POSITION
 {
 	return pos;

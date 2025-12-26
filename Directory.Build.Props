@@ -20,6 +20,7 @@
         PROJECT_NAME="$(ProjectName)";
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
 

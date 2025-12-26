@@ -22,15 +22,15 @@ class TutorialApp :
     public GameApp
 {
 public:
-	ComPtr<IDXGIFactory4> m_pDXGIFactory;		// DXGIÆÑÅä¸®
-	ComPtr<IDXGIAdapter3> m_pDXGIAdapter;		// ºñµğ¿ÀÄ«µå Á¤º¸¿¡ Á¢±Ù °¡´ÉÇÑ ÀÎÅÍÆäÀÌ½º
+	ComPtr<IDXGIFactory4> m_pDXGIFactory;		// DXGIíŒ©í† ë¦¬
+	ComPtr<IDXGIAdapter3> m_pDXGIAdapter;		// ë¹„ë””ì˜¤ì¹´ë“œ ì •ë³´ì— ì ‘ê·¼ ê°€ëŠ¥í•œ ì¸í„°í˜ì´ìŠ¤
 
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀ» ±¸¼ºÇÏ´Â ÇÊ¼ö °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º
-	ID3D11Device* m_pDevice = nullptr;						// µğ¹ÙÀÌ½º	
-	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// Áï½Ã µğ¹ÙÀÌ½º ÄÁÅØ½ºÆ®
-	IDXGISwapChain* m_pSwapChain = nullptr;					// ½º¿ÒÃ¼ÀÎ
-	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ·»´õ¸µ Å¸°Ùºä
-	// ‰X½º ½ºÅÙ½Ç ºäµµ ÀÖÁö¸¸ ¾ÆÁ÷ »ç¿ëÇÏÁö ¾Ê´Â´Ù.
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì„ êµ¬ì„±í•˜ëŠ” í•„ìˆ˜ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤
+	ID3D11Device* m_pDevice = nullptr;						// ë””ë°”ì´ìŠ¤	
+	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// ì¦‰ì‹œ ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+	IDXGISwapChain* m_pSwapChain = nullptr;					// ìŠ¤ì™‘ì²´ì¸
+	ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ë Œë”ë§ íƒ€ê²Ÿë·°
+	// ëŠìŠ¤ ìŠ¤í…ì‹¤ ë·°ë„ ìˆì§€ë§Œ ì•„ì§ ì‚¬ìš©í•˜ì§€ ì•ŠëŠ”ë‹¤.
 
 	Vector4 m_ClearColor = Vector4(0.45f, 0.55f, 0.60f, 1.00f);
 

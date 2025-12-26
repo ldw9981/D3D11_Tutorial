@@ -7,11 +7,11 @@ class TutorialApp :
 	public GameApp
 {
 public:
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀ» ±¸¼ºÇÏ´Â ÇÊ¼ö °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º ( ‰X½º ½ºÅÙ½Ç ºäµµ ÀÖÁö¸¸ ¾ÆÁ÷ »ç¿ëÇÏÁö ¾Ê´Â´Ù.)
-	ID3D11Device* m_pDevice = nullptr;						// µğ¹ÙÀÌ½º	
-	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// Áï½Ã µğ¹ÙÀÌ½º ÄÁÅØ½ºÆ®
-	IDXGISwapChain1* m_pSwapChain = nullptr;					// ½º¿ÒÃ¼ÀÎ
-    ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ·»´õ¸µ Å¸°Ùºäv
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì„ êµ¬ì„±í•˜ëŠ” í•„ìˆ˜ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤ ( ëŠìŠ¤ ìŠ¤í…ì‹¤ ë·°ë„ ìˆì§€ë§Œ ì•„ì§ ì‚¬ìš©í•˜ì§€ ì•ŠëŠ”ë‹¤.)
+	ID3D11Device* m_pDevice = nullptr;						// ë””ë°”ì´ìŠ¤	
+	ID3D11DeviceContext* m_pDeviceContext = nullptr;		// ì¦‰ì‹œ ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+	IDXGISwapChain1* m_pSwapChain = nullptr;					// ìŠ¤ì™‘ì²´ì¸
+    ID3D11RenderTargetView* m_pRenderTargetView = nullptr;	// ë Œë”ë§ íƒ€ê²Ÿë·°v
 	
 	bool OnInitialize() override;	
 	void OnUninitialize() override;

@@ -11,10 +11,10 @@
 #include <imgui_impl_dx11.h>
 #include <dxgidebug.h>
 
-// Á¤Á¡ ¼±¾ğ.
+// ì •ì  ì„ ì–¸.
 struct CubeVertex
 {
-	Vector3 Pos;		// Á¤Á¡ À§Ä¡ Á¤º¸.
+	Vector3 Pos;		// ì •ì  ìœ„ì¹˜ ì •ë³´.
 	Vector2 Tex;
 };
 
@@ -65,7 +65,7 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
-	//±×¸±´ë»ó ¼³Á¤
+	//ê·¸ë¦´ëŒ€ìƒ ì„¤ì •
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 
@@ -140,10 +140,10 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->DrawIndexed(m_nQuadIndices, 0, 0);
 	}
 
-	// µª½º&½ºÅÙ½Ç ºä¸¦ ·»´õÅ¸°Ù¿¡¼­ ¾²±âÇØÁ¦ÇØ¾ß ImGUI¸¦ À§ÇØ ÀĞ±â·Î »ç¿ë °¡´É
+	// ëìŠ¤&ìŠ¤í…ì‹¤ ë·°ë¥¼ ë Œë”íƒ€ê²Ÿì—ì„œ ì“°ê¸°í•´ì œí•´ì•¼ ImGUIë¥¼ ìœ„í•´ ì½ê¸°ë¡œ ì‚¬ìš© ê°€ëŠ¥
 
-	//m_pDeviceContext->CopySubresourceRegion(m_pTextureDepthDebug, 0, 0, 0, 0, m_pTextureDepthStencil, 0, nullptr);  // Depth º¹»ç
-	//m_pDeviceContext->CopySubresourceRegion(m_pTextureDepthStencil, 0, 0, 0, 0, m_pTextureDepthStencil, 0, nullptr);  // Stencil º¹»ç
+	//m_pDeviceContext->CopySubresourceRegion(m_pTextureDepthDebug, 0, 0, 0, 0, m_pTextureDepthStencil, 0, nullptr);  // Depth ë³µì‚¬
+	//m_pDeviceContext->CopySubresourceRegion(m_pTextureDepthStencil, 0, 0, 0, 0, m_pTextureDepthStencil, 0, nullptr);  // Stencil ë³µì‚¬
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, nullptr);
 	RenderImGUI();
 	m_pSwapChain->Present(0, 0);	// Present our back buffer to our front buffer
@@ -153,20 +153,20 @@ bool TutorialApp::InitD3D()
 {
 	HRESULT hr = 0;	
 
-	// ½º¿ÒÃ¼ÀÎ ¼Ó¼º ¼³Á¤ ±¸Á¶Ã¼ »ı¼º.
+	// ìŠ¤ì™‘ì²´ì¸ ì†ì„± ì„¤ì • êµ¬ì¡°ì²´ ìƒì„±.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
 	swapDesc.BufferCount = 1;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = m_hWnd;	// ½º¿ÒÃ¼ÀÎ Ãâ·ÂÇÒ Ã¢ ÇÚµé °ª.
-	swapDesc.Windowed = true;		// Ã¢ ¸ğµå ¿©ºÎ ¼³Á¤.
+	swapDesc.OutputWindow = m_hWnd;	// ìŠ¤ì™‘ì²´ì¸ ì¶œë ¥í•  ì°½ í•¸ë“¤ ê°’.
+	swapDesc.Windowed = true;		// ì°½ ëª¨ë“œ ì—¬ë¶€ ì„¤ì •.
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	// ¹é¹öÆÛ(ÅØ½ºÃ³)ÀÇ °¡·Î/¼¼·Î Å©±â ¼³Á¤.
+	// ë°±ë²„í¼(í…ìŠ¤ì²˜)ì˜ ê°€ë¡œ/ì„¸ë¡œ í¬ê¸° ì„¤ì •.
 	swapDesc.BufferDesc.Width = m_ClientWidth;
 	swapDesc.BufferDesc.Height = m_ClientHeight;
-	// È­¸é ÁÖ»çÀ² ¼³Á¤.
+	// í™”ë©´ ì£¼ì‚¬ìœ¨ ì„¤ì •.
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-	// »ùÇÃ¸µ °ü·Ã ¼³Á¤.
+	// ìƒ˜í”Œë§ ê´€ë ¨ ì„¤ì •.
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
@@ -174,19 +174,19 @@ bool TutorialApp::InitD3D()
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// 1. ÀåÄ¡ »ı¼º.   2.½º¿ÒÃ¼ÀÎ »ı¼º. 3.ÀåÄ¡ ÄÁÅØ½ºÆ® »ı¼º.
+	// 1. ì¥ì¹˜ ìƒì„±.   2.ìŠ¤ì™‘ì²´ì¸ ìƒì„±. 3.ì¥ì¹˜ ì»¨í…ìŠ¤íŠ¸ ìƒì„±.
 	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
 
-	// 4. ·»´õÅ¸°Ùºä »ı¼º.  (¹é¹öÆÛ¸¦ ÀÌ¿ëÇÏ´Â ·»´õÅ¸°Ùºä)	
+	// 4. ë Œë”íƒ€ê²Ÿë·° ìƒì„±.  (ë°±ë²„í¼ë¥¼ ì´ìš©í•˜ëŠ” ë Œë”íƒ€ê²Ÿë·°)	
 	ID3D11Texture2D* pBackBufferTexture = nullptr;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // ÅØ½ºÃ³´Â ³»ºÎ ÂüÁ¶ Áõ°¡
-	SAFE_RELEASE(pBackBufferTexture);	//¿ÜºÎ ÂüÁ¶ Ä«¿îÆ®¸¦ °¨¼Ò½ÃÅ²´Ù.
-	// ·»´õ Å¸°ÙÀ» ÃÖÁ¾ Ãâ·Â ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture, NULL, &m_pRenderTargetView));  // í…ìŠ¤ì²˜ëŠ” ë‚´ë¶€ ì°¸ì¡° ì¦ê°€
+	SAFE_RELEASE(pBackBufferTexture);	//ì™¸ë¶€ ì°¸ì¡° ì¹´ìš´íŠ¸ë¥¼ ê°ì†Œì‹œí‚¨ë‹¤.
+	// ë Œë” íƒ€ê²Ÿì„ ìµœì¢… ì¶œë ¥ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•©ë‹ˆë‹¤.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
-	//5. ºäÆ÷Æ® ¼³Á¤.	
+	//5. ë·°í¬íŠ¸ ì„¤ì •.	
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -196,7 +196,7 @@ bool TutorialApp::InitD3D()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-	//6. ‰X½º&½ºÅÙ½Ç ºä »ı¼º
+	//6. ëŠìŠ¤&ìŠ¤í…ì‹¤ ë·° ìƒì„±
 	D3D11_TEXTURE2D_DESC descDepth = {};
 	descDepth.Width = m_ClientWidth;
 	descDepth.Height = m_ClientHeight;
@@ -219,40 +219,40 @@ bool TutorialApp::InitD3D()
 
 
 
-	// 7. ½ºÅÙ½Ç ¾²±â¸¦ À§ÇÑ »óÅÂ ¼³Á¤
+	// 7. ìŠ¤í…ì‹¤ ì“°ê¸°ë¥¼ ìœ„í•œ ìƒíƒœ ì„¤ì •
 	D3D11_DEPTH_STENCIL_DESC stencilDescWrite = {};
-	stencilDescWrite.DepthEnable = TRUE; // ±íÀÌ ¹öÆÛ »ç¿ë
+	stencilDescWrite.DepthEnable = TRUE; // ê¹Šì´ ë²„í¼ ì‚¬ìš©
 	stencilDescWrite.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	stencilDescWrite.DepthFunc = D3D11_COMPARISON_ALWAYS;
 
-	stencilDescWrite.StencilEnable = TRUE; // ½ºÅÙ½Ç »ç¿ë
-	stencilDescWrite.StencilWriteMask = 0xFF; // ½ºÅÙ½ÇÀÇ ¸ğµç ºñÆ® ¾²±â °¡´É
-	stencilDescWrite.StencilReadMask = 0xFF;  // ½ºÅÙ½ÇÀÇ ¸ğµç ºñÆ® ÀĞ±â °¡´É
+	stencilDescWrite.StencilEnable = TRUE; // ìŠ¤í…ì‹¤ ì‚¬ìš©
+	stencilDescWrite.StencilWriteMask = 0xFF; // ìŠ¤í…ì‹¤ì˜ ëª¨ë“  ë¹„íŠ¸ ì“°ê¸° ê°€ëŠ¥
+	stencilDescWrite.StencilReadMask = 0xFF;  // ìŠ¤í…ì‹¤ì˜ ëª¨ë“  ë¹„íŠ¸ ì½ê¸° ê°€ëŠ¥
 
-	// Àü¸é ÆäÀÌ½º¿¡¼­ÀÇ ½ºÅÙ½Ç ¿¬»ê
-	stencilDescWrite.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; // ½ºÅÙ½Ç Å×½ºÆ® ½ÇÆĞ ½Ã À¯Áö
-	stencilDescWrite.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // ±íÀÌ Å×½ºÆ® ½ÇÆĞ ½Ã À¯Áö
-	stencilDescWrite.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE; // Å×½ºÆ® Åë°ú ½Ã ±³Ã¼
-	stencilDescWrite.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; // Ç×»ó Åë°ú
+	// ì „ë©´ í˜ì´ìŠ¤ì—ì„œì˜ ìŠ¤í…ì‹¤ ì—°ì‚°
+	stencilDescWrite.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; // ìŠ¤í…ì‹¤ í…ŒìŠ¤íŠ¸ ì‹¤íŒ¨ ì‹œ ìœ ì§€
+	stencilDescWrite.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // ê¹Šì´ í…ŒìŠ¤íŠ¸ ì‹¤íŒ¨ ì‹œ ìœ ì§€
+	stencilDescWrite.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE; // í…ŒìŠ¤íŠ¸ í†µê³¼ ì‹œ êµì²´
+	stencilDescWrite.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; // í•­ìƒ í†µê³¼
 	
 	stencilDescWrite.BackFace = stencilDescWrite.FrontFace;	
 	m_pDevice->CreateDepthStencilState(&stencilDescWrite, &m_pDepthStencilStateWrite);
 
-	// 7. ½ºÅÙ½Ç ÀĞ±â(Å×½ºÆ®)¸¦ À§ÇÑ »óÅÂ ¼³Á¤
+	// 7. ìŠ¤í…ì‹¤ ì½ê¸°(í…ŒìŠ¤íŠ¸)ë¥¼ ìœ„í•œ ìƒíƒœ ì„¤ì •
 	D3D11_DEPTH_STENCIL_DESC stencilDescRead = {};
 	stencilDescRead.DepthEnable = FALSE;
-	stencilDescRead.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // ±íÀÌ ¾²±â ºñÈ°¼ºÈ­
+	stencilDescRead.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // ê¹Šì´ ì“°ê¸° ë¹„í™œì„±í™”
 	stencilDescRead.DepthFunc = D3D11_COMPARISON_LESS;
 
 	stencilDescRead.StencilEnable = TRUE;
-	stencilDescRead.StencilReadMask = 0xFF; // ÀĞ±â ¸¶½ºÅ©
-	stencilDescRead.StencilWriteMask = 0x00; // ¾²±â ºñÈ°¼ºÈ­
+	stencilDescRead.StencilReadMask = 0xFF; // ì½ê¸° ë§ˆìŠ¤í¬
+	stencilDescRead.StencilWriteMask = 0x00; // ì“°ê¸° ë¹„í™œì„±í™”
 
-	// Àü¸é ÆäÀÌ½º¿¡¼­ÀÇ ½ºÅÙ½Ç ¿¬»ê
+	// ì „ë©´ í˜ì´ìŠ¤ì—ì„œì˜ ìŠ¤í…ì‹¤ ì—°ì‚°
 	stencilDescRead.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
-	stencilDescRead.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP; // À¯Áö
-	stencilDescRead.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; // ½ÇÆĞ ½Ã À¯Áö
-	stencilDescRead.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // ±íÀÌ ½ÇÆĞ ½Ã À¯Áö
+	stencilDescRead.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP; // ìœ ì§€
+	stencilDescRead.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; // ì‹¤íŒ¨ ì‹œ ìœ ì§€
+	stencilDescRead.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // ê¹Šì´ ì‹¤íŒ¨ ì‹œ ìœ ì§€
 
 	stencilDescRead.BackFace = stencilDescRead.FrontFace;
 	m_pDevice->CreateDepthStencilState(&stencilDescRead, &m_pDepthStencilStateRead);
@@ -272,16 +272,16 @@ void TutorialApp::UninitD3D()
 	SAFE_RELEASE(m_pRenderTargetView);
 }
 
-// 1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ
-// 2. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ı¼º 	
-// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ı¼º
-// 4. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÀÎµ¦½º ¹öÆÛ »ı¼º
-// 5. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ı¼º
-// 6. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ »ó¼ö ¹öÆÛ »ı¼º
+// 1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„
+// 2. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
+// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
+// 4. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ì¸ë±ìŠ¤ ë²„í¼ ìƒì„±
+// 5. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±
+// 6. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ìƒìˆ˜ ë²„í¼ ìƒì„±
 bool TutorialApp::InitScene()
 {
-	HRESULT hr=0; // °á°ú°ª.
-	// 1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ
+	HRESULT hr=0; // ê²°ê³¼ê°’.
+	// 1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„
 	// Local or Object or Model Space
 	CubeVertex vertices[] =
 	{
@@ -326,12 +326,12 @@ bool TutorialApp::InitScene()
 	vbData.pSysMem = vertices;
 	HR_T( m_pDevice->CreateBuffer(&bd, &vbData, &m_pVertexBuffer));	
 
-	// ¹öÅØ½º ¹öÆÛ Á¤º¸
+	// ë²„í…ìŠ¤ ë²„í¼ ì •ë³´
 	m_VertexBufferStride = sizeof(CubeVertex);
 	m_VertexBufferOffset = 0;
 
 
-	// 2. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ı¼º 	
+	// 2. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
 	ID3D10Blob* vertexShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"../shaders/11_BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
 
@@ -343,12 +343,12 @@ bool TutorialApp::InitScene()
 	hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pInputLayout);
 
-	// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ı¼º
+	// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pVertexShader));
 	SAFE_RELEASE(vertexShaderBuffer);
 
-	// 4. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÀÎµ¦½º ¹öÆÛ »ı¼º
+	// 4. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ì¸ë±ìŠ¤ ë²„í¼ ìƒì„±
 	WORD indices[] =
 	{
 		3,1,0, 2,1,3,
@@ -359,7 +359,7 @@ bool TutorialApp::InitScene()
 		22,20,21, 23,20,22
 	};
 
-	// ÀÎµ¦½º °³¼ö ÀúÀå.
+	// ì¸ë±ìŠ¤ ê°œìˆ˜ ì €ì¥.
 	m_nQuadIndices = ARRAYSIZE(indices);
 
 	bd = {};
@@ -373,7 +373,7 @@ bool TutorialApp::InitScene()
 	HR_T(m_pDevice->CreateBuffer(&bd, &ibData, &m_pIndexBuffer));
 
 
-	// 5. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ı¼º
+	// 5. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±
 	ID3D10Blob* pixelShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"../shaders/11_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
@@ -381,7 +381,7 @@ bool TutorialApp::InitScene()
 	SAFE_RELEASE(pixelShaderBuffer);
 
 
-	// 6. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ »ó¼ö ¹öÆÛ »ı¼º
+	// 6. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ìƒìˆ˜ ë²„í¼ ìƒì„±
 	// Create the constant buffer
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.ByteWidth = sizeof(ConstantBuffer);
@@ -435,7 +435,7 @@ void TutorialApp::UninitScene()
 bool TutorialApp::InitImGUI()
 {
 	/*
-		ImGui ÃÊ±âÈ­.
+		ImGui ì´ˆê¸°í™”.
 	*/
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -476,7 +476,7 @@ LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 void TutorialApp::RenderImGUI()
 {
 	/////////////////
-	//¾Æ·¡ºÎÅÍ´Â ImGUI
+	//ì•„ë˜ë¶€í„°ëŠ” ImGUI
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls

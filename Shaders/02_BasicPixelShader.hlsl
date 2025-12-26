@@ -1,4 +1,4 @@
-// ÇÈ¼¿ ¼ÎÀÌ´õ(½¦ÀÌ´õ/¼ÎÀÌ´õ).
+// í”½ì…€ ì…°ì´ë”(ì‰ì´ë”/ì…°ì´ë”).
 float4 main(float4 input : SV_POSITION) : SV_TARGET
 {
     return float4(1.0f, 0.0f, 0.0f, 1.0f);

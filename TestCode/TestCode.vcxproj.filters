@@ -24,7 +24,7 @@
     <ClCompile Include="TestSizeOfStruct.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Math.cpp">
+    <ClCompile Include="TestMath.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestReflection.cpp">

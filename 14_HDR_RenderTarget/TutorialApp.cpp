@@ -175,10 +175,10 @@ bool TutorialApp::InitD3D()
 	else
 		CreateSwapChainAndBackBuffer(DXGI_FORMAT_R8G8B8A8_UNORM); // LDR
 	
-	// ·»´õ Å¸°ÙÀ» ÃÖÁ¾ Ãâ·Â ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+	// ë Œë” íƒ€ê²Ÿì„ ìµœì¢… ì¶œë ¥ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•©ë‹ˆë‹¤.
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
-	//5. ºäÆ÷Æ® ¼³Á¤.	
+	//5. ë·°í¬íŠ¸ ì„¤ì •.	
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -188,7 +188,7 @@ bool TutorialApp::InitD3D()
 	viewport.MaxDepth = 1.0f;
 	m_pDeviceContext->RSSetViewports(1, &viewport);
 
-	//6. ‰X½º&½ºÅÙ½Ç ºä »ı¼º
+	//6. ëŠìŠ¤&ìŠ¤í…ì‹¤ ë·° ìƒì„±
 	D3D11_TEXTURE2D_DESC descDepth = {};
 	descDepth.Width = m_ClientWidth;
 	descDepth.Height = m_ClientHeight;
@@ -218,7 +218,7 @@ bool TutorialApp::InitD3D()
 	td.MipLevels = 1;
 	td.ArraySize = 1;
 	td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-	td.SampleDesc.Count = 1;   // MSAA ¾øÀ½
+	td.SampleDesc.Count = 1;   // MSAA ì—†ìŒ
 	td.SampleDesc.Quality = 0;
 	td.Usage = D3D11_USAGE_DEFAULT;
 	td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
@@ -253,23 +253,23 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 		m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	}
 
-	HRESULT hr = 0;	// °á°ú°ª.
+	HRESULT hr = 0;	// ê²°ê³¼ê°’.
 
-	// ½º¿ÒÃ¼ÀÎ ¼Ó¼º ¼³Á¤ ±¸Á¶Ã¼ »ı¼º.
+	// ìŠ¤ì™‘ì²´ì¸ ì†ì„± ì„¤ì • êµ¬ì¡°ì²´ ìƒì„±.
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
 	swapDesc.BufferCount = 2;
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = m_hWnd;	// ½º¿ÒÃ¼ÀÎ Ãâ·ÂÇÒ Ã¢ ÇÚµé °ª.
-	swapDesc.Windowed = true;		// Ã¢ ¸ğµå ¿©ºÎ ¼³Á¤.
+	swapDesc.OutputWindow = m_hWnd;	// ìŠ¤ì™‘ì²´ì¸ ì¶œë ¥í•  ì°½ í•¸ë“¤ ê°’.
+	swapDesc.Windowed = true;		// ì°½ ëª¨ë“œ ì—¬ë¶€ ì„¤ì •.
 	swapDesc.BufferDesc.Format = m_format;
-	// ¹é¹öÆÛ(ÅØ½ºÃ³)ÀÇ °¡·Î/¼¼·Î Å©±â ¼³Á¤.
+	// ë°±ë²„í¼(í…ìŠ¤ì²˜)ì˜ ê°€ë¡œ/ì„¸ë¡œ í¬ê¸° ì„¤ì •.
 	swapDesc.BufferDesc.Width = m_ClientWidth;
 	swapDesc.BufferDesc.Height = m_ClientHeight;
-	// È­¸é ÁÖ»çÀ² ¼³Á¤.
+	// í™”ë©´ ì£¼ì‚¬ìœ¨ ì„¤ì •.
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-	// »ùÇÃ¸µ °ü·Ã ¼³Á¤.
+	// ìƒ˜í”Œë§ ê´€ë ¨ ì„¤ì •.
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 
@@ -277,21 +277,21 @@ void TutorialApp::CreateSwapChainAndBackBuffer(DXGI_FORMAT format)
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// 1. ÀåÄ¡ »ı¼º.   2.½º¿ÒÃ¼ÀÎ »ı¼º. 3.ÀåÄ¡ ÄÁÅØ½ºÆ® »ı¼º.
+	// 1. ì¥ì¹˜ ìƒì„±.   2.ìŠ¤ì™‘ì²´ì¸ ìƒì„±. 3.ì¥ì¹˜ ì»¨í…ìŠ¤íŠ¸ ìƒì„±.
 	HR_T(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL, NULL,
 		D3D11_SDK_VERSION, &swapDesc, &m_pSwapChain, &m_pDevice, NULL, &m_pDeviceContext));
 
-	// 4. ·»´õÅ¸°Ùºä »ı¼º.  (¹é¹öÆÛ¸¦ ÀÌ¿ëÇÏ´Â ·»´õÅ¸°Ùºä)	
+	// 4. ë Œë”íƒ€ê²Ÿë·° ìƒì„±.  (ë°±ë²„í¼ë¥¼ ì´ìš©í•˜ëŠ” ë Œë”íƒ€ê²Ÿë·°)	
 	ComPtr<ID3D11Texture2D> backBufferTexture;		
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBufferTexture.GetAddressOf()));
-	HR_T(m_pDevice->CreateRenderTargetView(backBufferTexture.Get(), NULL, &m_pRenderTargetView));  // ÅØ½ºÃ³´Â ³»ºÎ ÂüÁ¶ Áõ°¡
+	HR_T(m_pDevice->CreateRenderTargetView(backBufferTexture.Get(), NULL, &m_pRenderTargetView));  // í…ìŠ¤ì²˜ëŠ” ë‚´ë¶€ ì°¸ì¡° ì¦ê°€
 	
 	ComPtr<IDXGISwapChain3> swapChain3;
 	HR_T(m_pSwapChain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&swapChain3));
 	if (m_format == DXGI_FORMAT_R10G10B10A2_UNORM)
 	{		
-		// EOTF = PQ (ST.2084 / G2084)  , »ö¿ª(Primaries) = Rec.2020 , RGB Full Range
-		// ÀÌ ½º¿ÒÃ¼ÀÎÀÇ 0.0~1.0 °ªÀº ¼±Çü RGB³ª °¨¸¶ °ªÀÌ ¾Æ´Ï¶ó PQ·Î ÀÎÄÚµùµÈ HDR10 ½ÅÈ£·Î ÇØ¼®ÇÏ¶ó¡±
+		// EOTF = PQ (ST.2084 / G2084)  , ìƒ‰ì—­(Primaries) = Rec.2020 , RGB Full Range
+		// ì´ ìŠ¤ì™‘ì²´ì¸ì˜ 0.0~1.0 ê°’ì€ ì„ í˜• RGBë‚˜ ê°ë§ˆ ê°’ì´ ì•„ë‹ˆë¼ PQë¡œ ì¸ì½”ë”©ëœ HDR10 ì‹ í˜¸ë¡œ í•´ì„í•˜ë¼â€
 		HR_T(swapChain3->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020));
 	}		
 }
@@ -302,10 +302,10 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 	HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
 	if (FAILED(hr))
 	{
-		LOG_ERRORA("ERROR: DXGI Factory »ı¼º ½ÇÆĞ.\n");
+		LOG_ERRORA("ERROR: DXGI Factory ìƒì„± ì‹¤íŒ¨.\n");
 		return false;
 	}
-	// 2. ÁÖ ±×·¡ÇÈ ¾î´ğÅÍ (0¹ø) ¿­°Å
+	// 2. ì£¼ ê·¸ë˜í”½ ì–´ëŒ‘í„° (0ë²ˆ) ì—´ê±°
 	ComPtr<IDXGIAdapter1> pAdapter;
 	UINT adapterIndex = 0;
 	while (pFactory->EnumAdapters1(adapterIndex, &pAdapter) != DXGI_ERROR_NOT_FOUND)
@@ -313,7 +313,7 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 		DXGI_ADAPTER_DESC1 desc;
 		pAdapter->GetDesc1(&desc);
 
-		// WARP ¾î´ğÅÍ(¼ÒÇÁÆ®¿ş¾î)¸¦ °Ç³Ê¶Ù°í ÁÖ ¾î´ğÅÍ¸¸ »ç¿ëÇÏµµ·Ï ¼±ÅÃÇÒ ¼ö ÀÖ½À´Ï´Ù.
+		// WARP ì–´ëŒ‘í„°(ì†Œí”„íŠ¸ì›¨ì–´)ë¥¼ ê±´ë„ˆë›°ê³  ì£¼ ì–´ëŒ‘í„°ë§Œ ì‚¬ìš©í•˜ë„ë¡ ì„ íƒí•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 		{
 			adapterIndex++;
@@ -325,59 +325,59 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 
 	if (!pAdapter)
 	{
-		LOG_ERRORA("ERROR: À¯È¿ÇÑ ÇÏµå¿ş¾î ¾î´ğÅÍ¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.\n");
+		LOG_ERRORA("ERROR: ìœ íš¨í•œ í•˜ë“œì›¨ì–´ ì–´ëŒ‘í„°ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.\n");
 		return false;
 	}	
 
-	// 3. ÁÖ ¸ğ´ÏÅÍ Ãâ·Â (0¹ø) ¿­°Å
+	// 3. ì£¼ ëª¨ë‹ˆí„° ì¶œë ¥ (0ë²ˆ) ì—´ê±°
 	ComPtr<IDXGIOutput> pOutput;
-	hr = pAdapter->EnumOutputs(0, &pOutput); // 0¹ø Ãâ·Â
+	hr = pAdapter->EnumOutputs(0, &pOutput); // 0ë²ˆ ì¶œë ¥
 	if (FAILED(hr))
 	{
-		LOG_ERRORA("ERROR: ÁÖ ¸ğ´ÏÅÍ Ãâ·Â(Output 0)À» Ã£À» ¼ö ¾ø½À´Ï´Ù.\n");
+		LOG_ERRORA("ERROR: ì£¼ ëª¨ë‹ˆí„° ì¶œë ¥(Output 0)ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.\n");
 		return false;
 	}
 
-	// 4. HDR Á¤º¸¸¦ ¾ò±â À§ÇØ IDXGIOutput6À¸·Î Äõ¸®
+	// 4. HDR ì •ë³´ë¥¼ ì–»ê¸° ìœ„í•´ IDXGIOutput6ìœ¼ë¡œ ì¿¼ë¦¬
 	ComPtr<IDXGIOutput6> pOutput6;
 	hr = pOutput.As(&pOutput6);
 	if (FAILED(hr))
 	{
-		printf("INFO: IDXGIOutput6 ÀÎÅÍÆäÀÌ½º¸¦ ¾òÀ» ¼ö ¾ø½À´Ï´Ù. HDR Á¤º¸¸¦ ¾òÀ» ¼ö ¾ø½À´Ï´Ù.\n");
+		printf("INFO: IDXGIOutput6 ì¸í„°í˜ì´ìŠ¤ë¥¼ ì–»ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. HDR ì •ë³´ë¥¼ ì–»ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.\n");
 		outMaxNits = 100.0f;
 		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 		return false;
 	}
 
-	// 5. DXGI_OUTPUT_DESC1¿¡¼­ HDR Á¤º¸ È®ÀÎ
+	// 5. DXGI_OUTPUT_DESC1ì—ì„œ HDR ì •ë³´ í™•ì¸
 	DXGI_OUTPUT_DESC1 desc1 = {};
 	hr = pOutput6->GetDesc1(&desc1);
 	if (FAILED(hr))
 	{
-		printf("ERROR: GetDesc1 È£Ãâ ½ÇÆĞ.\n");
+		printf("ERROR: GetDesc1 í˜¸ì¶œ ì‹¤íŒ¨.\n");
 		return false;
 	}
 
-	// 6. HDR È°¼ºÈ­ Á¶°Ç ºĞ¼®
+	// 6. HDR í™œì„±í™” ì¡°ê±´ ë¶„ì„
 	bool isHDRColorSpace = (desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
 	outMaxNits = (float)desc1.MaxLuminance ;
 
-	// OS°¡ HDRÀ» Ä×À» ¶§ MaxLuminance´Â 100 Nits(SDR ±âÁØ)¸¦ ÃÊ°úÇÕ´Ï´Ù.
+	// OSê°€ HDRì„ ì¼°ì„ ë•Œ MaxLuminanceëŠ” 100 Nits(SDR ê¸°ì¤€)ë¥¼ ì´ˆê³¼í•©ë‹ˆë‹¤.
 	bool isHDRActive = outMaxNits > 100.0f;
 
 	if (isHDRColorSpace && isHDRActive)
 	{
-		// ÃÖÁ¾ ÆÇ´Ü: HDR Áö¿ø ¹× OS È°¼ºÈ­
-		outFormat = DXGI_FORMAT_R10G10B10A2_UNORM; // HDR Æ÷¸Ë ¼³Á¤
-		printf("SUCCESS: HDR È°¼ºÈ­µÊ. MaxNits: %.1f, Format: R10G10B10A2_UNORM\n", outMaxNits);
+		// ìµœì¢… íŒë‹¨: HDR ì§€ì› ë° OS í™œì„±í™”
+		outFormat = DXGI_FORMAT_R10G10B10A2_UNORM; // HDR í¬ë§· ì„¤ì •
+		printf("SUCCESS: HDR í™œì„±í™”ë¨. MaxNits: %.1f, Format: R10G10B10A2_UNORM\n", outMaxNits);
 		return true;
 	}
 	else
 	{
-		// HDR Áö¿ø ¾ÈÇÔ ¶Ç´Â OS¿¡¼­ ºñÈ°¼ºÈ­
-		outMaxNits = 100.0f; // SDR ±âº»°ª
-		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // SDR Æ÷¸Ë ¼³Á¤
-		printf("INFO: HDR ºñÈ°¼ºÈ­. MaxNits: 100.0, Format: R8G8B8A8_UNORM\n");
+		// HDR ì§€ì› ì•ˆí•¨ ë˜ëŠ” OSì—ì„œ ë¹„í™œì„±í™”
+		outMaxNits = 100.0f; // SDR ê¸°ë³¸ê°’
+		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // SDR í¬ë§· ì„¤ì •
+		printf("INFO: HDR ë¹„í™œì„±í™”. MaxNits: 100.0, Format: R8G8B8A8_UNORM\n");
 		return false;
 	}
 	return true;
@@ -399,10 +399,10 @@ void TutorialApp::UninitD3D()
 
 bool TutorialApp::InitScene()
 {
-	HRESULT hr=0; // °á°ú°ª.
-	ID3D10Blob* errorMessage = nullptr;	 // ¿¡·¯ ¸Ş½ÃÁö¸¦ ÀúÀåÇÒ ¹öÆÛ.		
+	HRESULT hr=0; // ê²°ê³¼ê°’.
+	ID3D10Blob* errorMessage = nullptr;	 // ì—ëŸ¬ ë©”ì‹œì§€ë¥¼ ì €ì¥í•  ë²„í¼.		
 	
-	// ¶óÀÌÆ® »ó¼ö ¹öÆÛ »ı¼º	
+	// ë¼ì´íŠ¸ ìƒìˆ˜ ë²„í¼ ìƒì„±	
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.ByteWidth = sizeof(ConstantBuffer);
@@ -415,7 +415,7 @@ bool TutorialApp::InitScene()
 	CreateCube();
 	CreateQuad();
 
-	// FOV ÃÊ±â°ª¼³Á¤
+	// FOV ì´ˆê¸°ê°’ì„¤ì •
 	m_World = XMMatrixIdentity();
 	XMVECTOR Eye = XMVectorSet(0.0f, 4.0f, -10.0f, 0.0f);
 	XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
@@ -446,9 +446,9 @@ void TutorialApp::UninitScene()
 
 void TutorialApp::CreateQuad()
 {
-	HRESULT hr = 0; // °á°ú°ª.
-	ID3D10Blob* errorMessage = nullptr;	 // ¿¡·¯ ¸Ş½ÃÁö¸¦ ÀúÀåÇÒ ¹öÆÛ.	
-	// Á¤Á¡ ¼±¾ğ.
+	HRESULT hr = 0; // ê²°ê³¼ê°’.
+	ID3D10Blob* errorMessage = nullptr;	 // ì—ëŸ¬ ë©”ì‹œì§€ë¥¼ ì €ì¥í•  ë²„í¼.	
+	// ì •ì  ì„ ì–¸.
 	struct QuadVertex
 	{
 		Vector3 position;		// Normalized Device coordinate position
@@ -471,13 +471,13 @@ void TutorialApp::CreateQuad()
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;
 	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = QuadVertices;	// ¹è¿­ µ¥ÀÌÅÍ ÇÒ´ç.
+	vbData.pSysMem = QuadVertices;	// ë°°ì—´ ë°ì´í„° í• ë‹¹.
 	HR_T(m_pDevice->CreateBuffer(&vbDesc, &vbData, &m_pQuadVertexBuffer));
-	m_QuadVertexBufferStride = sizeof(QuadVertex);		// ¹öÅØ½º ¹öÆÛ Á¤º¸
+	m_QuadVertexBufferStride = sizeof(QuadVertex);		// ë²„í…ìŠ¤ ë²„í¼ ì •ë³´
 	m_QuadVertexBufferOffset = 0;
 	
-	// InputLayout »ı¼º 	
-	D3D11_INPUT_ELEMENT_DESC layout[] = // ÀÔ·Â ·¹ÀÌ¾Æ¿ô.
+	// InputLayout ìƒì„± 	
+	D3D11_INPUT_ELEMENT_DESC layout[] = // ì…ë ¥ ë ˆì´ì•„ì›ƒ.
 	{   // SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate	
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
@@ -487,18 +487,18 @@ void TutorialApp::CreateQuad()
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pQuadInputLayout));
 
-	// ¹öÅØ½º ¼ÎÀÌ´õ »ı¼º
+	// ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pQuadVertexShader));
-	SAFE_RELEASE(vertexShaderBuffer);	// ¹öÆÛ ÇØÁ¦.
+	SAFE_RELEASE(vertexShaderBuffer);	// ë²„í¼ í•´ì œ.
 
-	// ÀÎµ¦½º ¹öÆÛ »ı¼º
+	// ì¸ë±ìŠ¤ ë²„í¼ ìƒì„±
 	WORD indices[] =
 	{
 		0, 1, 2,
 		2, 1, 3
 	};
-	m_nQuadIndices = ARRAYSIZE(indices);	// ÀÎµ¦½º °³¼ö ÀúÀå.
+	m_nQuadIndices = ARRAYSIZE(indices);	// ì¸ë±ìŠ¤ ê°œìˆ˜ ì €ì¥.
 	D3D11_BUFFER_DESC ibDesc = {};
 	ibDesc.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
 	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -507,32 +507,32 @@ void TutorialApp::CreateQuad()
 	ibData.pSysMem = indices;
 	HR_T(m_pDevice->CreateBuffer(&ibDesc, &ibData, &m_pQuadIndexBuffer));
 
-	// ÇÈ¼¿ ¼ÎÀÌ´õ »ı¼º
+	// í”½ì…€ ì…°ì´ë” ìƒì„±
 	ID3D10Blob* pixelShaderBuffer = nullptr;
 
 
 	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_LDR.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingLDR));
-	SAFE_RELEASE(pixelShaderBuffer);	// ÇÈ¼¿ ¼ÎÀÌ´õ ¹öÆÛ ´õÀÌ»ó ÇÊ¿ä¾øÀ½.
+	SAFE_RELEASE(pixelShaderBuffer);	// í”½ì…€ ì…°ì´ë” ë²„í¼ ë”ì´ìƒ í•„ìš”ì—†ìŒ.
 
 	HR_T(CompileShaderFromFile(L"../Shaders/14_ToneMappingPS_HDR.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pPS_ToneMappingHDR));
-	SAFE_RELEASE(pixelShaderBuffer);	// ÇÈ¼¿ ¼ÎÀÌ´õ ¹öÆÛ ´õÀÌ»ó ÇÊ¿ä¾øÀ½.
+	SAFE_RELEASE(pixelShaderBuffer);	// í”½ì…€ ì…°ì´ë” ë²„í¼ ë”ì´ìƒ í•„ìš”ì—†ìŒ.
 }
 
 void TutorialApp::CreateCube()
 {
-	// Á¤Á¡ ¼±¾ğ.
+	// ì •ì  ì„ ì–¸.
 	struct CubeVertex
 	{
-		Vector3 Pos;		// Á¤Á¡ À§Ä¡ Á¤º¸.
+		Vector3 Pos;		// ì •ì  ìœ„ì¹˜ ì •ë³´.
 		Vector3 Normal;
 	};
 
-	HRESULT hr = 0; // °á°ú°ª.
-	ID3D10Blob* errorMessage = nullptr;	 // ¿¡·¯ ¸Ş½ÃÁö¸¦ ÀúÀåÇÒ ¹öÆÛ.	
+	HRESULT hr = 0; // ê²°ê³¼ê°’.
+	ID3D10Blob* errorMessage = nullptr;	 // ì—ëŸ¬ ë©”ì‹œì§€ë¥¼ ì €ì¥í•  ë²„í¼.	
 	CubeVertex vertices[] =
 	{
 		{ Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f) },// Normal Y +	 
@@ -566,7 +566,7 @@ void TutorialApp::CreateCube()
 		{ Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f) },
 	};
 
-	// ¹öÅØ½º ¹öÆÛ »ı¼º.
+	// ë²„í…ìŠ¤ ë²„í¼ ìƒì„±.
 	D3D11_BUFFER_DESC bd = {};
 	bd.ByteWidth = sizeof(CubeVertex) * ARRAYSIZE(vertices);
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -577,12 +577,12 @@ void TutorialApp::CreateCube()
 	vbData.pSysMem = vertices;
 	HR_T(m_pDevice->CreateBuffer(&bd, &vbData, &m_pCubeVertexBuffer));
 
-	// ¹öÅØ½º ¹öÆÛ ¹ÙÀÎµù.
+	// ë²„í…ìŠ¤ ë²„í¼ ë°”ì¸ë”©.
 	m_CubeVertexBufferStride = sizeof(CubeVertex);
 	m_CubeVertexBufferOffset = 0;
 
 
-	//  InputLayout »ı¼º 	
+	//  InputLayout ìƒì„± 	
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -594,14 +594,14 @@ void TutorialApp::CreateCube()
 	HR_T(m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_pCubeInputLayout));
 
-	//¹öÅØ½º ¼ÎÀÌ´õ »ı¼º
+	//ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
 	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), NULL, &m_pCubeVertexShader));
 
 	SAFE_RELEASE(vertexShaderBuffer);
 
 
-	// ÀÎµ¦½º ¹öÆÛ »ı¼º
+	// ì¸ë±ìŠ¤ ë²„í¼ ìƒì„±
 	WORD indices[] =
 	{
 		3,1,0, 2,1,3,
@@ -612,7 +612,7 @@ void TutorialApp::CreateCube()
 		22,20,21, 23,20,22
 	};
 
-	// ÀÎµ¦½º °³¼ö ÀúÀå.
+	// ì¸ë±ìŠ¤ ê°œìˆ˜ ì €ì¥.
 	m_nCubeIndices = ARRAYSIZE(indices);
 
 	bd = {};
@@ -624,7 +624,7 @@ void TutorialApp::CreateCube()
 	ibData.pSysMem = indices;
 	HR_T(m_pDevice->CreateBuffer(&bd, &ibData, &m_pCubeIndexBuffer));
 
-	// Cube ÇÈ¼¿ ¼ÎÀÌ´õ »ı¼º
+	// Cube í”½ì…€ ì…°ì´ë” ìƒì„±
 	ID3D10Blob* pixelShaderBuffer = nullptr;
 	HR_T(CompileShaderFromFile(L"../shaders/14_BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
@@ -640,7 +640,7 @@ void TutorialApp::CreateCube()
 bool TutorialApp::InitImGUI()
 {
 	/*
-		ImGui ÃÊ±âÈ­.
+		ImGui ì´ˆê¸°í™”.
 	*/
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -669,7 +669,7 @@ void TutorialApp::UninitImGUI()
 void TutorialApp::RenderImGUI()
 {
 	/////////////////
-		//¾Æ·¡ºÎÅÍ´Â ImGUI
+		//ì•„ë˜ë¶€í„°ëŠ” ImGUI
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls

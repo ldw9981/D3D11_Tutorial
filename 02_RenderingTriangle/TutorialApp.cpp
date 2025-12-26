@@ -2,10 +2,10 @@
 #include "../Common/Helper.h"
 
 
-// Á¤Á¡ ¼±¾ğ.
+// ì •ì  ì„ ì–¸.
 struct CubeVertex
 {
-	Vector3 position;		// À§Ä¡ Á¤º¸.
+	Vector3 position;		// ìœ„ì¹˜ ì •ë³´.
 };
 
 bool TutorialApp::OnInitialize()
@@ -34,15 +34,15 @@ void TutorialApp::OnRender()
 {
 	float color[4] = { 0.0f, 0.5f, 0.5f, 1.0f };
 
-	//±×¸±´ë»ó ¼³Á¤
+	//ê·¸ë¦´ëŒ€ìƒ ì„¤ì •
 	m_pDeviceContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), NULL);
 
 
-	// È­¸é Ä¥ÇÏ±â.
+	// í™”ë©´ ì¹ í•˜ê¸°.
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), color);
 
-	// Draw°è¿­ ÇÔ¼ö¸¦ È£ÃâÇÏ±âÀü¿¡ ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ ÇÊ¼ö ½ºÅ×ÀÌÁö ¼³Á¤À» ÇØ¾ßÇÑ´Ù.	
-	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // Á¤Á¡À» ÀÌ¾î¼­ ±×¸± ¹æ½Ä ¼³Á¤.
+	// Drawê³„ì—´ í•¨ìˆ˜ë¥¼ í˜¸ì¶œí•˜ê¸°ì „ì— ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— í•„ìˆ˜ ìŠ¤í…Œì´ì§€ ì„¤ì •ì„ í•´ì•¼í•œë‹¤.	
+	m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // ì •ì ì„ ì´ì–´ì„œ ê·¸ë¦´ ë°©ì‹ ì„¤ì •.
 	m_pDeviceContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &m_QuadVertextBufferStride, &m_QuadVertextBufferOffset);
 	m_pDeviceContext->IASetInputLayout(m_pInputLayout.Get());
 	m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
@@ -59,16 +59,16 @@ bool TutorialApp::InitD3D()
 {
 	HRESULT hr = 0;
 
-	// 1. D3D11 Device,DeviceContext »ı¼º
+	// 1. D3D11 Device,DeviceContext ìƒì„±
 	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// ±×·¡ÇÈ Ä«µå ÇÏµå¿ş¾îÀÇ ½ºÆåÀ¸·Î È£È¯µÇ´Â °¡Àå ³ôÀº DirectX ±â´É·¹º§·Î »ı¼ºÇÏ¿© µå¶óÀÌ¹ö°¡ ÀÛµ¿ ÇÑ´Ù.
-	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ºÎÅÍ ¼ø¼­´ë·Î ½ÃµµÇÑ´Ù.
+	// ê·¸ë˜í”½ ì¹´ë“œ í•˜ë“œì›¨ì–´ì˜ ìŠ¤í™ìœ¼ë¡œ í˜¸í™˜ë˜ëŠ” ê°€ì¥ ë†’ì€ DirectX ê¸°ëŠ¥ë ˆë²¨ë¡œ ìƒì„±í•˜ì—¬ ë“œë¼ì´ë²„ê°€ ì‘ë™ í•œë‹¤.
+	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ë¶€í„° ìˆœì„œëŒ€ë¡œ ì‹œë„í•œë‹¤.
 		D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
 	};
-	D3D_FEATURE_LEVEL actualFeatureLevel; // ÃÖÁ¾ ÇÇÃ³ ·¹º§À» ÀúÀåÇÒ º¯¼ö
+	D3D_FEATURE_LEVEL actualFeatureLevel; // ìµœì¢… í”¼ì²˜ ë ˆë²¨ì„ ì €ì¥í•  ë³€ìˆ˜
 
 	HR_T(D3D11CreateDevice(
 		nullptr,
@@ -83,7 +83,7 @@ bool TutorialApp::InitD3D()
 		m_pDeviceContext.GetAddressOf()
 	));
 
-	// 2. ½º¿ÒÃ¼ÀÎ »ı¼ºÀ» À§ÇÑ DXGI Factory »ı¼º
+	// 2. ìŠ¤ì™‘ì²´ì¸ ìƒì„±ì„ ìœ„í•œ DXGI Factory ìƒì„±
 	UINT dxgiFactoryFlags = 0;
 #ifdef _DEBUG
 	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
@@ -98,15 +98,15 @@ bool TutorialApp::InitD3D()
 
 	swapChainDesc.Width = m_ClientWidth;
 	swapChainDesc.Height = m_ClientHeight;
-	// ÇÏ³ªÀÇ ÇÈ¼¿ÀÌ Ã¤³Î RGBA °¢ 8ºñÆ® Çü½ÄÀ¸·Î Ç¥ÇöµÇ¸ç 
-	// Unsigned Normalized Integer 8ºñÆ® Á¤¼ö(0~255)´Ü°è¸¦ ºÎµ¿¼Ò¼öÁ¡À¸·Î Á¤±ÔÈ­ÇÑ 0.0~1.0À¸·Î ¸ÅÇÎÇÏ¿© Ç¥ÇöÇÑ´Ù.
+	// í•˜ë‚˜ì˜ í”½ì…€ì´ ì±„ë„ RGBA ê° 8ë¹„íŠ¸ í˜•ì‹ìœ¼ë¡œ í‘œí˜„ë˜ë©° 
+	// Unsigned Normalized Integer 8ë¹„íŠ¸ ì •ìˆ˜(0~255)ë‹¨ê³„ë¥¼ ë¶€ë™ì†Œìˆ˜ì ìœ¼ë¡œ ì •ê·œí™”í•œ 0.0~1.0ìœ¼ë¡œ ë§¤í•‘í•˜ì—¬ í‘œí˜„í•œë‹¤.
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ½º¿Ò Ã¼ÀÎÀÇ ¹é ¹öÆÛ°¡ ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀÇ ÃÖÁ¾ Ãâ·Â ´ë»óÀ¸·Î »ç¿ë
-	swapChainDesc.SampleDesc.Count = 1;  // ¸ÖÆ¼»ùÇÃ¸µ »ç¿ë ¾ÈÇÔ
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ìŠ¤ì™‘ ì²´ì¸ì˜ ë°± ë²„í¼ê°€ ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì˜ ìµœì¢… ì¶œë ¥ ëŒ€ìƒìœ¼ë¡œ ì‚¬ìš©
+	swapChainDesc.SampleDesc.Count = 1;  // ë©€í‹°ìƒ˜í”Œë§ ì‚¬ìš© ì•ˆí•¨
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE; // Recommended for flip models
-	swapChainDesc.Stereo = FALSE;  // ½ºÅ×·¹¿À 3D ·»´õ¸µÀ» ºñÈ°¼ºÈ­
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ÀüÃ¼ È­¸é ÀüÈ¯À» Çã¿ë
-	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  Ã¢ÀÇ Å©±â¿Í ¹é ¹öÆÛÀÇ Å©±â°¡ ´Ù¸¦ ¶§. ¹é¹öÆÛ Å©±â¿¡ ¸Â°Ô ½ºÄÉÀÏ¸µ ÇÏÁö ¾Ê´Â´Ù.
+	swapChainDesc.Stereo = FALSE;  // ìŠ¤í…Œë ˆì˜¤ 3D ë Œë”ë§ì„ ë¹„í™œì„±í™”
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ì „ì²´ í™”ë©´ ì „í™˜ì„ í—ˆìš©
+	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  ì°½ì˜ í¬ê¸°ì™€ ë°± ë²„í¼ì˜ í¬ê¸°ê°€ ë‹¤ë¥¼ ë•Œ. ë°±ë²„í¼ í¬ê¸°ì— ë§ê²Œ ìŠ¤ì¼€ì¼ë§ í•˜ì§€ ì•ŠëŠ”ë‹¤.
 
 	HR_T(pFactory->CreateSwapChainForHwnd(
 		m_pDevice.Get(),
@@ -117,13 +117,13 @@ bool TutorialApp::InitD3D()
 		m_pSwapChain.GetAddressOf()
 	));
 
-	// 3. ·»´õÅ¸°Ù ºä »ı¼º.  ·»´õ Å¸°Ù ºä´Â "¿©±â´Ù°¡ ±×¸²À» ±×·Á¶ó"¶ó°í GPU¿¡°Ô ¾Ë·ÁÁÖ´Â ¿ªÇÒÀ» ÇÏ´Â °´Ã¼.
-	// ÅØ½ºÃ³¿Í ¿µ±¸Àû ¿¬°áµÇ´Â °´Ã¼ÀÌ´Ù. 
+	// 3. ë Œë”íƒ€ê²Ÿ ë·° ìƒì„±.  ë Œë” íƒ€ê²Ÿ ë·°ëŠ” "ì—¬ê¸°ë‹¤ê°€ ê·¸ë¦¼ì„ ê·¸ë ¤ë¼"ë¼ê³  GPUì—ê²Œ ì•Œë ¤ì£¼ëŠ” ì—­í• ì„ í•˜ëŠ” ê°ì²´.
+	// í…ìŠ¤ì²˜ì™€ ì˜êµ¬ì  ì—°ê²°ë˜ëŠ” ê°ì²´ì´ë‹¤. 
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
 
-	// ºäÆ÷Æ® ¼³Á¤.	
+	// ë·°í¬íŠ¸ ì„¤ì •.	
 	D3D11_VIEWPORT viewport={};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -142,17 +142,17 @@ void TutorialApp::UninitD3D()
 
 bool TutorialApp::InitScene()
 {	
-	HRESULT hr=0; // °á°ú°ª.
-	ID3D10Blob* errorMessage = nullptr;	 // ÄÄÆÄÀÏ ¿¡·¯ ¸Ş½ÃÁö°¡ ÀúÀåµÉ ¹öÆÛ.	
+	HRESULT hr=0; // ê²°ê³¼ê°’.
+	ID3D10Blob* errorMessage = nullptr;	 // ì»´íŒŒì¼ ì—ëŸ¬ ë©”ì‹œì§€ê°€ ì €ì¥ë  ë²„í¼.	
 
-	//1. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ¹öÅØ½º ¹öÆÛ¹× ¹öÆÛ Á¤º¸ ÁØºñ
-	// ¾ÆÁ÷Àº VertexShaderÀÇ World, View, Projection º¯È¯À» »ç¿ëÇÏÁö ¾ÊÀ¸¹Ç·Î 
-	// Á÷Á¢ Normalized Device Coordinate(ÁÂÇ¥°è)ÀÇ À§Ä¡·Î ¼³Á¤ÇÑ´Ù.
-	//      /---------------------(1,1,1)   z°ªÀº ±íÀÌ°ª
+	//1. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  ë²„í…ìŠ¤ ë²„í¼ë° ë²„í¼ ì •ë³´ ì¤€ë¹„
+	// ì•„ì§ì€ VertexShaderì˜ World, View, Projection ë³€í™˜ì„ ì‚¬ìš©í•˜ì§€ ì•Šìœ¼ë¯€ë¡œ 
+	// ì§ì ‘ Normalized Device Coordinate(ì¢Œí‘œê³„)ì˜ ìœ„ì¹˜ë¡œ ì„¤ì •í•œë‹¤.
+	//      /---------------------(1,1,1)   zê°’ì€ ê¹Šì´ê°’
 	//     /                      / |   
 	// (-1,1,0)----------------(1,1,0)        
 	//   |         v1           |   |
-	//   |        /   `         |   |       Áß¾ÓÀÌ (0,0,0)  
+	//   |        /   `         |   |       ì¤‘ì•™ì´ (0,0,0)  
 	//   |       /  +   `       |   |
 	//   |     /         `      |   |
 	//	 |   v0-----------v2    |  /
@@ -165,43 +165,43 @@ bool TutorialApp::InitScene()
 	};
 
 	D3D11_BUFFER_DESC vbDesc = {};
-	m_VertexCount = ARRAYSIZE(vertices);	// Á¤Á¡ÀÇ ¼ö
-	vbDesc.ByteWidth = sizeof(CubeVertex) * m_VertexCount; // ¹öÅØ½º ¹öÆÛÀÇ Å©±â(Byte).
+	m_VertexCount = ARRAYSIZE(vertices);	// ì •ì ì˜ ìˆ˜
+	vbDesc.ByteWidth = sizeof(CubeVertex) * m_VertexCount; // ë²„í…ìŠ¤ ë²„í¼ì˜ í¬ê¸°(Byte).
 	vbDesc.CPUAccessFlags = 0;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER; // Á¤Á¡ ¹öÆÛ·Î »ç¿ë.
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER; // ì •ì  ë²„í¼ë¡œ ì‚¬ìš©.
 	vbDesc.MiscFlags = 0;
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;	// CPU´Â Á¢±ÙºÒ°¡ ,  GPU¿¡¼­ ÀĞ±â/¾²±â °¡´ÉÇÑ ¹öÆÛ·Î »ı¼º.
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;	// CPUëŠ” ì ‘ê·¼ë¶ˆê°€ ,  GPUì—ì„œ ì½ê¸°/ì“°ê¸° ê°€ëŠ¥í•œ ë²„í¼ë¡œ ìƒì„±.
 
-	// Á¤Á¡ ¹öÆÛ »ı¼º.
+	// ì •ì  ë²„í¼ ìƒì„±.
 	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = vertices;	// ¹öÆÛ¸¦ »ı¼ºÇÒ¶§ º¹»çÇÒ µ¥ÀÌÅÍÀÇ ÁÖ¼Ò ¼³Á¤ 
+	vbData.pSysMem = vertices;	// ë²„í¼ë¥¼ ìƒì„±í• ë•Œ ë³µì‚¬í•  ë°ì´í„°ì˜ ì£¼ì†Œ ì„¤ì • 
 	HR_T(hr = m_pDevice->CreateBuffer(&vbDesc, &vbData, m_pVertexBuffer.GetAddressOf()));
 
-	// ¹öÅØ½º ¹öÆÛ Á¤º¸ 
-	m_QuadVertextBufferStride = sizeof(CubeVertex); // ¹öÅØ½º ÇÏ³ªÀÇ Å©±â
-	m_QuadVertextBufferOffset = 0;	// ¹öÅØ½º ½ÃÀÛ ÁÖ¼Ò¿¡¼­ ´õÇÒ ¿ÀÇÁ¼Â ÁÖ¼Ò
+	// ë²„í…ìŠ¤ ë²„í¼ ì •ë³´ 
+	m_QuadVertextBufferStride = sizeof(CubeVertex); // ë²„í…ìŠ¤ í•˜ë‚˜ì˜ í¬ê¸°
+	m_QuadVertextBufferOffset = 0;	// ë²„í…ìŠ¤ ì‹œì‘ ì£¼ì†Œì—ì„œ ë”í•  ì˜¤í”„ì…‹ ì£¼ì†Œ
 	
-	// 2. Render¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ  ¹öÅØ½º ¼ÎÀÌ´õ »ı¼º
-	ComPtr<ID3DBlob> vertexShaderBuffer = nullptr; // ¹öÅØ½º ¼¼ÀÌ´õ HLSLÀÇ ÄÄÆÄÀÏµÈ °á°ú(¹ÙÀÌÆ®ÄÚµå)¸¦ ´ãÀ»¼ö ÀÖ´Â ¹öÆÛ °´Ã¼
+	// 2. Renderì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•   ë²„í…ìŠ¤ ì…°ì´ë” ìƒì„±
+	ComPtr<ID3DBlob> vertexShaderBuffer = nullptr; // ë²„í…ìŠ¤ ì„¸ì´ë” HLSLì˜ ì»´íŒŒì¼ëœ ê²°ê³¼(ë°”ì´íŠ¸ì½”ë“œ)ë¥¼ ë‹´ì„ìˆ˜ ìˆëŠ” ë²„í¼ ê°ì²´
 	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicVertexShader.hlsl", "main", "vs_4_0", vertexShaderBuffer.GetAddressOf()));
-	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), // ÇÊ¿äÇÑ µ¥ÀÌÅÍ¸¦ º¹»çÇÏ¸ç °´Ã¼ »ı¼º 
+	HR_T(m_pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), // í•„ìš”í•œ ë°ì´í„°ë¥¼ ë³µì‚¬í•˜ë©° ê°ì²´ ìƒì„± 
 		vertexShaderBuffer->GetBufferSize(), NULL, m_pVertexShader.GetAddressOf()));
 	
-	// 3. Render() ¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ InputLayout »ı¼º 	
-	D3D11_INPUT_ELEMENT_DESC layout[] =  // ÀÎÇ² ·¹ÀÌ¾Æ¿ôÀº ¹öÅØ½º ½¦ÀÌ´õ°¡ ÀÔ·Â¹ŞÀ» µ¥ÀÌÅÍÀÇ Çü½ÄÀ» ÁöÁ¤ÇÑ´Ù.
+	// 3. Render() ì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  InputLayout ìƒì„± 	
+	D3D11_INPUT_ELEMENT_DESC layout[] =  // ì¸í’‹ ë ˆì´ì•„ì›ƒì€ ë²„í…ìŠ¤ ì‰ì´ë”ê°€ ì…ë ¥ë°›ì„ ë°ì´í„°ì˜ í˜•ì‹ì„ ì§€ì •í•œë‹¤.
 	{// SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate		
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
-	// ¹öÅØ½º ¼ÎÀÌ´õÀÇ Input¿¡ ÁöÁ¤µÈ ³»¿ë°ú °°ÀºÁö °ËÁõÇÏ¸é¼­ InputLayoutÀ» »ı¼ºÇÑ´Ù.
+	// ë²„í…ìŠ¤ ì…°ì´ë”ì˜ Inputì— ì§€ì •ëœ ë‚´ìš©ê³¼ ê°™ì€ì§€ ê²€ì¦í•˜ë©´ì„œ InputLayoutì„ ìƒì„±í•œë‹¤.
 	HR_T(hr = m_pDevice->CreateInputLayout(layout, ARRAYSIZE(layout),
 		vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), m_pInputLayout.GetAddressOf()));
 
 
-	// 4. Render¿¡¼­ ÆÄÀÌÇÁ¶óÀÎ¿¡ ¹ÙÀÎµùÇÒ ÇÈ¼¿ ¼ÎÀÌ´õ »ı¼º
-	ComPtr<ID3DBlob> pixelShaderBuffer = nullptr; // ÇÈ¼¿ ¼¼ÀÌ´õ HLSLÀÇ ÄÄÆÄÀÏµÈ °á°ú(¹ÙÀÌÆ®ÄÚµå)¸¦ ´ãÀ»¼ö ÀÖ´Â ¹öÆÛ °´Ã¼
+	// 4. Renderì—ì„œ íŒŒì´í”„ë¼ì¸ì— ë°”ì¸ë”©í•  í”½ì…€ ì…°ì´ë” ìƒì„±
+	ComPtr<ID3DBlob> pixelShaderBuffer = nullptr; // í”½ì…€ ì„¸ì´ë” HLSLì˜ ì»´íŒŒì¼ëœ ê²°ê³¼(ë°”ì´íŠ¸ì½”ë“œ)ë¥¼ ë‹´ì„ìˆ˜ ìˆëŠ” ë²„í¼ ê°ì²´
 	
 	HR_T(CompileShaderFromFile(L"../Shaders/02_BasicPixelShader.hlsl", "main", "ps_4_0", pixelShaderBuffer.GetAddressOf()));
-	HR_T( m_pDevice->CreatePixelShader(	  // ÇÊ¿äÇÑ µ¥ÀÌÅÍ¸¦ º¹»çÇÏ¸ç °´Ã¼ »ı¼º 
+	HR_T( m_pDevice->CreatePixelShader(	  // í•„ìš”í•œ ë°ì´í„°ë¥¼ ë³µì‚¬í•˜ë©° ê°ì²´ ìƒì„± 
 		pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, m_pPixelShader.GetAddressOf()));
 	

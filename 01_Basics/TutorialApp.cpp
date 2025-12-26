@@ -13,7 +13,7 @@
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
-#define USE_FLIPMODE 1			//°æ°í ¸Þ¼¼Áö¸¦ ¾ø¾Ö·Á¸é Flip ¸ðµå¸¦ »ç¿ëÇÑ´Ù.
+#define USE_FLIPMODE 1			//ê²½ê³  ë©”ì„¸ì§€ë¥¼ ì—†ì• ë ¤ë©´ Flip ëª¨ë“œë¥¼ ì‚¬ìš©í•œë‹¤.
 
 
 bool TutorialApp::OnInitialize()
@@ -36,14 +36,14 @@ void TutorialApp::OnUpdate()
 
 void TutorialApp::OnRender()
 {
-	//±×¸±´ë»ó ¼³Á¤
+	//ê·¸ë¦´ëŒ€ìƒ ì„¤ì •
 	m_pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
 	Color color(0.0f, 0.5f, 0.5f, 1.0f);
-	// È­¸é Ä¥ÇÏ±â.
+	// í™”ë©´ ì¹ í•˜ê¸°.
 	m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, color);
 
-	// ½º¿ÒÃ¼ÀÎ ±³Ã¼.
+	// ìŠ¤ì™‘ì²´ì¸ êµì²´.
 	m_pSwapChain->Present(0, 0);
 }
 
@@ -52,17 +52,17 @@ bool TutorialApp::InitD3D()
 {
 	HRESULT hr = 0;
 
-	// 1. D3D11 Device,DeviceContext »ý¼º
+	// 1. D3D11 Device,DeviceContext ìƒì„±
 	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	// ±×·¡ÇÈ Ä«µå ÇÏµå¿þ¾îÀÇ ½ºÆåÀ¸·Î È£È¯µÇ´Â °¡Àå ³ôÀº DirectX ±â´É·¹º§·Î »ý¼ºÇÏ¿© µå¶óÀÌ¹ö°¡ ÀÛµ¿ ÇÑ´Ù.
-	// ÀÎÅÍÆäÀÌ½º´Â Direc3D11 ÀÌÁö¸¸ GPUµå¶óÀÌ¹ö´Â D3D12 µå¶óÀÌ¹ö°¡ ÀÛµ¿ÇÒ¼öµµ ÀÖ´Ù.
-	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ºÎÅÍ ¼ø¼­´ë·Î ½ÃµµÇÑ´Ù.
+	// ê·¸ëž˜í”½ ì¹´ë“œ í•˜ë“œì›¨ì–´ì˜ ìŠ¤íŽ™ìœ¼ë¡œ í˜¸í™˜ë˜ëŠ” ê°€ìž¥ ë†’ì€ DirectX ê¸°ëŠ¥ë ˆë²¨ë¡œ ìƒì„±í•˜ì—¬ ë“œë¼ì´ë²„ê°€ ìž‘ë™ í•œë‹¤.
+	// ì¸í„°íŽ˜ì´ìŠ¤ëŠ” Direc3D11 ì´ì§€ë§Œ GPUë“œë¼ì´ë²„ëŠ” D3D12 ë“œë¼ì´ë²„ê°€ ìž‘ë™í• ìˆ˜ë„ ìžˆë‹¤.
+	D3D_FEATURE_LEVEL featureLevels[] = { // index 0ë¶€í„° ìˆœì„œëŒ€ë¡œ ì‹œë„í•œë‹¤.
 		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0,D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
 	};
-	D3D_FEATURE_LEVEL actualFeatureLevel; // ÃÖÁ¾ ÇÇÃ³ ·¹º§À» ÀúÀåÇÒ º¯¼ö
+	D3D_FEATURE_LEVEL actualFeatureLevel; // ìµœì¢… í”¼ì²˜ ë ˆë²¨ì„ ì €ìž¥í•  ë³€ìˆ˜
 
 	HR_T(D3D11CreateDevice(
 		nullptr,
@@ -77,7 +77,7 @@ bool TutorialApp::InitD3D()
 		&m_pDeviceContext
 	));
 
-	// 2. ½º¿ÒÃ¼ÀÎ »ý¼ºÀ» À§ÇÑ DXGI Factory »ý¼º
+	// 2. ìŠ¤ì™‘ì²´ì¸ ìƒì„±ì„ ìœ„í•œ DXGI Factory ìƒì„±
 	UINT dxgiFactoryFlags = 0;
 #ifdef _DEBUG
 	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
@@ -96,15 +96,15 @@ bool TutorialApp::InitD3D()
 #endif
 	swapChainDesc.Width = m_ClientWidth;
 	swapChainDesc.Height = m_ClientHeight;
-	// ÇÏ³ªÀÇ ÇÈ¼¿ÀÌ Ã¤³Î RGBA °¢ 8ºñÆ® Çü½ÄÀ¸·Î Ç¥ÇöµÇ¸ç 
-	// Unsigned Normalized Integer 8ºñÆ® Á¤¼ö(0~255)´Ü°è¸¦ ºÎµ¿¼Ò¼öÁ¡À¸·Î Á¤±ÔÈ­ÇÑ 0.0~1.0À¸·Î ¸ÅÇÎÇÏ¿© Ç¥ÇöÇÑ´Ù.
+	// í•˜ë‚˜ì˜ í”½ì…€ì´ ì±„ë„ RGBA ê° 8ë¹„íŠ¸ í˜•ì‹ìœ¼ë¡œ í‘œí˜„ë˜ë©° 
+	// Unsigned Normalized Integer 8ë¹„íŠ¸ ì •ìˆ˜(0~255)ë‹¨ê³„ë¥¼ ë¶€ë™ì†Œìˆ˜ì ìœ¼ë¡œ ì •ê·œí™”í•œ 0.0~1.0ìœ¼ë¡œ ë§¤í•‘í•˜ì—¬ í‘œí˜„í•œë‹¤.
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ½º¿Ò Ã¼ÀÎÀÇ ¹é ¹öÆÛ°¡ ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀÇ ÃÖÁ¾ Ãâ·Â ´ë»óÀ¸·Î »ç¿ë
-	swapChainDesc.SampleDesc.Count = 1;  // ¸ÖÆ¼»ùÇÃ¸µ »ç¿ë ¾ÈÇÔ
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // ìŠ¤ì™‘ ì²´ì¸ì˜ ë°± ë²„í¼ê°€ ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì˜ ìµœì¢… ì¶œë ¥ ëŒ€ìƒìœ¼ë¡œ ì‚¬ìš©
+	swapChainDesc.SampleDesc.Count = 1;  // ë©€í‹°ìƒ˜í”Œë§ ì‚¬ìš© ì•ˆí•¨
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE; // Recommended for flip models
-	swapChainDesc.Stereo = FALSE;  // ½ºÅ×·¹¿À 3D ·»´õ¸µÀ» ºñÈ°¼ºÈ­
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ÀüÃ¼ È­¸é ÀüÈ¯À» Çã¿ë
-	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  Ã¢ÀÇ Å©±â¿Í ¹é ¹öÆÛÀÇ Å©±â°¡ ´Ù¸¦ ¶§. ¹é¹öÆÛ Å©±â¿¡ ¸Â°Ô ½ºÄÉÀÏ¸µ ÇÏÁö ¾Ê´Â´Ù.
+	swapChainDesc.Stereo = FALSE;  // ìŠ¤í…Œë ˆì˜¤ 3D ë Œë”ë§ì„ ë¹„í™œì„±í™”
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // ì „ì²´ í™”ë©´ ì „í™˜ì„ í—ˆìš©
+	swapChainDesc.Scaling = DXGI_SCALING_NONE; //  ì°½ì˜ í¬ê¸°ì™€ ë°± ë²„í¼ì˜ í¬ê¸°ê°€ ë‹¤ë¥¼ ë•Œ. ë°±ë²„í¼ í¬ê¸°ì— ë§žê²Œ ìŠ¤ì¼€ì¼ë§ í•˜ì§€ ì•ŠëŠ”ë‹¤.
 		
 	HR_T(pFactory->CreateSwapChainForHwnd(
 		m_pDevice,
@@ -115,8 +115,8 @@ bool TutorialApp::InitD3D()
 		&m_pSwapChain
 	));
 
-	// 3. ·»´õÅ¸°Ù ºä »ý¼º.  ·»´õ Å¸°Ù ºä´Â "¿©±â´Ù°¡ ±×¸²À» ±×·Á¶ó"¶ó°í GPU¿¡°Ô ¾Ë·ÁÁÖ´Â ¿ªÇÒÀ» ÇÏ´Â °´Ã¼.
-	// ÅØ½ºÃ³¿Í ¿µ±¸Àû ¿¬°áµÇ´Â °´Ã¼ÀÌ´Ù. 
+	// 3. ë Œë”íƒ€ê²Ÿ ë·° ìƒì„±.  ë Œë” íƒ€ê²Ÿ ë·°ëŠ” "ì—¬ê¸°ë‹¤ê°€ ê·¸ë¦¼ì„ ê·¸ë ¤ë¼"ë¼ê³  GPUì—ê²Œ ì•Œë ¤ì£¼ëŠ” ì—­í• ì„ í•˜ëŠ” ê°ì²´.
+	// í…ìŠ¤ì²˜ì™€ ì˜êµ¬ì  ì—°ê²°ë˜ëŠ” ê°ì²´ì´ë‹¤. 
 	ComPtr<ID3D11Texture2D> pBackBufferTexture;
 	HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
 	HR_T(m_pDevice->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, &m_pRenderTargetView));

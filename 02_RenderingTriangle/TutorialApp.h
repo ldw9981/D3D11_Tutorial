@@ -20,20 +20,20 @@ class TutorialApp :
 {
 public:
 
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎÀ» ±¸¼ºÇÏ´Â ÇÊ¼ö °´Ã¼ÀÇ ÀÎÅÍÆäÀÌ½º (  ‰X½º ½ºÅÙ½Ç ºäµµ ÀÖÁö¸¸ ¾ÆÁ÷ »ç¿ëÇÏÁö ¾Ê´Â´Ù.)
-	ComPtr<ID3D11Device> m_pDevice = nullptr;						// µğ¹ÙÀÌ½º	
-	ComPtr<ID3D11DeviceContext> m_pDeviceContext = nullptr;		// Áï½Ã µğ¹ÙÀÌ½º ÄÁÅØ½ºÆ®
-	ComPtr<IDXGISwapChain1> m_pSwapChain = nullptr;					// ½º¿ÒÃ¼ÀÎ
-	ComPtr<ID3D11RenderTargetView> m_pRenderTargetView = nullptr;	// ·»´õ¸µ Å¸°Ùºä
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì„ êµ¬ì„±í•˜ëŠ” í•„ìˆ˜ ê°ì²´ì˜ ì¸í„°í˜ì´ìŠ¤ (  ëŠìŠ¤ ìŠ¤í…ì‹¤ ë·°ë„ ìˆì§€ë§Œ ì•„ì§ ì‚¬ìš©í•˜ì§€ ì•ŠëŠ”ë‹¤.)
+	ComPtr<ID3D11Device> m_pDevice = nullptr;						// ë””ë°”ì´ìŠ¤	
+	ComPtr<ID3D11DeviceContext> m_pDeviceContext = nullptr;		// ì¦‰ì‹œ ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+	ComPtr<IDXGISwapChain1> m_pSwapChain = nullptr;					// ìŠ¤ì™‘ì²´ì¸
+	ComPtr<ID3D11RenderTargetView> m_pRenderTargetView = nullptr;	// ë Œë”ë§ íƒ€ê²Ÿë·°
 	
-	// ·»´õ¸µ ÆÄÀÌÇÁ¶óÀÎ¿¡ Àû¿ëÇÏ´Â  °´Ã¼¿Í Á¤º¸
-	ComPtr<ID3D11VertexShader> m_pVertexShader = nullptr;	// Á¤Á¡ ¼ÎÀÌ´õ.
-	ComPtr<ID3D11PixelShader> m_pPixelShader = nullptr;	// ÇÈ¼¿ ¼ÎÀÌ´õ.	
-	ComPtr<ID3D11InputLayout> m_pInputLayout = nullptr;	// ÀÔ·Â ·¹ÀÌ¾Æ¿ô.
-	ComPtr<ID3D11Buffer> m_pVertexBuffer = nullptr;		// ¹öÅØ½º ¹öÆÛ.
-	UINT m_QuadVertextBufferStride = 0;					// ¹öÅØ½º ÇÏ³ªÀÇ Å©±â.
-	UINT m_QuadVertextBufferOffset = 0;					// ¹öÅØ½º ¹öÆÛÀÇ ¿ÀÇÁ¼Â.
-	UINT m_VertexCount = 0;							// ¹öÅØ½º °³¼ö.
+	// ë Œë”ë§ íŒŒì´í”„ë¼ì¸ì— ì ìš©í•˜ëŠ”  ê°ì²´ì™€ ì •ë³´
+	ComPtr<ID3D11VertexShader> m_pVertexShader = nullptr;	// ì •ì  ì…°ì´ë”.
+	ComPtr<ID3D11PixelShader> m_pPixelShader = nullptr;	// í”½ì…€ ì…°ì´ë”.	
+	ComPtr<ID3D11InputLayout> m_pInputLayout = nullptr;	// ì…ë ¥ ë ˆì´ì•„ì›ƒ.
+	ComPtr<ID3D11Buffer> m_pVertexBuffer = nullptr;		// ë²„í…ìŠ¤ ë²„í¼.
+	UINT m_QuadVertextBufferStride = 0;					// ë²„í…ìŠ¤ í•˜ë‚˜ì˜ í¬ê¸°.
+	UINT m_QuadVertextBufferOffset = 0;					// ë²„í…ìŠ¤ ë²„í¼ì˜ ì˜¤í”„ì…‹.
+	UINT m_VertexCount = 0;							// ë²„í…ìŠ¤ ê°œìˆ˜.
 
 	bool OnInitialize() override;
 	void OnUninitialize() override;
@@ -43,7 +43,7 @@ public:
 	bool InitD3D();
 	void UninitD3D();
 
-	bool InitScene();		// ½¦ÀÌ´õ,¹öÅØ½º,ÀÎµ¦½º
+	bool InitScene();		// ì‰ì´ë”,ë²„í…ìŠ¤,ì¸ë±ìŠ¤
 	void UninitScene();
 };
 
