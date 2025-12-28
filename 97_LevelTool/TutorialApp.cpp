@@ -603,30 +603,38 @@ void TutorialApp::OnInputProcess(const Keyboard::State& KeyState, const Keyboard
 		// ImGui 창이 마우스를 캡쳐했는지 확인 (3D 뷰포트 클릭만 처리)
 		if (!ImGui::GetIO().WantCaptureMouse)
 		{
-			// 마우스 스크린 좌표를 NDC로 변환
+			// 마우스 스크린 좌표를 NDC로 변환   x,y: [-1,1]   z: [0,1]
 			float x = (2.0f * MouseState.x) / m_ClientWidth - 1.0f;
 			float y = 1.0f - (2.0f * MouseState.y) / m_ClientHeight;
 
-			// NDC를 뷰 공간으로 변환
-			Matrix invProj = m_Projection.Invert();
-			Vector4 rayClip(x, y, 1.0f, 1.0f);  // Near plane (z = 1.0f in NDC)
-			Vector4 rayEye = Vector4::Transform(rayClip, invProj);
-			rayEye.z = 1.0f;  // Forward direction
-			rayEye.w = 0.0f;  // Direction vector (not a point)
+			Matrix invViewProj = (m_View * m_Projection).Invert();
 
-			// 뷰 공간을 월드 공간으로 변환
-			Matrix invView = m_View.Invert();
-			Vector4 rayWorld4 = Vector4::Transform(rayEye, invView);
-			Vector3 rayDir(rayWorld4.x, rayWorld4.y, rayWorld4.z);
+			// Near / Far in NDC (D3D: z=0 near, z=1 far)
+			Vector4 nearClip(x, y, 0.0f, 1.0f);
+			Vector4 farClip(x, y, 1.0f, 1.0f);
+
+			// View는 World Space->Camera Space 변환 , Projection은 Camera Space ->Projection(Clip) Space 변환이므로
+			Vector4 nearWorld = Vector4::Transform(nearClip, invViewProj);
+			Vector4 farWorld = Vector4::Transform(farClip, invViewProj);
+
+			// 투영 행렬은 w를 z에 연동시켜 원근을 만들기 때문에, 역변환 후에도 (x,y,z,w) 동차좌표가 나온다.
+			// 실제 월드 좌표를 얻으려면 perspective divide로 xyz를 w로 나눠야 함.
+			nearWorld /= nearWorld.w;
+			farWorld /= farWorld.w;
+
+			Vector3 rayOrigin(nearWorld.x, nearWorld.y, nearWorld.z);
+			Vector3 rayDir = Vector3(farWorld.x - nearWorld.x,
+				farWorld.y - nearWorld.y,
+				farWorld.z - nearWorld.z);
 			rayDir.Normalize();
 
-			// Ray 생성 (카메라 위치에서 월드 방향으로)
-			Ray ray(m_Camera.m_Position, rayDir);
+			// Ray 생성 (화면의 점에서 시작하는 레이)
+			Ray ray(Vector3(nearWorld), rayDir);
 
 			// 디버그 레이 정보 저장 (Show Ray가 켜져있을 때만)
 			if (m_bShowDebugRay)
 			{
-				m_DebugRayOrigin = m_Camera.m_Position;
+				m_DebugRayOrigin = Vector3(nearWorld);
 				m_DebugRayDirection = rayDir;
 			}
 
