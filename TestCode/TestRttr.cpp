@@ -63,7 +63,8 @@ public:
 };
 
 // 하나의 cpp파일에 한번만 작성해야 함
-// 컴파일러가 RTTR_REGISTRATION을 전역 변수 초기화 코드로 변환하고, 프로그램 시작 시 main() 이전에 자동 실행한다.
+// 컴파일러가 RTTR_REGISTRATION을 전역 변수 초기화 코드로 변환하고,
+// 프로그램 시작 시 main() 이전에 자동 실행한다.
 RTTR_REGISTRATION
 {
 	// rttr::policy::ctor::as_raw_ptr 설명:
