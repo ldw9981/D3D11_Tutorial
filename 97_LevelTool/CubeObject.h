@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "GameObject.h"
 #include <directxtk/SimpleMath.h>
 
@@ -15,6 +15,7 @@
 
 using namespace DirectX::SimpleMath;
 
+
 class CubeObject : public GameObject
 {
 	RTTR_ENABLE(GameObject)
@@ -23,7 +24,10 @@ public:
 	~CubeObject();
 
 	// 속성
-	Vector4 m_Color;
+	Color m_Color;
+	Vector4 m_Float4;
+	Vector3 m_Float3;
+	Vector2 m_Float2;
 	std::string m_Name;
-	float m_Value;
+	float m_Float1;
 };

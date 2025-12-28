@@ -35,6 +35,7 @@ struct ConstantBuffer
 	Vector4 vMaterialColor;
 };
 
+
 bool TutorialApp::OnInitialize()
 {
 	if (!InitD3D())
@@ -858,8 +859,7 @@ void TutorialApp::RenderInspectorContent()
 		if (value.is_type<float>())
 		{
 			float v = value.get_value<float>();
-			ImGui::InputFloat(name.c_str(), &v, 0.0f, 0.0f, "%.3f");
-			if (ImGui::IsItemDeactivatedAfterEdit())
+			if (ImGui::DragFloat(name.c_str(), &v))
 				prop.set_value(*m_pSelectedObject, v);
 		}
 		else if (value.is_type<std::string>())
@@ -873,8 +873,7 @@ void TutorialApp::RenderInspectorContent()
 		{
 			Vector3 v = value.get_value<Vector3>();
 			float arr[3] = { v.x, v.y, v.z };
-			ImGui::InputFloat3(name.c_str(), arr, "%.3f");
-			if (ImGui::IsItemDeactivatedAfterEdit())
+			if (ImGui::DragFloat3(name.c_str(), arr))
 			{
 				v.x = arr[0]; v.y = arr[1]; v.z = arr[2];
 				prop.set_value(*m_pSelectedObject, v);
@@ -884,12 +883,23 @@ void TutorialApp::RenderInspectorContent()
 		{
 			Vector4 v = value.get_value<Vector4>();
 			float arr[4] = { v.x, v.y, v.z, v.w };
+			if (ImGui::DragFloat4(name.c_str(), arr))
+			{
+				v.x = arr[0]; v.y = arr[1]; v.z = arr[2]; v.w = arr[3];
+				prop.set_value(*m_pSelectedObject, v);
+			}
+		}
+		else if (value.is_type<Color>())
+		{
+			Color v = value.get_value<Color>();
+			float arr[4] = { v.x, v.y, v.z, v.w };
 			if (ImGui::ColorEdit4(name.c_str(), arr))
 			{
 				v.x = arr[0]; v.y = arr[1]; v.z = arr[2]; v.w = arr[3];
 				prop.set_value(*m_pSelectedObject, v);
 			}
 		}
+
 
 		// 속성 메타데이터 가져오기
 		auto desc_var = prop.get_metadata("desc");

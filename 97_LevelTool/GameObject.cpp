@@ -1,4 +1,4 @@
-﻿#include "GameObject.h"
+#include "GameObject.h"
 
 #ifdef min
 #undef min
@@ -56,7 +56,12 @@ Matrix GameObject::GetWorldMatrix()
 {
 	// Scale -> Rotation -> Translation
 	Matrix scaleMatrix = Matrix::CreateScale(m_Scale);
-	Matrix rotationMatrix = Matrix::CreateFromYawPitchRoll(m_Rotation.y, m_Rotation.x, m_Rotation.z);
+	// 3축 회전은 쿼터니언으로 변환		
+	Quaternion rotationQuat = Quaternion::CreateFromYawPitchRoll(
+		DirectX::XMConvertToRadians(m_Rotation.y),
+		DirectX::XMConvertToRadians(m_Rotation.x),
+		DirectX::XMConvertToRadians(m_Rotation.z));
+	Matrix rotationMatrix = Matrix::CreateFromQuaternion(rotationQuat);
 	Matrix translationMatrix = Matrix::CreateTranslation(m_Position);
 
 	m_WorldM = scaleMatrix * rotationMatrix * translationMatrix;
