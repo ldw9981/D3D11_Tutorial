@@ -5,12 +5,13 @@
 #include "CubeObject.h"
 #include <imgui.h>
 
-
-#define RTTR_DLL
-#include <rttr/registration>
-
 #pragma comment (lib, "d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
+
+
+// RTTR 사용을 위한 헤더와 라이브러리 링크
+#define RTTR_DLL
+#include <rttr/registration>
 
 #ifdef _DEBUG
 #pragma comment(lib, "rttr_core_d.lib")
