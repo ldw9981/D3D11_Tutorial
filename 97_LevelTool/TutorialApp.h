@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <windows.h>
 #include "../Common/GameApp.h"
 #include <d3d11.h>
@@ -87,8 +87,6 @@ public:
 	void RenderObjectPaletteContent();
 	void RenderWorldHierarchyContent();
 	void RenderInspectorContent();
-
-	Vector3 GetWorldPositionFromMouse(const ImVec2& mousePos);
 
 	void SaveScene();
 	void LoadScene();

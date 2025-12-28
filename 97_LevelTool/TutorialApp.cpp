@@ -909,39 +909,3 @@ void TutorialApp::RenderInspectorContent()
 		}
 	}
 }
-
-Vector3 TutorialApp::GetWorldPositionFromMouse(const ImVec2& mousePos)
-{
-	// 스크린 좌표를 NDC(Normalized Device Coordinates)로 변환
-	float x = (2.0f * mousePos.x) / m_ClientWidth - 1.0f;
-	float y = 1.0f - (2.0f * mousePos.y) / m_ClientHeight;
-
-	// NDC를 뷰 공간으로 변환
-	Matrix invProj = m_Projection.Invert();
-	Vector4 rayClip(x, y, -1.0f, 1.0f);
-	Vector4 rayView = Vector4::Transform(rayClip, invProj);
-	rayView.z = -1.0f;
-	rayView.w = 0.0f;
-
-	// 뷰 공간을 월드 공간으로 변환
-	Matrix invView = m_View.Invert();
-	Vector4 rayWorld4 = Vector4::Transform(rayView, invView);
-	Vector3 rayWorld(rayWorld4.x, rayWorld4.y, rayWorld4.z);
-	rayWorld.Normalize();
-
-	// 카메라 위치에서 Ray 생성
-	Vector3 camPos = m_Camera.m_Position;
-
-	// Y=0 평면과의 교점 계산 (바닥에 배치)
-	if (rayWorld.y != 0.0f)
-	{
-		float t = -camPos.y / rayWorld.y;
-		if (t > 0.0f)
-		{
-			return camPos + rayWorld * t;
-		}
-	}
-
-	// 기본값 카메라 앞방 5유닛
-	return camPos + rayWorld * 5.0f;
-}
