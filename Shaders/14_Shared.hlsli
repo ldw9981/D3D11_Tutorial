@@ -14,6 +14,10 @@ cbuffer ConstantBuffer : register(b0)
     float gExposure;
     int gUseWideGamut;      // 넓은 색역 사용 여부 (0=Rec.709, 1=Rec.2020)
     int gUseToneMapping;    // 톤매핑 적용 여부 (0=Off, 1=ACES Film)
+    float gReferenceWhiteNit; // 기준 화이트 포인트 (nits)
+    float padding1;
+    float padding2;
+    float padding3;
 }
 
 

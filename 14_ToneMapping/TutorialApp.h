@@ -78,6 +78,7 @@ public:
 	float m_rotationAngle = 0.0f;
 
 	float m_LightIntensity[2] = { 1.0f, 5.0f };	// 라이트 세기 (배율, 1.0 = 기준 밝기)
+	float m_ReferenceWhiteNit=0;
 	float m_MonitorMaxNits=0.0f;
 	float m_Exposure = 0.0f;
 	bool m_isHDRSupported = false;

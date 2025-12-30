@@ -28,6 +28,10 @@ struct ConstantBuffer
 	float gExposure=1.0f;
 	int gUseWideGamut=0;		// 넓은 색역 사용 여부
 	int gUseToneMapping=1;		// 톤매핑 적용 여부
+	float gReferenceWhiteNit=230.0f; // SDR 기준 화이트 포인트 (nits)
+	float padding1;
+	float padding2;
+	float padding3;
 };
 
 bool TutorialApp::OnInitialize()
@@ -92,6 +96,7 @@ void TutorialApp::OnRender()
 	cb1.gExposure = m_Exposure;
 	cb1.gUseWideGamut = m_isWideGamut ? 1 : 0;	// 넓은 색역 사용 여부 전달
 	cb1.gUseToneMapping = m_UseToneMapping ? 1 : 0;	// 톤매핑 적용 여부 전달
+	cb1.gReferenceWhiteNit = m_ReferenceWhiteNit;	// 기준 화이트 포인트 전달
 
 	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
@@ -388,6 +393,9 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 	// 넓은 색역 판단: DCI-P3 수준 이상 (Red Primary x > 0.66 또는 Green Primary y > 0.68)
 	m_isWideGamut = (redX > 0.66f) || (greenY > 0.68f);
 
+	// Wide Gamut 여부에 따라 Reference White Nit 설정
+	m_ReferenceWhiteNit = m_isWideGamut ? 400.0f : 230.0f;
+
 	if (isHDRColorSpace && isHDRActive)
 	{
 		// 최종 판단: HDR 지원 및 OS 활성화
@@ -428,6 +436,7 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 		outMaxNits = 100.0f; // SDR 기본값
 		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // SDR 포맷 설정
 		m_isWideGamut = false;
+		m_ReferenceWhiteNit = 230.0f; // SDR 기본값
 
 		printf("INFO: HDR 비활성화됨\n");
 		printf("  MaxNits: 100.0 (SDR 기본값)\n");
@@ -780,6 +789,7 @@ void TutorialApp::RenderImGUI()
 		ImGui::Text("Tone Mapping Settings:");
 		ImGui::Checkbox("Use Tone Mapping (ACES Film)", &m_UseToneMapping);
 		ImGui::DragFloat("Exposure", &m_Exposure, 0.1f, -5.0f, 5.0f);
+		ImGui::DragFloat("Reference White (nits)", &m_ReferenceWhiteNit, 1.0f, 80.0f, 1000.0f);
 
 		ImGui::Separator();
 		ImGui::DragFloat("Light0 intensity", &m_LightIntensity[0], 0.01f, 0.0f, 300.0f);
