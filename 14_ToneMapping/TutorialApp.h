@@ -77,10 +77,15 @@ public:
 	XMFLOAT4 m_LightDirsEvaluated[2] = {};		// 계산된 라이트 방향
 	float m_rotationAngle = 0.0f;
 
-	float m_LightIntensity[2] = { 0.1f,1.0f };	// 라이트 세기
+	float m_LightIntensity[2] = { 1.0f, 5.0f };	// 라이트 세기 (배율, 1.0 = 기준 밝기)
 	float m_MonitorMaxNits=0.0f;
 	float m_Exposure = 0.0f;
 	bool m_isHDRSupported = false;
+	bool m_isWideGamut = false;	// 넓은 색역 지원 여부
+	bool m_UseToneMapping = true;	// 톤매핑 적용 여부
+	float m_RedPrimary[2] = { 0.0f, 0.0f };		// Red Primary CIE xy 좌표
+	float m_GreenPrimary[2] = { 0.0f, 0.0f };	// Green Primary CIE xy 좌표
+	float m_BluePrimary[2] = { 0.0f, 0.0f };	// Blue Primary CIE xy 좌표
 
 	bool OnInitialize() override;
 	void OnUninitialize() override;

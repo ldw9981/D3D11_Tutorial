@@ -1,6 +1,7 @@
 #include "TutorialApp.h"
 #include "../Common/Helper.h"
 #include <d3dcompiler.h>
+#include <vector>
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>
@@ -25,7 +26,8 @@ struct ConstantBuffer
 	Vector4 vOutputColor;
 	float monitorMaxNits=100.0f;
 	float gExposure=1.0f;
-	float padding[2];
+	int gUseWideGamut=0;		// 넓은 색역 사용 여부
+	int gUseToneMapping=1;		// 톤매핑 적용 여부
 };
 
 bool TutorialApp::OnInitialize()
@@ -88,7 +90,8 @@ void TutorialApp::OnRender()
 	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 	cb1.monitorMaxNits = m_MonitorMaxNits;
 	cb1.gExposure = m_Exposure;
-
+	cb1.gUseWideGamut = m_isWideGamut ? 1 : 0;	// 넓은 색역 사용 여부 전달
+	cb1.gUseToneMapping = m_UseToneMapping ? 1 : 0;	// 톤매핑 적용 여부 전달
 
 	m_pDeviceContext->UpdateSubresource(m_pLightConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
@@ -358,6 +361,14 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 		return false;
 	}
 
+	// 모니터의 색역 정보 저장 (CIE xy 좌표)
+	m_RedPrimary[0] = desc1.RedPrimary[0];
+	m_RedPrimary[1] = desc1.RedPrimary[1];
+	m_GreenPrimary[0] = desc1.GreenPrimary[0];
+	m_GreenPrimary[1] = desc1.GreenPrimary[1];
+	m_BluePrimary[0] = desc1.BluePrimary[0];
+	m_BluePrimary[1] = desc1.BluePrimary[1];
+
 	// 6. HDR 활성화 조건 분석
 	bool isHDRColorSpace = (desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
 	outMaxNits = (float)desc1.MaxLuminance ;
@@ -365,11 +376,50 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 	// OS가 HDR을 켰을 때 MaxLuminance는 100 Nits(SDR 기준)를 초과합니다.
 	bool isHDRActive = outMaxNits > 100.0f;
 
+	// 7. 색역 분석 및 판단
+	// 참고 색역 좌표:
+	// Rec.709:  Red(0.640, 0.330), Green(0.300, 0.600), Blue(0.150, 0.060)
+	// DCI-P3:   Red(0.680, 0.320), Green(0.265, 0.690), Blue(0.150, 0.060)
+	// Rec.2020: Red(0.708, 0.292), Green(0.170, 0.797), Blue(0.131, 0.046)
+
+	float redX = m_RedPrimary[0];
+	float greenY = m_GreenPrimary[1];
+
+	// 넓은 색역 판단: DCI-P3 수준 이상 (Red Primary x > 0.66 또는 Green Primary y > 0.68)
+	m_isWideGamut = (redX > 0.66f) || (greenY > 0.68f);
+
 	if (isHDRColorSpace && isHDRActive)
 	{
 		// 최종 판단: HDR 지원 및 OS 활성화
 		outFormat = DXGI_FORMAT_R10G10B10A2_UNORM; // HDR 포맷 설정
-		printf("SUCCESS: HDR 활성화됨. MaxNits: %.1f, Format: R10G10B10A2_UNORM\n", outMaxNits);
+
+		printf("========== Monitor Color Gamut Info ==========\n");
+		printf("MaxLuminance: %.1f nits\n", outMaxNits);
+		printf("MinLuminance: %.4f nits\n", desc1.MinLuminance);
+		printf("\n[Color Primaries (CIE xy)]\n");
+		printf("  Red   Primary: (%.4f, %.4f)\n", m_RedPrimary[0], m_RedPrimary[1]);
+		printf("  Green Primary: (%.4f, %.4f)\n", m_GreenPrimary[0], m_GreenPrimary[1]);
+		printf("  Blue  Primary: (%.4f, %.4f)\n", m_BluePrimary[0], m_BluePrimary[1]);
+		printf("\n[Reference Standards]\n");
+		printf("  Rec.709:  Red(0.640, 0.330), Green(0.300, 0.600)\n");
+		printf("  DCI-P3:   Red(0.680, 0.320), Green(0.265, 0.690)\n");
+		printf("  Rec.2020: Red(0.708, 0.292), Green(0.170, 0.797)\n");
+		printf("\n[Analysis]\n");
+
+		if (m_isWideGamut)
+		{
+			printf("  Color Gamut: WIDE GAMUT (DCI-P3 or wider)\n");
+			printf("  Recommendation: Rec.2020 색 공간 사용 가능\n");
+		}
+		else
+		{
+			printf("  Color Gamut: STANDARD GAMUT (sRGB/Rec.709)\n");
+			printf("  Recommendation: Rec.709 유지 권장 (색 왜곡 방지)\n");
+		}
+
+		printf("\nFormat: R10G10B10A2_UNORM (HDR)\n");
+		printf("==============================================\n");
+
 		return true;
 	}
 	else
@@ -377,7 +427,12 @@ bool TutorialApp::CheckHDRSupportAndGetMaxNits(float& outMaxNits, DXGI_FORMAT& o
 		// HDR 지원 안함 또는 OS에서 비활성화
 		outMaxNits = 100.0f; // SDR 기본값
 		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // SDR 포맷 설정
-		printf("INFO: HDR 비활성화. MaxNits: 100.0, Format: R8G8B8A8_UNORM\n");
+		m_isWideGamut = false;
+
+		printf("INFO: HDR 비활성화됨\n");
+		printf("  MaxNits: 100.0 (SDR 기본값)\n");
+		printf("  Format: R8G8B8A8_UNORM (LDR)\n");
+
 		return false;
 	}
 	return true;
@@ -532,15 +587,15 @@ void TutorialApp::CreateCube()
 	};
 
 	HRESULT hr = 0; // 결과값.
-	ID3D10Blob* errorMessage = nullptr;	 // 에러 메시지를 저장할 버퍼.	
+	ID3D10Blob* errorMessage = nullptr;	 // 에러 메시지를 저장할 버퍼.
 	CubeVertex vertices[] =
 	{
-		{ Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f) },// Normal Y +	 
+		{ Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f) },// Normal Y +
 		{ Vector3(1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f) },
 		{ Vector3(1.0f, 1.0f, 1.0f),	Vector3(0.0f, 1.0f, 0.0f) },
 		{ Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 1.0f, 0.0f) },
 
-		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f) },// Normal Y -		
+		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f) },// Normal Y -
 		{ Vector3(1.0f, -1.0f, -1.0f),	Vector3(0.0f, -1.0f, 0.0f) },
 		{ Vector3(1.0f, -1.0f, 1.0f),	Vector3(0.0f, -1.0f, 0.0f) },
 		{ Vector3(-1.0f, -1.0f, 1.0f),	Vector3(0.0f, -1.0f, 0.0f) },
@@ -582,7 +637,7 @@ void TutorialApp::CreateCube()
 	m_CubeVertexBufferOffset = 0;
 
 
-	//  InputLayout 생성 	
+	//  InputLayout 생성
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -634,7 +689,7 @@ void TutorialApp::CreateCube()
 	HR_T(CompileShaderFromFile(L"../shaders/14_SolidPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
 	HR_T(m_pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
 		pixelShaderBuffer->GetBufferSize(), NULL, &m_pSolidPixelShader));
-	SAFE_RELEASE(pixelShaderBuffer);	
+	SAFE_RELEASE(pixelShaderBuffer);
 }
 
 bool TutorialApp::InitImGUI()
@@ -688,20 +743,49 @@ void TutorialApp::RenderImGUI()
 
 		
 		
+		// HDR 지원 여부
 		m_isHDRSupported ? ImGui::Text("HDR Support") : ImGui::Text("No HDR Support");
-		
+
+		// 백버퍼 포맷
 		if( m_format == DXGI_FORMAT_R10G10B10A2_UNORM )
 			ImGui::Text("Current Format: R10G10B10A2_UNORM (HDR ToneMapping)");
 		else if (m_format == DXGI_FORMAT_R8G8B8A8_UNORM)
 			ImGui::Text("Current Format: R8G8B8A8_UNORM (LDR ToneMapping)");
 		else
 			ImGui::Text("Current Format: unknown");
-					
+
+		// 모니터 밝기 정보
+		ImGui::Text("Monitor Max Nits: %.1f", m_MonitorMaxNits);
+
+		// 색역 정보
+		ImGui::Separator();
+		ImGui::Text("Color Gamut Info:");
+		if (m_isHDRSupported)
+		{
+			ImGui::Text("  Red Primary:   (%.4f, %.4f)", m_RedPrimary[0], m_RedPrimary[1]);
+			ImGui::Text("  Green Primary: (%.4f, %.4f)", m_GreenPrimary[0], m_GreenPrimary[1]);
+			ImGui::Text("  Blue Primary:  (%.4f, %.4f)", m_BluePrimary[0], m_BluePrimary[1]);
+
+			if (m_isWideGamut)
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "  -> Wide Gamut (DCI-P3+)");
+			else
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  -> Standard Gamut (Rec.709)");
+		}
+		else
+		{
+			ImGui::Text("  (HDR 비활성화 상태)");
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Tone Mapping Settings:");
+		ImGui::Checkbox("Use Tone Mapping (ACES Film)", &m_UseToneMapping);
 		ImGui::DragFloat("Exposure", &m_Exposure, 0.1f, -5.0f, 5.0f);
-		ImGui::DragFloat("Light0 intensity", &m_LightIntensity[0], 0.01f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color		
+
+		ImGui::Separator();
+		ImGui::DragFloat("Light0 intensity", &m_LightIntensity[0], 0.01f, 0.0f, 300.0f);
+		ImGui::ColorEdit3("Light0 color", (float*)&m_LightColors[0]); // Edit 3 floats representing a color
 		ImGui::SliderFloat("Light1 rotation", &m_rotationAngle, 0.0f, 360.0f);
-		ImGui::DragFloat("Light1 intensity", &m_LightIntensity[1], 0.01f, 0.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::DragFloat("Light1 intensity", &m_LightIntensity[1], 0.01f, 0.0f, 300.0f);
 		ImGui::ColorEdit3("Light1 color", (float*)&m_LightColors[1]); // Edit 3 floats representing a color	
 		ImGui::End();
 	}

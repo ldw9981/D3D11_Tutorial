@@ -12,7 +12,8 @@ cbuffer ConstantBuffer : register(b0)
     float4 vOutputColor;
     float  gMaxHDRNits;
     float gExposure;
-    float padding[2];
+    int gUseWideGamut;      // ë„“ì€ ìƒ‰ì—­ ì‚¬ìš© ì—¬ë¶€ (0=Rec.709, 1=Rec.2020)
+    int gUseToneMapping;    // í†¤ë§¤í•‘ ì ìš© ì—¬ë¶€ (0=Off, 1=ACES Film)
 }
 
 
@@ -31,7 +32,7 @@ struct PS_INPUT_BASIC
 
 struct VS_INPUT_QUAD
 {
-    float3 position : POSITION; // ÀÌ¹Ì NDC
+    float3 position : POSITION; // ì´ë¯¸ NDC
     float2 uv : TEXCOORD0;
 };
 
@@ -42,8 +43,8 @@ struct PS_INPUT_QUAD
 };
 
 
-// ÀÔ·Â: Linear °ø°£ÀÇ HDR RGB »ö»ó°ª
-// Ãâ·Â: 0.0 ~ 1.0 ¹üÀ§ÀÇ ¾ĞÃàµÈ ¼±Çü RGB °ª (float3)
+// ì…ë ¥: Linear ê³µê°„ì˜ HDR RGB ìƒ‰ìƒê°’
+// ì¶œë ¥: 0.0 ~ 1.0 ë²”ìœ„ì˜ ì••ì¶•ëœ ì„ í˜• RGB ê°’ (float3)
 float3 ACESFilm(float3 x)
 {
     float a = 2.51f;
@@ -53,6 +54,3 @@ float3 ACESFilm(float3 x)
     float e = 0.14f;
     return saturate(x * (a * x + b) / (x * (c * x + d) + e));
 }
-
-
-

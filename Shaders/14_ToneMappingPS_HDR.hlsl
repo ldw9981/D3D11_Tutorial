@@ -26,16 +26,43 @@ float3 LinearToST2084(float3 color)
 
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {
-     // 1. 렌더링된 HDR 색 로드 (Nits 스케일로 표현)
+    //  렌더링된 HDR 색 로드
     float3 C_linear709 = gSceneHDR.Sample(gSamplerLinear, input.uv).rgb;
+
+    // Exposure 적용
     float3 C_exposure = C_linear709 * pow(2.0f, gExposure);
-    float3 C_tonemapped = ACESFilm(C_exposure);
+
+    // 색역 변환: 모니터가 넓은 색역을 지원하는 경우만 Rec.2020으로 변환
+    float3 C_Gamut;
+    if (gUseWideGamut)
+    {
+        // Wide Gamut 모니터: Rec.709 -> Rec.2020 변환
+        C_Gamut = Rec709ToRec2020(C_exposure);
+    }
+    else
+    {
+        // Standard Gamut 모니터: Rec.709 유지 (색 왜곡 방지)
+        C_Gamut = C_exposure;
+    }
+
+    float3 C_tonemapped;
+    if (gUseToneMapping)
+    {        
+        C_tonemapped = ACESFilm(C_Gamut);
+    }
+    else
+    {
+        C_tonemapped = C_Gamut;
+    }
 
     const float st2084max = 10000.0;
-    const float hdrScalar = gMaxHDRNits / st2084max;
-    float3 C_Rec2020 = Rec709ToRec2020(C_tonemapped);
-    float3 C_ST2084 = LinearToST2084(C_Rec2020 * hdrScalar);
+    float referenceWhite = gUseWideGamut ? 203.0f : 400.0f;
+    float3 finalColorNits = C_tonemapped * referenceWhite;
+    finalColorNits = min(finalColorNits, gMaxHDRNits);
+
+    // PQ 입력: 물리적 밝기를 10,000 nits 기준으로 정규화된 0~1 사이를 입력함
+    float3 C_ST2084 = LinearToST2084(finalColorNits/st2084max);
 
     // 최종 PQ 인코딩된 값 [0.0, 1.0]을 R10G10B10A2_UNORM 백버퍼에 출력
-    return float4(C_ST2084, 1.0);
+    return float4(C_ST2084, 1.0f);
 }
