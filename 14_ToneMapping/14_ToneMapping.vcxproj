@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{0e5f6f72-258c-4bda-91d0-7cdc5cf866c5}</ProjectGuid>
-    <RootNamespace>My14HDRRenderTarget</RootNamespace>
+    <RootNamespace>14_ToneMapping</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
