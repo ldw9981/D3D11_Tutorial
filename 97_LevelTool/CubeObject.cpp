@@ -24,6 +24,8 @@ RTTR_REGISTRATION
 		.property("Float3", &CubeObject::m_Float3)
 		.property("Float2", &CubeObject::m_Float2)
 		.property("Float1", &CubeObject::m_Float1);
+
+
 }
 
 CubeObject::CubeObject()

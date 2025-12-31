@@ -24,20 +24,28 @@ RTTR_REGISTRATION
 		.property("Scale", &GameObject::m_Scale);
 
 	
-	registration::class_<Vector3>("Vector3")
+	registration::class_<DirectX::SimpleMath::Vector3>("Vector3")
 		.constructor<>()
 		.constructor<float, float, float>()
 		.property("x", &Vector3::x)
 		.property("y", &Vector3::y)
 		.property("z", &Vector3::z);
 
-	registration::class_<Vector4>("Vector4")
+	registration::class_<DirectX::SimpleMath::Vector4>("Vector4")
 		.constructor<>()
 		.constructor<float, float, float, float>()
 		.property("x", &Vector4::x)
 		.property("y", &Vector4::y)
 		.property("z", &Vector4::z)
 		.property("w", &Vector4::w);
+
+	registration::class_<DirectX::SimpleMath::Color>("Color")
+		.constructor<>()
+		.constructor<float, float, float, float>()
+		.property("x", &Color::x)
+		.property("y", &Color::y)
+		.property("z", &Color::z)
+		.property("w", &Color::w);
 }
 
 GameObject::GameObject()
@@ -105,14 +113,19 @@ nlohmann::json GameObject::Serialize() const
 		{
 			objJson["properties"][propName] = value.get_value<std::string>();
 		}
-		else if (value.is_type<Vector3>())
+		else if (value.is_type<DirectX::SimpleMath::Vector3>())
 		{
 			Vector3 v = value.get_value<Vector3>();
 			objJson["properties"][propName] = { v.x, v.y, v.z };
 		}
-		else if (value.is_type<Vector4>())
+		else if (value.is_type<DirectX::SimpleMath::Vector4>())
 		{
 			Vector4 v = value.get_value<Vector4>();
+			objJson["properties"][propName] = { v.x, v.y, v.z, v.w };
+		}
+		else if (value.is_type<DirectX::SimpleMath::Color>())
+		{
+			Color v = value.get_value<Color>();
 			objJson["properties"][propName] = { v.x, v.y, v.z, v.w };
 		}
 	}
@@ -166,8 +179,17 @@ bool GameObject::Deserialize(const nlohmann::json& jsonObj)
 			v.w = propValue[3].get<float>();
 			prop.set_value(*this, v);
 		}
+		else if (propType == type::get<Color>() && propValue.is_array() && propValue.size() == 4)
+		{
+			Color v;
+			v.x = propValue[0].get<float>();
+			v.y = propValue[1].get<float>();
+			v.z = propValue[2].get<float>();
+			v.w = propValue[3].get<float>();
+			prop.set_value(*this, v);
+		}
 	}
-	
+
 	UpdateAABB();
 
 	return true;

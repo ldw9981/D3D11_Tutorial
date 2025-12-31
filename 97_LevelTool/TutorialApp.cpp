@@ -878,9 +878,9 @@ void TutorialApp::RenderInspectorContent()
 			if (ImGui::InputText(name.c_str(), buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))
 				prop.set_value(*m_pSelectedObject, std::string(buf));
 		}
-		else if (value.is_type<Vector3>())
+		else if (value.is_type<DirectX::SimpleMath::Vector3>())
 		{
-			Vector3 v = value.get_value<Vector3>();
+			DirectX::SimpleMath::Vector3 v = value.get_value<DirectX::SimpleMath::Vector3>();
 			float arr[3] = { v.x, v.y, v.z };
 			if (ImGui::DragFloat3(name.c_str(), arr))
 			{
@@ -888,9 +888,9 @@ void TutorialApp::RenderInspectorContent()
 				prop.set_value(*m_pSelectedObject, v);
 			}
 		}
-		else if (value.is_type<Vector4>())
+		else if (value.is_type<DirectX::SimpleMath::Vector4>())
 		{
-			Vector4 v = value.get_value<Vector4>();
+			DirectX::SimpleMath::Vector4 v = value.get_value<DirectX::SimpleMath::Vector4>();
 			float arr[4] = { v.x, v.y, v.z, v.w };
 			if (ImGui::DragFloat4(name.c_str(), arr))
 			{
@@ -898,15 +898,20 @@ void TutorialApp::RenderInspectorContent()
 				prop.set_value(*m_pSelectedObject, v);
 			}
 		}
-		else if (value.is_type<Color>())
+		else if (value.is_type<DirectX::SimpleMath::Color>())
 		{
-			Color v = value.get_value<Color>();
+			DirectX::SimpleMath::Color v = value.get_value<DirectX::SimpleMath::Color>();
 			float arr[4] = { v.x, v.y, v.z, v.w };
 			if (ImGui::ColorEdit4(name.c_str(), arr))
 			{
 				v.x = arr[0]; v.y = arr[1]; v.z = arr[2]; v.w = arr[3];
 				prop.set_value(*m_pSelectedObject, v);
 			}
+		}
+		else
+		{
+			// 인식되지 않은 타입 표시
+			ImGui::Text("%s: (Unknown type: %s)", name.c_str(), value.get_type().get_name().to_string().c_str());
 		}
 
 
