@@ -63,3 +63,43 @@ float3 LinearToSRGB(float3 linearColor)
 {
     return pow(linearColor, 1.0f / 2.2f);
 }
+
+float3 ToneMapHDR_Reinhard(float3 sceneLinear, float paperWhiteNits, float peakNits)
+{
+    // 1) Convert relative scene-linear -> absolute nits anchored at paper white
+    float3 nits = sceneLinear * paperWhiteNits;
+
+    // 2) Roll-off to peak (compress highlights smoothly)
+    //    This is a "peak-aware Reinhard" style curve:
+    //    - stays close to linear around low/mid
+    //    - compresses as it approaches peak
+    float3 x = nits / peakNits; // normalize to peak
+    float3 y = x / (1.0 + x); // compress to < 1
+    float3 outNits = y * peakNits; // back to nits
+
+    return outNits;
+}
+
+float3 Rec709ToRec2020(float3 color)
+{
+    static const float3x3 conversion =
+    {
+        0.627402, 0.329292, 0.043306,
+        0.069095, 0.919544, 0.011360,
+        0.016394, 0.088028, 0.895578
+    };
+    return mul(conversion, color);
+}
+
+// PQ는 10,000nit 기준 이므로
+// color_for_PQ = linear01 * (displayMaxNits / 10000.0)
+float3 LinearToST2084(float3 color)
+{
+    float m1 = 2610.0 / 4096.0 / 4;
+    float m2 = 2523.0 / 4096.0 * 128;
+    float c1 = 3424.0 / 4096.0;
+    float c2 = 2413.0 / 4096.0 * 32;
+    float c3 = 2392.0 / 4096.0 * 32;
+    float3 cp = pow(abs(color), m1);
+    return pow((c1 + c2 * cp) / (1 + c3 * cp), m2);
+}

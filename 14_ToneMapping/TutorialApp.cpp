@@ -384,10 +384,7 @@ bool TutorialApp::CheckHDRSupport(float& outMaxNits, DXGI_FORMAT& outFormat, DXG
 
 	// 넓은 색역 판단: DCI-P3 수준 이상 (Red Primary x > 0.66 또는 Green Primary y > 0.68)
 	m_isWideGamutSupported = (redX > 0.66f) || (greenY > 0.68f);
-
-	// Wide Gamut 여부에 따라 Reference White Nit 설정
-	m_ReferenceWhiteNit = m_isWideGamutSupported ? 400.0f : 230.0f;
-
+	
 	if (isHDRColorSpace && isHDRActive)
 	{
 		// 최종 판단: HDR 지원 및 OS 활성화
@@ -431,7 +428,6 @@ bool TutorialApp::CheckHDRSupport(float& outMaxNits, DXGI_FORMAT& outFormat, DXG
 		outFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // SDR 포맷 설정
 		outColorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
 		m_isWideGamutSupported = false;
-		m_ReferenceWhiteNit = 230.0f; // SDR 기본값
 
 		printf("INFO: HDR 비활성화됨\n");
 		printf("  MaxNits: 100.0 (SDR 기본값)\n");
