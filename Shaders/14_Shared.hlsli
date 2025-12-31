@@ -58,3 +58,8 @@ float3 ACESFilm(float3 x)
     float e = 0.14f;
     return saturate(x * (a * x + b) / (x * (c * x + d) + e));
 }
+
+float3 LinearToSRGB(float3 linearColor)
+{
+    return pow(linearColor, 1.0f / 2.2f);
+}

@@ -1,10 +1,7 @@
 #include "14_Shared.hlsli"
 
 
-float3 LinearToSRGB(float3 linearColor)
-{
-    return pow(linearColor, 1.0f / 2.2f);
-}
+
 
 float4 main(PS_INPUT_QUAD input) : SV_Target
 {

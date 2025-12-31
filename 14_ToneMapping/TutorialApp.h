@@ -53,14 +53,16 @@ public:
 	ID3D11Buffer* m_pCubeIndexBuffer = nullptr;
 	int m_nCubeIndices = 0;
 	bool m_forceLDR = false;
+	bool m_forceP709 = false;
 	bool m_UseACESFilm = true;
 
 
-	DXGI_FORMAT m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT			m_CurrFormat = DXGI_FORMAT_UNKNOWN;
+	DXGI_COLOR_SPACE_TYPE m_CurrColorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
 	ID3D11Buffer* m_pLightConstantBuffer = nullptr;
-	Matrix                m_World;				// 월드좌표계 공간으로 변환을 위한 행렬.
-	Matrix                m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
-	Matrix                m_Projection;			// 단위장치좌표계( Normalized Device Coordinate) 공간으로 변환을 위한 행렬.
+	Matrix              m_World;				// 월드좌표계 공간으로 변환을 위한 행렬.
+	Matrix				m_View;				// 뷰좌표계 공간으로 변환을 위한 행렬.
+	Matrix              m_Projection;			// 단위장치좌표계( Normalized Device Coordinate) 공간으로 변환을 위한 행렬.
 
 
 	XMFLOAT4 m_LightColors[2] =		// 라이트 색상
@@ -82,8 +84,10 @@ public:
 	float m_MonitorMaxNits=0.0f;
 	float m_Exposure = 0.0f;
 	bool m_isHDRSupported = false;
-	bool m_isWideGamut = false;	// 넓은 색역 지원 여부
+	bool m_isWideGamutSupported = false;	// 넓은 색역 지원 여부
+	bool m_useWideGamut = false;		// 넓은 색역 사용 여부
 	bool m_UseToneMapping = true;	// 톤매핑 적용 여부
+
 	float m_RedPrimary[2] = { 0.0f, 0.0f };		// Red Primary CIE xy 좌표
 	float m_GreenPrimary[2] = { 0.0f, 0.0f };	// Green Primary CIE xy 좌표
 	float m_BluePrimary[2] = { 0.0f, 0.0f };	// Blue Primary CIE xy 좌표
@@ -96,8 +100,8 @@ public:
 	bool InitD3D();
 	void UninitD3D();
 	void CreateSwapChainAndBackBuffer(DXGI_FORMAT format);
-	bool CheckHDRSupportAndGetMaxNits(float& outMaxLuminance, DXGI_FORMAT& outFormat);
-
+	bool CheckHDRSupport(float& outMaxLuminance, DXGI_FORMAT& outFormat, DXGI_COLOR_SPACE_TYPE& outCS);
+	void SelectColorSpace(DXGI_COLOR_SPACE_TYPE colorSpace);
 	bool InitScene();		// 쉐이더,버텍스,인덱스
 	void UninitScene();
 	

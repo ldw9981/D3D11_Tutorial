@@ -32,38 +32,37 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
     // Exposure 적용
     float3 C_exposure = C_linear709 * pow(2.0f, gExposure);
 
+    float3 C_tonemapped;
+    if (gUseToneMapping)
+    {
+        C_tonemapped = ACESFilm(C_exposure);
+    }
+    else
+    {
+        C_tonemapped = C_exposure;
+    }
+    
     // 색역 변환: 모니터가 넓은 색역을 지원하는 경우만 Rec.2020으로 변환
-    float3 C_Gamut;
+    float3 C_final;
     if (gUseWideGamut)
     {
         // Wide Gamut 모니터: Rec.709 -> Rec.2020 변환
-        C_Gamut = Rec709ToRec2020(C_exposure);
-    }
-    else
-    {
-        // Standard Gamut 모니터: Rec.709 유지 (색 왜곡 방지)
-        C_Gamut = C_exposure;
-    }
+        float3 C_Gamut = Rec709ToRec2020(C_tonemapped);
 
-    float3 C_tonemapped;
-    if (gUseToneMapping)
-    {        
-        C_tonemapped = ACESFilm(C_Gamut);
-    }
-    else
-    {
-        C_tonemapped = C_Gamut;
-    }
-
-    const float st2084max = 10000.0; 
-    float3 finalColorNits = C_tonemapped * gReferenceWhiteNit;
-    finalColorNits = min(finalColorNits, gMaxHDRNits);
+        const float st2084max = 10000.0;
+        float3 finalColorNits = C_Gamut * gReferenceWhiteNit;
+        finalColorNits = min(finalColorNits, gMaxHDRNits);
 
     // ACES 출력 1.0 (가장 밝은 값) → 1500 nits (모니터 최대 밝기) → 0.15 (PQ 정규화)
     // 모니터최대밝기/10000 이 입력할수 있는 한계값 -> 출력도 한계
     // → LinearToST2084(0.15) ≈ 0.58 (최종 출력, R10G10B10A2 포맷으로 저장)   
-    float3 C_ST2084 = LinearToST2084(finalColorNits/st2084max);
-
+        C_final = LinearToST2084(finalColorNits / st2084max);        
+    }
+    else
+    {
+        // Standard Gamut 모니터: Rec.709 유지 (색 왜곡 방지)
+        C_final = LinearToSRGB(C_tonemapped);
+    }  
     // 최종 PQ 인코딩된 값 [0.0, 1.0]을 R10G10B10A2_UNORM 백버퍼에 출력
-    return float4(C_ST2084, 1.0f);
+    return float4(C_final, 1.0f);
 }

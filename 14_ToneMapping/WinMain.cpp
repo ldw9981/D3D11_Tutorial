@@ -18,7 +18,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			if (_wcsicmp(argv[i], L"-LDR") == 0)
 			{
-				App.m_forceLDR = true;				
+				App.m_forceLDR = true;
+			}
+
+			if (_wcsicmp(argv[i], L"-P709") == 0)
+			{
+				App.m_forceP709 = true;
 			}
 		}
 
