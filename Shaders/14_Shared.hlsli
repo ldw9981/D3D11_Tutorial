@@ -64,21 +64,28 @@ float3 LinearToSRGB(float3 linearColor)
     return pow(linearColor, 1.0f / 2.2f);
 }
 
-float3 ToneMapHDR_Reinhard(float3 sceneLinear, float paperWhiteNits, float peakNits)
+
+//휘도 기반 톤 매핑 (Luminance-based)
+float3 ToneMapHDR_Reinhard_Luminance(float3 sceneLinear, float paperWhiteNits, float peakNits)
 {
-    // 1) Convert relative scene-linear -> absolute nits anchored at paper white
+    // 1) 절대 니트값으로 변환
     float3 nits = sceneLinear * paperWhiteNits;
 
-    // 2) Roll-off to peak (compress highlights smoothly)
-    //    This is a "peak-aware Reinhard" style curve:
-    //    - stays close to linear around low/mid
-    //    - compresses as it approaches peak
-    float3 x = nits / peakNits; // normalize to peak
-    float3 y = x / (1.0 + x); // compress to < 1
-    float3 outNits = y * peakNits; // back to nits
+    // 2) 휘도(Luminance) 계산 (Rec.2020 계수 사용)
+    // 색역 변환 후라면 이 계수를 사용하는 것이 정확합니다.
+    float L_nits = dot(nits, float3(0.2627f, 0.6780f, 0.0593f));
 
-    return outNits;
+    // 3) 휘도를 기준으로 압축 비율(Scale) 계산
+    float x = L_nits / peakNits;
+    float y = x / (1.0f + x);
+    
+    // 분모가 0이 되는 것을 방지하며 scale 계산
+    float scale = (y * peakNits) / max(L_nits, 0.0001f);
+
+    // 4) 원본 RGB에 동일한 비율을 곱함 (색조 유지)
+    return nits * scale;
 }
+
 
 float3 Rec709ToRec2020(float3 color)
 {
