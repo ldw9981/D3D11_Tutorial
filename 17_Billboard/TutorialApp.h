@@ -31,10 +31,10 @@ struct ConstantBuffer
 
 enum class BillboardType
 {
-	Identity = 0,           // 빌보드 없음
-	YAxisLocked = 1,    // 연기/불꽃 - Y축 고정
-	Spherical = 2,      // 스파크 - Spherical
-	ScreenAligned = 3   // UI 이펙트 - Screen aligned
+	Identity = 0,           // Identity 행렬 적용
+	YAxisLocked = 1,    // 연기/불꽃 - Y축 기준으로만 회전하여 카메라 위치를 바라보도록 한다.
+	Spherical = 2,      // 스파크 - Spherical	X,Y,Z축 모두 회전 사용하여 카메라 위치를 바라보도록 한다.
+	ScreenAligned = 3   // UI 이펙트 - Screen aligned  카메라의 화면과 항상 완전히 평행하게 정렬하여 정면으로 보입
 };
 
 class TutorialApp : public GameApp
