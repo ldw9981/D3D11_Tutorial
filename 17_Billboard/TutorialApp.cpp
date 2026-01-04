@@ -238,7 +238,7 @@ void TutorialApp::OnRender()
 		"Identity",
 		"Y-Axis Locked (Smoke/Fire)",
 		"Spherical (Sparks)",		
-		"Screen Aligned (UI)"
+		"Screen Aligned (3D UI)"
 	};
 	int currentType = (int)m_CurrentBillboardType;
 	if (ImGui::Combo("Type", &currentType, billboardTypes, 4)) {
