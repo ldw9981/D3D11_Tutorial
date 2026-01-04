@@ -9,7 +9,6 @@
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 ///////////////**************new**************////////////////////
-#pragma comment (lib, "D3D10_1.lib")
 #pragma comment (lib, "DXGI.lib")
 #pragma comment (lib, "D2D1.lib")
 #pragma comment (lib, "dwrite.lib")
@@ -24,9 +23,8 @@
 #include <directxtk/SimpleMath.h>
 
 ///////////////**************new**************////////////////////
-#include <D3D10_1.h>
 #include <DXGI.h>
-#include <D2D1.h>
+#include <d2d1_1.h>
 #include <sstream>
 #include <dwrite.h>
 ///////////////**************new**************////////////////////
@@ -53,10 +51,10 @@ ID3D11ShaderResourceView* CubesTexture;
 ID3D11SamplerState* CubesTexSamplerState;
 
 ///////////////**************new**************////////////////////
-ID3D10Device1* d3d101Device;
-IDXGIKeyedMutex* keyedMutex11;
-IDXGIKeyedMutex* keyedMutex10;
-ID2D1RenderTarget* D2DRenderTarget;
+ID2D1Factory1* D2DFactory;
+ID2D1Device* D2DDevice;
+ID2D1DeviceContext* D2DDeviceContext;
+ID2D1Bitmap1* D2DTargetBitmap;
 ID2D1SolidColorBrush* Brush;
 ID3D11Texture2D* BackBuffer11;
 ID3D11Texture2D* sharedTex11;
@@ -105,7 +103,7 @@ bool InitScene();
 void UpdateScene();
 void DrawScene();
 ///////////////**************new**************////////////////////
-bool InitD2D_D3D101_DWrite(IDXGIAdapter1* Adapter);
+bool InitD2D_D3D11_DWrite();
 void InitD2DScreenTexture();
 void RenderText(std::wstring text);
 ///////////////**************new**************////////////////////
@@ -314,8 +312,8 @@ bool InitializeDirect3d11App(HINSTANCE hInstance)
 	hr = D3D11CreateDeviceAndSwapChain(Adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
 		NULL, NULL, D3D11_SDK_VERSION, &swapChainDesc, &SwapChain, &d3d11Device, NULL, &d3d11DevCon);
 
-	//Initialize Direct2D, Direct3D 10.1, DirectWrite
-	InitD2D_D3D101_DWrite(Adapter);
+	//Initialize Direct2D (D2D1.1 via DXGI device) + DirectWrite
+	InitD2D_D3D11_DWrite();
 
 	//Release the Adapter interface
 	Adapter->Release();
@@ -348,13 +346,9 @@ bool InitializeDirect3d11App(HINSTANCE hInstance)
 }
 
 ///////////////**************new**************////////////////////
-bool InitD2D_D3D101_DWrite(IDXGIAdapter1* Adapter)
+bool InitD2D_D3D11_DWrite()
 {
-	//Create our Direc3D 10.1 Device///////////////////////////////////////////////////////////////////////////////////////
-	hr = D3D10CreateDevice1(Adapter, D3D10_DRIVER_TYPE_HARDWARE, NULL, D3D10_CREATE_DEVICE_DEBUG | D3D10_CREATE_DEVICE_BGRA_SUPPORT,
-		D3D10_FEATURE_LEVEL_9_3, D3D10_1_SDK_VERSION, &d3d101Device);
-
-	//Create Shared Texture that Direct3D 10.1 will render on//////////////////////////////////////////////////////////////
+	// Create the texture that Direct2D will draw into (and D3D11 will sample)
 	D3D11_TEXTURE2D_DESC sharedTexDesc;
 
 	ZeroMemory(&sharedTexDesc, sizeof(sharedTexDesc));
@@ -367,48 +361,42 @@ bool InitD2D_D3D101_DWrite(IDXGIAdapter1* Adapter)
 	sharedTexDesc.SampleDesc.Count = 1;
 	sharedTexDesc.Usage = D3D11_USAGE_DEFAULT;
 	sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	sharedTexDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+	sharedTexDesc.CPUAccessFlags = 0;
+	sharedTexDesc.MiscFlags = 0;
 
 	hr = d3d11Device->CreateTexture2D(&sharedTexDesc, NULL, &sharedTex11);
 
-	// Get the keyed mutex for the shared texture (for D3D11)///////////////////////////////////////////////////////////////
-	hr = sharedTex11->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&keyedMutex11);
+	// Create D2D factory (1.1)
+	D2D1_FACTORY_OPTIONS options = {};
+	D2DFactory = nullptr;
+	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory1), &options, (void**)&D2DFactory);
 
-	// Get the shared handle needed to open the shared texture in D3D10.1///////////////////////////////////////////////////
-	IDXGIResource* sharedResource10;
-	HANDLE sharedHandle10;
+	// Create D2D device/context from the D3D11 DXGI device
+	IDXGIDevice* dxgiDevice = nullptr;
+	hr = d3d11Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
+	D2DDevice = nullptr;
+	hr = D2DFactory->CreateDevice(dxgiDevice, &D2DDevice);
+	D2DDeviceContext = nullptr;
+	hr = D2DDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &D2DDeviceContext);
+	if (dxgiDevice) dxgiDevice->Release();
 
-	hr = sharedTex11->QueryInterface(__uuidof(IDXGIResource), (void**)&sharedResource10);
+	// Create a D2D target bitmap that wraps the D3D11 texture's DXGI surface
+	IDXGISurface* sharedSurface = nullptr;
+	hr = sharedTex11->QueryInterface(__uuidof(IDXGISurface), (void**)&sharedSurface);
+	D2D1_BITMAP_PROPERTIES1 bitmapProps = {};
+	bitmapProps.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	bitmapProps.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+	bitmapProps.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
+	bitmapProps.dpiX = 96.0f;
+	bitmapProps.dpiY = 96.0f;
+	D2DTargetBitmap = nullptr;
+	hr = D2DDeviceContext->CreateBitmapFromDxgiSurface(sharedSurface, &bitmapProps, &D2DTargetBitmap);
+	if (sharedSurface) sharedSurface->Release();
+	D2DDeviceContext->SetTarget(D2DTargetBitmap);
 
-	hr = sharedResource10->GetSharedHandle(&sharedHandle10);
-
-	sharedResource10->Release();
-
-	// Open the surface for the shared texture in D3D10.1///////////////////////////////////////////////////////////////////
-	IDXGISurface1* sharedSurface10;
-
-	hr = d3d101Device->OpenSharedResource(sharedHandle10, __uuidof(IDXGISurface1), (void**)(&sharedSurface10));
-
-	hr = sharedSurface10->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&keyedMutex10);
-
-	// Create D2D factory///////////////////////////////////////////////////////////////////////////////////////////////////
-	ID2D1Factory* D2DFactory;
-	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), (void**)&D2DFactory);
-
-	D2D1_RENDER_TARGET_PROPERTIES renderTargetProperties;
-
-	ZeroMemory(&renderTargetProperties, sizeof(renderTargetProperties));
-
-	renderTargetProperties.type = D2D1_RENDER_TARGET_TYPE_HARDWARE;
-	renderTargetProperties.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED);
-
-	hr = D2DFactory->CreateDxgiSurfaceRenderTarget(sharedSurface10, &renderTargetProperties, &D2DRenderTarget);
-
-	sharedSurface10->Release();
-	D2DFactory->Release();
-
-	// Create a solid color brush to draw something with		
-	hr = D2DRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 0.0f, 1.0f), &Brush);
+	// Create a solid color brush to draw something with
+	Brush = nullptr;
+	hr = D2DDeviceContext->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 0.0f, 1.0f), &Brush);
 
 	//DirectWrite///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
@@ -428,7 +416,6 @@ bool InitD2D_D3D101_DWrite(IDXGIAdapter1* Adapter)
 	hr = TextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	hr = TextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 
-	d3d101Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 	return true;
 }
 ///////////////**************new**************////////////////////
@@ -455,11 +442,11 @@ void CleanUp()
 	CWcullMode->Release();
 
 	///////////////**************new**************////////////////////
-	d3d101Device->Release();
-	keyedMutex11->Release();
-	keyedMutex10->Release();
-	D2DRenderTarget->Release();
-	Brush->Release();
+	if (Brush) Brush->Release();
+	if (D2DTargetBitmap) D2DTargetBitmap->Release();
+	if (D2DDeviceContext) D2DDeviceContext->Release();
+	if (D2DDevice) D2DDevice->Release();
+	if (D2DFactory) D2DFactory->Release();
 	BackBuffer11->Release();
 	sharedTex11->Release();
 	DWriteFactory->Release();
@@ -475,10 +462,12 @@ void InitD2DScreenTexture()
 	CubeVertex v[] =
 	{
 		// Front Face
-		CubeVertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-		CubeVertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-		CubeVertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-		CubeVertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+		// This quad is drawn with WVP = Identity, so positions must already be in clip space.
+		// D3D clip space expects 0..1 for Z; use Z=0 so the quad isn't clipped away.
+		CubeVertex(-1.0f, -1.0f, 0.0f, 0.0f, 1.0f),
+		CubeVertex(-1.0f,  1.0f, 0.0f, 0.0f, 0.0f),
+		CubeVertex(1.0f,  1.0f, 0.0f, 1.0f, 0.0f),
+		CubeVertex(1.0f, -1.0f, 0.0f, 1.0f, 1.0f),
 	};
 
 	DWORD indices[] = {
@@ -533,10 +522,10 @@ bool InitScene()
 
 	//Compile Shaders from shader file
 //	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "VS", "vs_4_0", 0, 0, 0, &VS_Buffer, 0, 0);
-	hr = CompileShaderFromFile(L"../shaders/12_Effects.hlsl", 0, "VS", "vs_4_0", &VS_Buffer);
+	hr = CompileShaderFromFile(L"../shaders/12_EffectVS.hlsl", 0, "main", "vs_4_0", &VS_Buffer);
 
 	//	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "PS", "ps_4_0", 0, 0, 0, &PS_Buffer, 0, 0);
-	hr = CompileShaderFromFile(L"../shaders/12_Effects.hlsl", 0, "PS", "ps_4_0", &PS_Buffer);
+	hr = CompileShaderFromFile(L"../shaders/12_EffectPS.hlsl", 0, "main", "ps_4_0", &PS_Buffer);
 
 	//Create the Shader Objects
 	hr = d3d11Device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), NULL, &VS);
@@ -696,20 +685,20 @@ bool InitScene()
 	ZeroMemory(&rtbd, sizeof(rtbd));
 
 	rtbd.BlendEnable = true;
-	rtbd.SrcBlend = D3D11_BLEND_SRC_COLOR;
-	///////////////**************new**************////////////////////
+	// Direct2D renders into BGRA with premultiplied alpha.
+	// Use premultiplied-alpha blending: out = src + dst * (1 - src.a)
+	rtbd.SrcBlend = D3D11_BLEND_ONE;
 	rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	///////////////**************new**************////////////////////
 	rtbd.BlendOp = D3D11_BLEND_OP_ADD;
 	rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-	rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
+	rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 	rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+	rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	blendDesc.AlphaToCoverageEnable = false;
 	blendDesc.RenderTarget[0] = rtbd;
 
-	hr = CreateTextureFromFile(d3d11Device, L"../resource/braynzar.jpg", &CubesTexture);
+	hr = CreateTextureFromFile(d3d11Device, L"../resource/seafloor.dds", &CubesTexture);
 
 	// Describe the Sample State
 	D3D11_SAMPLER_DESC sampDesc;
@@ -774,17 +763,15 @@ void UpdateScene()
 ///////////////**************new**************////////////////////
 void RenderText(std::wstring text)
 {
-	//Release the D3D 11 Device
-	keyedMutex11->ReleaseSync(0);
+	// D2D가 sharedTex11에 그리기 전에, D3D11에서 SRV로 바인딩한 것을 해제
+	ID3D11ShaderResourceView* nullSRV = nullptr;
+	d3d11DevCon->PSSetShaderResources(0, 1, &nullSRV);
 
-	//Use D3D10.1 device
-	keyedMutex10->AcquireSync(0, 5);
-
-	//Draw D2D content		
-	D2DRenderTarget->BeginDraw();
+	// Draw D2D content
+	D2DDeviceContext->BeginDraw();
 
 	//Clear D2D Background
-	D2DRenderTarget->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
+	D2DDeviceContext->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
 
 	//Create our string
 	std::wostringstream printString;
@@ -801,7 +788,7 @@ void RenderText(std::wstring text)
 	D2D1_RECT_F layoutRect = D2D1::RectF(0, 0, Width, Height);
 
 	//Draw the Text
-	D2DRenderTarget->DrawText(
+	D2DDeviceContext->DrawText(
 		printText.c_str(),
 		static_cast<UINT32>(wcslen(printText.c_str())),
 		TextFormat,
@@ -809,13 +796,7 @@ void RenderText(std::wstring text)
 		Brush
 	);
 
-	D2DRenderTarget->EndDraw();
-
-	//Release the D3D10.1 Device
-	keyedMutex10->ReleaseSync(1);
-
-	//Use the D3D11 Device
-	keyedMutex11->AcquireSync(1, 5);
+	D2DDeviceContext->EndDraw();
 
 	//Use the shader resource representing the direct2d render target
 	//to texture a square which is rendered in screen space so it
