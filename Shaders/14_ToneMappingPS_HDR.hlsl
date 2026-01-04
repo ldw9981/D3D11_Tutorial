@@ -27,6 +27,8 @@ float4 main(PS_INPUT_QUAD input) : SV_Target
     {
         if (gUseToneMapping)
             C_final = ACESFilm(C_exposure);
+        else
+            C_final = C_exposure;
         
         // Standard Gamut 모니터: Rec.709 유지 (색 왜곡 방지)
         C_final = LinearToSRGB(C_final);
