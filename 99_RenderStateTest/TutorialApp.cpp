@@ -150,8 +150,16 @@ void TutorialApp::OnRender()
 		m_pDeviceContext->DrawIndexed(m_nIndexCount, 0, 0);
 	}
 
+	// Depth 텍스처를 ImGui에서 SRV로 샘플링하려면, 여기서 DSV 바인딩을 먼저 해제해야 합니다.
+	// (같은 리소스를 DSV + SRV로 동시에 바인딩하는 것은 D3D11에서 금지)
+	m_pDeviceContext->OMSetRenderTargets(1, rtvs, nullptr);
+
 	// Render ImGUI
 	RenderImGUI();
+
+	// 다음 프레임에 depth 텍스처를 DSV로 다시 바인딩할 수 있도록 SRV 바인딩도 해제
+	ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+	m_pDeviceContext->PSSetShaderResources(0, 1, nullSRV);
 
 	// Present our back buffer to our front buffer
 	m_pSwapChain->Present(0, 0);
@@ -208,23 +216,32 @@ bool TutorialApp::InitD3D()
 	descDepth.Height = m_ClientHeight;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	descDepth.SampleDesc.Count = 1;
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
-	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
 
-	ComPtr<ID3D11Texture2D> textureDepthStencil;
-	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, textureDepthStencil.GetAddressOf()));
+	m_pDepthStencilTexture.Reset();
+	HR_T(m_pDevice->CreateTexture2D(&descDepth, nullptr, m_pDepthStencilTexture.GetAddressOf()));
 
 	// Create the depth stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-	descDSV.Format = descDepth.Format;
+	descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
-	HR_T(m_pDevice->CreateDepthStencilView(textureDepthStencil.Get(), &descDSV, m_pDepthStencilView.GetAddressOf()));
+	HR_T(m_pDevice->CreateDepthStencilView(m_pDepthStencilTexture.Get(), &descDSV, m_pDepthStencilView.GetAddressOf()));
+
+	// Create SRV for visualization
+	D3D11_SHADER_RESOURCE_VIEW_DESC descSRV = {};
+	descSRV.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	descSRV.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	descSRV.Texture2D.MostDetailedMip = 0;
+	descSRV.Texture2D.MipLevels = 1;
+	m_pDepthStencilSRV.Reset();
+	HR_T(m_pDevice->CreateShaderResourceView(m_pDepthStencilTexture.Get(), &descSRV, m_pDepthStencilSRV.GetAddressOf()));
 
 	
 	return true;
@@ -408,8 +425,8 @@ void TutorialApp::UpdateRasterizerState()
 void TutorialApp::UpdateDepthStencilState()
 {
 	D3D11_DEPTH_STENCIL_DESC desc = {};
-	desc.DepthEnable = m_DepthEnable;
-	desc.DepthWriteMask = (m_DepthWriteMask == 0) ? D3D11_DEPTH_WRITE_MASK_ZERO : D3D11_DEPTH_WRITE_MASK_ALL;
+	desc.DepthEnable = (m_DepthTestEnable || m_DepthWriteEnable);
+	desc.DepthWriteMask = m_DepthWriteEnable ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
 	
 	// DepthFunc mapping
 	D3D11_COMPARISON_FUNC funcs[] = {
@@ -422,7 +439,9 @@ void TutorialApp::UpdateDepthStencilState()
 		D3D11_COMPARISON_GREATER_EQUAL,
 		D3D11_COMPARISON_ALWAYS
 	};
-	desc.DepthFunc = funcs[m_DepthFunc];
+	if (m_DepthFunc < 0) m_DepthFunc = 0;
+	if (m_DepthFunc >= (int)_countof(funcs)) m_DepthFunc = (int)_countof(funcs) - 1;
+	desc.DepthFunc = m_DepthTestEnable ? funcs[m_DepthFunc] : D3D11_COMPARISON_ALWAYS;
 	desc.StencilEnable = m_StencilEnable;
 	desc.StencilReadMask = 0xFF;
 	desc.StencilWriteMask = 0xFF;
@@ -506,6 +525,23 @@ void TutorialApp::RenderImGUI()
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+
+	if ((m_DepthTestEnable || m_DepthWriteEnable) && m_pDepthStencilSRV)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		const float margin = 10.0f;
+		const ImVec2 size(220.0f, 220.0f);
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - size.x - margin, margin), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(size, ImGuiCond_Always);
+		ImGui::SetNextWindowBgAlpha(0.75f);
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+		ImGui::Begin("Depth##Preview", nullptr, flags);
+		ImGui::TextUnformatted("Depth");
+		ImGui::Image((ImTextureID)m_pDepthStencilSRV.Get(), ImVec2(size.x - 20.0f, size.y - 40.0f));
+		ImGui::End();
+	}
 
 	ImGui::Begin("Render Settings");
 	
@@ -606,19 +642,19 @@ void TutorialApp::RenderImGUI()
 	ImGui::Text("Depth Stencil State");
 	ImGui::Text("---------------------------------");
 	
-	if (ImGui::Checkbox("Depth Enable", &m_DepthEnable))
+	if (ImGui::Checkbox("Depth Test", &m_DepthTestEnable))
 		UpdateDepthStencilState();
-	
-	const char* depthWriteMasks[] = { "Zero", "All" };
-	if (ImGui::Combo("Depth Write Mask", &m_DepthWriteMask, depthWriteMasks, 2))
+
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Depth Write", &m_DepthWriteEnable))
 		UpdateDepthStencilState();
 	
 	const char* depthFuncs[] = { "Never", "Less", "Equal", "LessEqual", "Greater", "NotEqual", "GreaterEqual", "Always" };
 	if (ImGui::Combo("Depth Func", &m_DepthFunc, depthFuncs, 8))
 		UpdateDepthStencilState();
 	
-	if (ImGui::Checkbox("Stencil Enable", &m_StencilEnable))
-		UpdateDepthStencilState();
+	//if (ImGui::Checkbox("Stencil Enable", &m_StencilEnable))
+	//	UpdateDepthStencilState();
 	
 	ImGui::Text("---------------------------------");
 	ImGui::Text("Blend State");
@@ -634,8 +670,8 @@ void TutorialApp::RenderImGUI()
 	if (ImGui::Combo("Dest Blend", &m_DestBlend, blendTypes, 10))
 		UpdateBlendState();
 	
-	const char* blendOps[] = { "", "Add", "Subtract", "RevSubtract", "Min", "Max" };
-	if (ImGui::Combo("Blend Op", &m_BlendOp, blendOps, 6))
+	const char* blendOps[] = {"Add", "Subtract", "RevSubtract", "Min", "Max" };
+	if (ImGui::Combo("Blend Op", &m_BlendOp, blendOps, 5))
 		UpdateBlendState();
 	
 	if (ImGui::Checkbox("Alpha To Coverage", &m_AlphaToCoverageEnable))

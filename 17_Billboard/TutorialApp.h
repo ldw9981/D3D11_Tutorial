@@ -33,7 +33,7 @@ enum class BillboardType
 {
 	Identity = 0,           // Identity 행렬 적용
 	YAxisLocked = 1,    // 연기/불꽃 - Y축 기준으로만 회전하여 카메라 위치를 바라보도록 한다.
-	Spherical = 2,      // 스파크 - Spherical	X,Y,Z축 모두 회전 사용하여 카메라 위치를 바라보도록 한다.
+	Spherical = 2,      // 방향성 없이 점에서 방사하는 이펙트	X,Y,Z축 모두 회전 사용하여 카메라 위치를 바라보도록 한다.
 	ScreenAligned = 3   // UI 이펙트 - Screen aligned  카메라의 화면과 항상 완전히 평행하게 정렬하여 정면으로 보입
 };
 

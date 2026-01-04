@@ -21,7 +21,9 @@ public:
 	ComPtr<ID3D11DeviceContext> m_pDeviceContext;
 	ComPtr<IDXGISwapChain> m_pSwapChain;
 	ComPtr<ID3D11RenderTargetView> m_pRenderTargetView;
+	ComPtr<ID3D11Texture2D> m_pDepthStencilTexture;
 	ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;
+	ComPtr<ID3D11ShaderResourceView> m_pDepthStencilSRV;
 
 	// 그리기에 파이프라인에 적용하는 리소스 객체와 인터페이스
 	ComPtr<ID3D11Buffer> m_pVertexBuffer;
@@ -46,15 +48,15 @@ public:
 	bool m_ScissorEnable = false;
 
 	// Depth Stencil State Options
-	bool m_DepthEnable = true;
-	int m_DepthWriteMask = 1; // 0=Zero, 1=All
+	bool m_DepthTestEnable = true;
+	bool m_DepthWriteEnable = true;
 	int m_DepthFunc = 1; // 0=Never, 1=Less, 2=Equal, 3=LessEqual, 4=Greater, 5=NotEqual, 6=GreaterEqual, 7=Always
 	bool m_StencilEnable = false;
 
 	// Blend State Options
 	bool m_BlendEnable = false;
-	int m_SrcBlend = 5; // 5=SrcAlpha
-	int m_DestBlend = 6; // 6=InvSrcAlpha
+	int m_SrcBlend = 0; // 
+	int m_DestBlend = 0; // 
 	int m_BlendOp = 0; // 0=Add, 1=Subtract, 2=RevSubtract, 3=Min, 4=Max
 	bool m_AlphaToCoverageEnable = false;
 
@@ -75,7 +77,7 @@ public:
 	Vector3 m_vLightColor = {1.0f, 1.0f, 1.0f};
 	
 	bool m_bRotateAnimation = false;
-	int m_DrawOrder[3] = {2, 1, 0}; // 0=Cube1, 1=Cube2, 2=Cube3
+	int m_DrawOrder[3] = {0, 1, 2}; // 0=Cube1, 1=Cube2, 2=Cube3
 	
 	bool m_bWireframe = false;
 
