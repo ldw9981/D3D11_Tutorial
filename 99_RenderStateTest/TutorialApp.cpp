@@ -568,10 +568,10 @@ void TutorialApp::RenderImGUI()
 	
 	ImGui::Separator();
 	ImGui::Checkbox("Rotate Animation", &m_bRotateAnimation);
-	ImGui::ColorEdit4("Clear Color", (float*)&m_vClearColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
-	ImGui::ColorEdit4("Cube 1 Color", (float*)&m_vMeshColor1, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
-	ImGui::ColorEdit4("Cube 2 Color", (float*)&m_vMeshColor2, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
-	ImGui::ColorEdit4("Cube 3 Color", (float*)&m_vMeshColor3, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
+	ImGui::ColorEdit4("Clear Color", (float*)&m_vClearColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_Float);
+	ImGui::ColorEdit4("Cube 1 Color", (float*)&m_vMeshColor1, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview| ImGuiColorEditFlags_Float);
+	ImGui::ColorEdit4("Cube 2 Color", (float*)&m_vMeshColor2, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_Float);
+	ImGui::ColorEdit4("Cube 3 Color", (float*)&m_vMeshColor3, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_Float);
 	
 	ImGui::Separator();
 	ImGui::Text("Draw Order Control");
