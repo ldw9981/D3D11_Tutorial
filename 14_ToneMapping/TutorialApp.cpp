@@ -808,7 +808,7 @@ void TutorialApp::RenderImGUI()
 
 		ImGui::Separator();
 		ImGui::Text("Tone Mapping Settings:");
-		ImGui::Checkbox("Use Tone Mapping (ACES Film)", &m_UseToneMapping);
+		ImGui::Checkbox("Use Tone Mapping", &m_UseToneMapping);
 		ImGui::DragFloat("Exposure", &m_Exposure, 0.1f, -5.0f, 5.0f);
 		ImGui::DragFloat("Reference White (nits)", &m_ReferenceWhiteNit, 10.0f, 80.0f, 10000.0f);
 
