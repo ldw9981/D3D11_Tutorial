@@ -12,6 +12,35 @@
 
 using namespace Microsoft::WRL;
 
+#include <physx/characterkinematic/PxExtended.h>
+
+using namespace physx;
+// ControllerHitReport implementation
+void ControllerHitReport::onShapeHit(const PxControllerShapeHit& hit)
+{
+	// Controller가 Dynamic Actor와 충돌했을 때 밀어내기
+	PxRigidDynamic* actor = hit.actor->is<PxRigidDynamic>();
+	if (actor)
+	{
+		// 충돌 방향 계산 (Controller에서 Actor로)
+		PxExtendedVec3 cctPos = hit.controller->getPosition();
+		PxVec3 worldPos((PxReal)hit.worldPos.x, (PxReal)hit.worldPos.y, (PxReal)hit.worldPos.z);
+		PxVec3 controllerPos((PxReal)cctPos.x, (PxReal)cctPos.y, (PxReal)cctPos.z);
+		PxVec3 dir = worldPos - controllerPos;
+		dir.y = 0.0f;
+		
+		const PxF32 dirMagnitude = dir.magnitude();
+		if (dirMagnitude > 0.001f)
+		{
+			dir.normalize();
+			
+			// 간단하고 고정된 힘으로 밀기 (PhysX 예제 방식)
+			const PxF32 pushStrength = 5.0f;
+			actor->addForce(dir * pushStrength, PxForceMode::eACCELERATION);
+		}
+	}
+}
+
 struct ConstantBuffer
 {
 	Matrix mWorld;
@@ -192,8 +221,21 @@ void TutorialApp::OnRender()
 	ImGui::NewFrame();
 
 	// PhysX 오브젝트 위치 표시
-	ImGui::Begin("PhysX Debug Info");
+	ImGui::Begin("PhysX Debug Info", nullptr, ImGuiWindowFlags_None);
 	ImGui::Text("DeltaTime: %.4f sec (%.1f FPS)", m_Timer.DeltaTime(), 1.0f / m_Timer.DeltaTime());
+	ImGui::Separator();
+
+	// CUDA 지원 정보
+	ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "=== GPU Acceleration ===");
+	if (m_pCudaContextManager)
+	{
+		ImGui::Text("CUDA: Supported");
+		ImGui::Text("CUDA Context Manager: Active");
+	}
+	else
+	{
+		ImGui::Text("CUDA: Not Available");
+	}
 	ImGui::Separator();
 
 	// Ground
@@ -792,14 +834,14 @@ bool TutorialApp::InitPhysX()
 	// === Dynamic Actors (물리 시뮬레이션 적용) ===
 
 	// Dynamic Cube Actor 생성
-	PxTransform dynamicCubeTransform(PxVec3(-5.0f, 5.0f, 0.0f));
+	PxTransform dynamicCubeTransform(PxVec3(-5.0f, 50.0f, 0.0f));
 	PxBoxGeometry cubeGeometry(1.0f, 1.0f, 1.0f);
 	m_pDynamicCubeActor = PxCreateDynamic(*m_pPhysics, dynamicCubeTransform, cubeGeometry, *m_pMaterial, 10.0f);
 	m_pDynamicCubeActor->setAngularDamping(0.5f);
 	m_pScene->addActor(*m_pDynamicCubeActor);
 
 	// Dynamic Sphere Actor 생성
-	PxTransform dynamicSphereTransform(PxVec3(0.0f, 5.0f, 0.0f));
+	PxTransform dynamicSphereTransform(PxVec3(0.0f,50.0f, 0.0f));
 	PxSphereGeometry sphereGeometry(1.0f);
 	m_pDynamicSphereActor = PxCreateDynamic(*m_pPhysics, dynamicSphereTransform, sphereGeometry, *m_pMaterial, 10.0f);
 	m_pDynamicSphereActor->setAngularDamping(0.5f);
@@ -831,6 +873,7 @@ bool TutorialApp::InitPhysX()
 	capsuleDesc.contactOffset = 0.1f;
 	capsuleDesc.stepOffset = 0.5f;
 	capsuleDesc.density = 10.0f;
+	capsuleDesc.reportCallback = &m_ControllerHitReport;
 
 	m_pCapsuleController = m_pControllerManager->createController(capsuleDesc);
 	if (!m_pCapsuleController)
@@ -931,12 +974,31 @@ void TutorialApp::UpdatePhysX(float deltaTime)
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 		displacement += PxVec3(right.x, 0, right.z) * moveSpeed * deltaTime;
 
-	// 중력 적용
-	displacement.y = -9.81f * deltaTime;
+	// 점프 처리 (스페이스바)
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+		if (m_IsGrounded)
+		{
+			m_VerticalVelocity = 7.0f; // 점프 초기 속도
+			m_IsGrounded = false;
+		}
+	}
 
-	// Controller 이동
+	// 중력 적용
+	const float gravity = -9.81f;
+	m_VerticalVelocity += gravity * deltaTime;
+	displacement.y = m_VerticalVelocity * deltaTime;
+
+	// Controller 이동 (Hit Report 콜백이 자동으로 Dynamic Actor를 밀어냄)
 	PxControllerFilters filters;
-	m_pCapsuleController->move(displacement, 0.001f, deltaTime, filters);
+	PxControllerCollisionFlags collisionFlags = m_pCapsuleController->move(displacement, 0.001f, deltaTime, filters);
+
+	// 바닥에 닿았는지 체크
+	if (collisionFlags & PxControllerCollisionFlag::eCOLLISION_DOWN)
+	{
+		m_IsGrounded = true;
+		m_VerticalVelocity = 0.0f;
+	}
 
 	// PhysX 시뮬레이션 업데이트 (고정 타임스텝 사용)
 	const float fixedTimeStep = 1.0f / 60.0f;  // 60 FPS 고정

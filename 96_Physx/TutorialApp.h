@@ -14,6 +14,15 @@ using namespace DirectX::SimpleMath;
 using namespace DirectX;
 using namespace physx;
 
+// Character Controller Hit Report for pushing dynamic actors
+class ControllerHitReport : public PxUserControllerHitReport
+{
+public:
+	virtual void onShapeHit(const PxControllerShapeHit& hit) override;
+	virtual void onControllerHit(const PxControllersHit& hit) override {}
+	virtual void onObstacleHit(const PxControllerObstacleHit& hit) override {}
+};
+
 class TutorialApp : public GameApp
 {
 public:
@@ -82,6 +91,11 @@ public:
 
 	PxController* m_pCapsuleController = nullptr;
 	PxControllerManager* m_pControllerManager = nullptr;
+	ControllerHitReport m_ControllerHitReport;
+
+	// Jump variables
+	float m_VerticalVelocity = 0.0f;
+	bool m_IsGrounded = true;
 
 	// Actor positions
 	Vector3 m_GroundPosition;
