@@ -6,3 +6,5 @@ https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64
 * CUDA 툴킷이 설치되어 있지 않다면 CPU로만 계산하는 라이브러리를 빌드한다.
 
 2. 최신빌드와 예제를 보려면 Github를 방문한다.
+github https://github.com/NVIDIA-Omniverse/PhysX/tree/main/physx
+예제는 https://github.com/NVIDIA-Omniverse/PhysX/tree/main/physx/snippets
