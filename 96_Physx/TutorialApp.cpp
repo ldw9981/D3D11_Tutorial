@@ -221,6 +221,8 @@ void TutorialApp::OnRender()
 	ImGui::NewFrame();
 
 	// PhysX 오브젝트 위치 표시
+	ImGui::SetNextWindowSize(ImVec2(450, 550), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
 	ImGui::Begin("PhysX Debug Info", nullptr, ImGuiWindowFlags_None);
 	ImGui::Text("DeltaTime: %.4f sec (%.1f FPS)", m_Timer.DeltaTime(), 1.0f / m_Timer.DeltaTime());
 	ImGui::Separator();
@@ -236,6 +238,12 @@ void TutorialApp::OnRender()
 	{
 		ImGui::Text("CUDA: Not Available");
 	}
+	ImGui::Separator();
+
+	// 조작 방법
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "=== Controls ===");
+	ImGui::Text("Arrow Keys: Move Capsule");
+	ImGui::Text("Space: Jump");
 	ImGui::Separator();
 
 	// Ground
@@ -255,7 +263,10 @@ void TutorialApp::OnRender()
 	// Capsule Controller
 	ImGui::Separator();
 	ImGui::Text("Capsule: (%.2f, %.2f, %.2f)", m_CapsulePosition.x, m_CapsulePosition.y, m_CapsulePosition.z);
+	ImGui::Text("Grounded: %s", m_IsGrounded ? "Yes" : "No");
 	ImGui::Separator();
+
+
 
 	// 속도 정보 (Dynamic Rigid Body만)
 	ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "=== Velocities ===");
@@ -745,8 +756,13 @@ void TutorialApp::OnInputProcess(const Keyboard::State& KeyState, const Keyboard
 	m_Camera.OnInputProcess(KeyState, KeyTracker, MouseState, MouseTracker);
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 LRESULT CALLBACK TutorialApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+		return true;
+
 	return __super::WndProc(hWnd, message, wParam, lParam);
 }
 
@@ -1034,7 +1050,8 @@ bool TutorialApp::InitImGUI()
 	// ImGui 초기화
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
 	// ImGui 스타일 설정
 	ImGui::StyleColorsDark();
