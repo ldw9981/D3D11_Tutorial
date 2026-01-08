@@ -99,7 +99,7 @@ public:
 		float radius;
 	};
 	PointLightData m_PointLights[MAX_POINT_LIGHTS];
-	int m_ActiveLightCount = 1;  // Number of lights to actually render (adjustable)
+	int m_ActiveLightCount = 5;  // Number of lights to actually render (adjustable)
 	float m_GlobalLightRadiusScale = 1.0f;
 
 
