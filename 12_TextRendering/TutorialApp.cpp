@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "TutorialApp.h"
+#include "../Common/Helper.h"
 
-#include <sstream>
-#include <algorithm>
 
 using namespace DirectX;
 using namespace std;
@@ -525,7 +524,7 @@ bool TutorialApp::InitScene()
 		return false;
 
 	// Texture + sampler
-	hr = CreateTextureFromFile(m_Device, L"../resource/seafloor.dds", &m_CubesTexture);
+	hr = CreateTextureFromFile(m_Device, L"../resource/seafloor.dds", &m_CubesTexture,true);
 	if (FAILED(hr))
 		return false;
 
@@ -647,16 +646,6 @@ void TutorialApp::RenderText(const wchar_t* text)
 
 	// Restore opaque blend state for next frame
 	m_DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
-}
-
-HRESULT TutorialApp::CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView)
-{
-	HRESULT hr = DirectX::CreateDDSTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
-	if (FAILED(hr))
-	{
-		hr = DirectX::CreateWICTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
-	}
-	return hr;
 }
 
 HRESULT TutorialApp::CompileShaderFromFile(const WCHAR* szFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)

@@ -6,6 +6,7 @@
 #include <directXTK/WICTextureLoader.h>
 #include <dxgidebug.h>
 #include <dxgi1_3.h>    // DXGIGetDebugInterface1
+#include <DirectXTex.h>
 
 #pragma comment(lib, "dxguid.lib")  // 꼭 필요!
 #pragma comment(lib, "dxgi.lib")
@@ -70,24 +71,46 @@ HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCS
 	return S_OK;
 }
 
-HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView)
+HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice,const wchar_t* szFileName,
+	ID3D11ShaderResourceView** textureView, bool isSRGB /*추가*/)
 {
+	std::filesystem::path path(szFileName);
+	std::wstring strExtension = path.extension();
+	std::transform(strExtension.begin(), strExtension.end(), strExtension.begin(), ::towlower);
+
+	DirectX::TexMetadata metadata1;
+	DirectX::ScratchImage scratchImage;
+
 	HRESULT hr = S_OK;
-
-	// Load the Texture
-	hr = DirectX::CreateDDSTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
-	if (FAILED(hr))
+	if (strExtension == L".dds")
 	{
-		hr = DirectX::CreateWICTextureFromFile(d3dDevice, szFileName, nullptr, textureView);
-		if (FAILED(hr))
-		{
-			MessageBoxW(NULL, GetComErrorString(hr), szFileName, MB_OK);
-			return hr;
-		}
+		HR_T(hr = DirectX::LoadFromDDSFile(szFileName, DirectX::DDS_FLAGS_NONE, &metadata1, scratchImage));
 	}
-	return S_OK;
-}
+	else if (strExtension == L".tga")
+	{
+		HR_T(hr = DirectX::LoadFromTGAFile(szFileName, &metadata1, scratchImage));
+	}
+	else if (strExtension == L".hdr")
+	{
+		HR_T(hr = DirectX::LoadFromHDRFile(szFileName, &metadata1, scratchImage));
+	}
+	else // 기타..
+	{
+		HR_T(hr = DirectX::LoadFromWICFile(szFileName, DirectX::WIC_FLAGS_NONE, &metadata1, scratchImage));
+	}
 
+	DirectX::CREATETEX_FLAGS flags = DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT;
+	flags |= isSRGB ? DirectX::CREATETEX_FORCE_SRGB : DirectX::CREATETEX_IGNORE_SRGB;
+
+	HR_T(DirectX::CreateShaderResourceViewEx(
+		d3dDevice, scratchImage.GetImages(), scratchImage.GetImageCount(), metadata1,
+		D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE,
+		0, 0,
+		flags,
+		textureView
+	));
+	return hr;
+}
 
 
 void CheckDXGIDebug()

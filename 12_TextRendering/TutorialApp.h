@@ -53,7 +53,6 @@ private:
 	bool InitScene();
 	void RenderText(const wchar_t* text);
 	HRESULT CreateD2DBitmapFromFile(const wchar_t* fileName, ID2D1Bitmap1** outBitmap);
-	HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice, const wchar_t* szFileName, ID3D11ShaderResourceView** textureView);
 	HRESULT CompileShaderFromFile(const WCHAR* szFileName, const D3D_SHADER_MACRO* pDefines, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
 private:

@@ -16,6 +16,9 @@
 #include <set>
 #include <list>
 #include <memory>
+#include <sstream>
+#include <algorithm>
+
 #include <DirectXMath.h>
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
